@@ -49,7 +49,7 @@ uses
   // Android
   Androidapi.Helpers,
   // DW
-  DW.Androidapi.JNI.Firebase, DW.Firebase.App.Android, DW.Androidapi.JNI.FirebaseServiceHelpers, DW.Androidapi.JNI.LocalBroadcastManager;
+  DW.Androidapi.JNI.Firebase, DW.FirebaseApp.Android, DW.Androidapi.JNI.FirebaseServiceHelpers, DW.Androidapi.JNI.LocalBroadcastManager;
 
 { TFirebaseInstanceIdReceiverListener }
 
