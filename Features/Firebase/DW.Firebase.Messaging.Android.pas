@@ -8,6 +8,8 @@ unit DW.Firebase.Messaging.Android;
 {                                                       }
 {*******************************************************}
 
+{$I DW.GlobalDefines.inc}
+
 interface
 
 uses

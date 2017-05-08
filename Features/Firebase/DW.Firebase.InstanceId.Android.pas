@@ -8,6 +8,8 @@ unit DW.Firebase.InstanceId.Android;
 {                                                       }
 {*******************************************************}
 
+{$I DW.GlobalDefines.inc}
+
 interface
 
 uses

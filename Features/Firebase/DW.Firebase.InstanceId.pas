@@ -8,6 +8,8 @@ unit DW.Firebase.InstanceId;
 {                                                       }
 {*******************************************************}
 
+{$I DW.GlobalDefines.inc}
+
 interface
 
 type

@@ -8,6 +8,8 @@ unit DW.Androidapi.JNI.Firebase;
 {                                                       }
 {*******************************************************}
 
+{$I DW.GlobalDefines.inc}
+
 interface
 
 uses

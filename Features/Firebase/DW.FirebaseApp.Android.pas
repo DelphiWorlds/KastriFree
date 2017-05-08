@@ -1,5 +1,15 @@
 unit DW.FirebaseApp.Android;
 
+{*******************************************************}
+{                                                       }
+{                    Kastri Free                        }
+{                                                       }
+{          DelphiWorlds Cross-Platform Library          }
+{                                                       }
+{*******************************************************}
+
+{$I DW.GlobalDefines.inc}
+
 interface
 
 type
@@ -13,7 +23,9 @@ type
 implementation
 
 uses
+  // Android
   Androidapi.Helpers,
+  // DW
   DW.Androidapi.JNI.Firebase;
 
 { TPlatformFirebaseApp }

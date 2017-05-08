@@ -8,6 +8,8 @@ unit DW.Firebase.Messaging.iOS;
 {                                                       }
 {*******************************************************}
 
+{$I DW.GlobalDefines.inc}
+
 interface
 
 uses

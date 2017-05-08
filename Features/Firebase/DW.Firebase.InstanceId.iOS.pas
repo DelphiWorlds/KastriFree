@@ -8,6 +8,8 @@ unit DW.Firebase.InstanceId.iOS;
 {                                                       }
 {*******************************************************}
 
+{$I DW.GlobalDefines.inc}
+
 interface
 
 uses

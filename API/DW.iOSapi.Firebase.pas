@@ -8,6 +8,8 @@ unit DW.iOSapi.Firebase;
 {                                                       }
 {*******************************************************}
 
+{$I DW.GlobalDefines.inc}
+
 interface
 
 uses
