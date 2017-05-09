@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BEGIN_INCLUDE(manifest) -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+        package="%package%"
+        android:versionCode="%versionCode%"
+        android:versionName="%versionName%"
+        android:installLocation="%installLocation%">
+
+    <!-- This is the platform API where NativeActivity was introduced. -->
+    <uses-sdk android:minSdkVersion="%minSdkVersion%" android:targetSdkVersion="%targetSdkVersion%" />
+<%uses-permission%>
+    <!-- **** FCM **** push notifications permission BEGIN -->
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <!-- **** FCM **** push notifications permission END -->
+    <uses-feature android:glEsVersion="0x00020000" android:required="True"/>
+    <application android:persistent="%persistent%" 
+        android:restoreAnyVersion="%restoreAnyVersion%" 
+        android:label="%label%" 
+        android:debuggable="%debuggable%" 
+        android:largeHeap="%largeHeap%"
+        android:icon="%icon%"
+        android:theme="%theme%"
+        android:hardwareAccelerated="%hardwareAccelerated%">
+
+<%application-meta-data%>
+        <!-- **** FCM **** required gms metadata BEGIN -->
+        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version"/>
+        <!-- **** FCM **** required gms metadata END -->
+		<%services%>
+        <!-- **** FCM **** Firebase and Delphi Worlds services BEGIN -->
+        <service android:name="com.google.firebase.iid.FirebaseInstanceIdService" android:exported="true">
+            <intent-filter android:priority="-500">
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+            </intent-filter>
+        </service>
+        <service android:name="com.google.firebase.messaging.FirebaseMessagingService" android:exported="true">
+            <intent-filter android:priority="-500">
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+        <service android:name="com.delphiworlds.kastri.DWFirebaseInstanceIdService">
+            <intent-filter>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+            </intent-filter>
+        </service>
+        <service android:name="com.delphiworlds.kastri.DWFirebaseMessagingService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+        <!-- **** FCM **** Firebase and Delphi Worlds services END -->
+        <!-- Our activity is a subclass of the built-in NativeActivity framework class.
+             This will take care of integrating with our NDK code. -->
+        <activity android:name="com.embarcadero.firemonkey.FMXNativeActivity"
+                android:label="%activityLabel%"
+                android:configChanges="orientation|keyboard|keyboardHidden|screenSize"
+                android:launchMode="singleTask">
+            <!-- Tell NativeActivity the name of our .so -->
+            <meta-data android:name="android.app.lib_name"
+                android:value="%libNameValue%" />
+            <intent-filter>  
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter> 
+        </activity>
+        <%activity%>
+        <%receivers%>
+        <!-- **** FCM **** Firebase receivers BEGIN -->
+        <receiver android:name="com.google.firebase.iid.FirebaseInstanceIdInternalReceiver" android:exported="false"/>
+        <receiver android:name="com.google.firebase.iid.FirebaseInstanceIdReceiver" android:exported="true" android:permission="com.google.android.c2dm.permission.SEND">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
+                <category android:name="com.codasart.mm"/> <!-- Is this necessary? -->
+            </intent-filter>
+        </receiver>
+        <receiver android:name="com.google.firebase.iid.FirebaseInstanceIdInternalReceiver" android:exported="false"/>
+        <!-- **** FCM **** Firebase receivers END -->
+    </application>
+</manifest>
+<!-- END_INCLUDE(manifest) -->

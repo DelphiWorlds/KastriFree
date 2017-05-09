@@ -1,0 +1,81 @@
+object frmMain: TfrmMain
+  Left = 0
+  Top = 0
+  Caption = 'Form1'
+  ClientHeight = 584
+  ClientWidth = 388
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  DesignerMasterStyle = 0
+  object FirebaseCMLabel: TLabel
+    Align = Top
+    StyledSettings = [Family, Style, FontColor]
+    Size.Width = 388.000000000000000000
+    Size.Height = 29.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.Size = 16.000000000000000000
+    TextSettings.HorzAlign = Center
+    Text = 'Firebase Cloud Messaging Starter Project'
+    TabOrder = 0
+  end
+  object TokenLabel: TLabel
+    Align = Top
+    StyledSettings = [Family, Style, FontColor]
+    Margins.Top = 4.000000000000000000
+    Position.Y = 33.000000000000000000
+    Size.Width = 388.000000000000000000
+    Size.Height = 28.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.Size = 14.000000000000000000
+    TextSettings.HorzAlign = Center
+    Text = 'Your device token:'
+    TabOrder = 2
+  end
+  object TokenMemo: TMemo
+    Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+    DataDetectorTypes = []
+    ReadOnly = True
+    TextSettings.WordWrap = True
+    Align = Top
+    Margins.Left = 4.000000000000000000
+    Margins.Right = 4.000000000000000000
+    Position.X = 4.000000000000000000
+    Position.Y = 61.000000000000000000
+    Size.Width = 380.000000000000000000
+    Size.Height = 152.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 4
+    Viewport.Width = 376.000000000000000000
+    Viewport.Height = 148.000000000000000000
+  end
+  object MessagesLabel: TLabel
+    Align = Top
+    StyledSettings = [Family, Style, FontColor]
+    Margins.Top = 4.000000000000000000
+    Position.Y = 217.000000000000000000
+    Size.Width = 388.000000000000000000
+    Size.Height = 33.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.Size = 14.000000000000000000
+    TextSettings.HorzAlign = Center
+    Text = 'FCM Messages:'
+    TabOrder = 1
+  end
+  object MessagesMemo: TMemo
+    Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+    DataDetectorTypes = []
+    ReadOnly = True
+    TextSettings.WordWrap = True
+    Align = Client
+    Margins.Left = 4.000000000000000000
+    Margins.Right = 4.000000000000000000
+    Margins.Bottom = 4.000000000000000000
+    Size.Width = 380.000000000000000000
+    Size.Height = 330.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 3
+    Viewport.Width = 376.000000000000000000
+    Viewport.Height = 326.000000000000000000
+  end
+end

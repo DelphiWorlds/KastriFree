@@ -1,13 +1,14 @@
-program KastriFree;
+program FCMStarter;
 
 uses
   System.StartUpCopy,
   FMX.Forms,
-  DW.OSLog in 'Core\DW.OSLog.pas';
+  MainFrm in 'MainFrm.pas' {frmMain};
 
 {$R *.res}
 
 begin
   Application.Initialize;
+  Application.CreateForm(TfrmMain, frmMain);
   Application.Run;
 end.
