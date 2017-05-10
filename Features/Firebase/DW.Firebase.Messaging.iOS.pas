@@ -61,7 +61,7 @@ type
     procedure SubscribeToTopic(const ATopicName: string); override;
     procedure UnsubscribeFromTopic(const ATopicName: string); override;
   public
-    constructor Create(const AFirebaseMessaging: TFirebaseMessaging); virtual;
+    constructor Create(const AFirebaseMessaging: TFirebaseMessaging); override;
     destructor Destroy; override;
   end;
 
@@ -110,7 +110,6 @@ procedure TUserNotificationCenterDelegate.userNotificationCenterDidReceiveNotifi
   didReceiveNotificationResponse: UNNotificationResponse; withCompletionHandler: Pointer);
 var
   LBlockImp: procedure(self: pointer; _cmd: pointer); cdecl;
-  LMessage: TPushRemoteNotificationMessage;
   LJSON: string;
 begin
   LJSON := NSDictionaryToJSON(didReceiveNotificationResponse.notification.request.content.userInfo);
@@ -125,7 +124,6 @@ procedure TUserNotificationCenterDelegate.userNotificationCenterWillPresentNotif
 var
   LBlockImp: procedure(self: pointer; _cmd: pointer; const options); cdecl;
   LOptions: UNNotificationPresentationOptions;
-  LMessage: TPushRemoteNotificationMessage;
   LJSON: string;
 begin
   LJSON := NSDictionaryToJSON(willPresentNotification.request.content.userInfo);
