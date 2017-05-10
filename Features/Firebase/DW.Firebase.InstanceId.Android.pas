@@ -36,8 +36,8 @@ type
     FFirebaseInstanceIdBroadcastReceiver: JFMXBroadcastReceiver;
     FFirebaseInstanceIdReceiverListener: TFirebaseInstanceIdReceiverListener;
   protected
-    procedure HandleTokenRefresh(const AToken: string);
     function GetToken: string; override;
+    procedure HandleTokenRefresh(const AToken: string);
   public
     constructor Create(const AFirebaseInstanceId: TFirebaseInstanceId); override;
     destructor Destroy; override;

@@ -44,8 +44,8 @@ type
   private
     FTokenRefreshListener: TTokenRefreshNotificationListener;
   protected
-    procedure HandleTokenRefresh;
     function GetToken: string; override;
+    procedure HandleTokenRefresh;
   public
     constructor Create(const AFirebaseInstanceId: TFirebaseInstanceId); override;
   end;

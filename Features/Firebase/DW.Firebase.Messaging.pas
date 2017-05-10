@@ -50,9 +50,9 @@ type
     FOnAuthorizationRefused: TNotifyEvent;
     FOnMessageReceived: TFirebaseMessageReceivedEvent;
     procedure ApplicationEventMessageHandler(const Sender: TObject; const M: TMessage);
+    function GetIsConnected: Boolean;
     procedure PushFailToRegisterMessageHandler(const Sender: TObject; const M: TMessage);
     procedure PushRemoteNotificationMessageHandler(const Sender: TObject; const M: TMessage);
-    function GetIsConnected: Boolean;
   protected
     procedure DoAuthorizationRefused;
     procedure DoMessageReceived(const APayload: TStrings);

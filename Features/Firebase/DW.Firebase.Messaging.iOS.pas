@@ -175,12 +175,12 @@ end;
 procedure TPlatformFirebaseMessaging.Connect;
 begin
   Disconnect;
-  TFIRMessaging.Wrap(TFIRMessaging.OCClass.messaging).connectWithCompletion(FIRMessagingConnectCompletionHandler);
+  Messaging.connectWithCompletion(FIRMessagingConnectCompletionHandler);
 end;
 
 procedure TPlatformFirebaseMessaging.Disconnect;
 begin
-  TFIRMessaging.Wrap(TFIRMessaging.OCClass.messaging).disconnect;
+  Messaging.disconnect;
   IsConnected := False;
 end;
 
