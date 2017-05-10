@@ -53,6 +53,8 @@ type
 implementation
 
 uses
+  // RTL
+  System.Classes,
   // Mac
   Macapi.Helpers, Macapi.ObjCRuntime,
   // iOS
@@ -98,8 +100,12 @@ end;
 
 procedure TPlatformFirebaseInstanceId.HandleTokenRefresh;
 begin
-  // TODO: TThread.Queue?
-  DoTokenRefresh(GetToken);
+  TThread.Queue(nil,
+    procedure
+    begin
+      DoTokenRefresh(GetToken);
+    end
+  );
 end;
 
 end.
