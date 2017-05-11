@@ -27,6 +27,7 @@ type
   private
     FFirebaseMessaging: TFirebaseMessaging;
     FIsConnected: Boolean;
+    FIsForeground: Boolean;
     FWasConnected: Boolean;
   protected
     procedure ApplicationBecameActive;
@@ -34,11 +35,13 @@ type
     procedure Connect; virtual; abstract;
     procedure Disconnect; virtual; abstract;
     procedure DoApplicationBecameActive; virtual;
+    procedure DoApplicationEnteredBackground; virtual;
     procedure DoAuthorizationRefused;
     procedure DoMessageReceived(const APayload: TStrings);
     procedure SubscribeToTopic(const ATopicName: string); virtual; abstract;
     procedure UnsubscribeFromTopic(const ATopicName: string); virtual; abstract;
     property IsConnected: Boolean read FIsConnected write FIsConnected;
+    property IsForeground: Boolean read FIsForeground write FIsForeground;
   public
     constructor Create(const AFirebaseMessaging: TFirebaseMessaging); virtual;
     destructor Destroy; override;
@@ -96,6 +99,7 @@ end;
 
 procedure TCustomPlatformFirebaseMessaging.ApplicationBecameActive;
 begin
+  FIsForeground := True;
   if FWasConnected then
     Connect;
   DoApplicationBecameActive;
@@ -103,11 +107,17 @@ end;
 
 procedure TCustomPlatformFirebaseMessaging.ApplicationEnteredBackground;
 begin
+  FIsForeground := False;
   FWasConnected := IsConnected;
   Disconnect;
 end;
 
 procedure TCustomPlatformFirebaseMessaging.DoApplicationBecameActive;
+begin
+  //
+end;
+
+procedure TCustomPlatformFirebaseMessaging.DoApplicationEnteredBackground;
 begin
   //
 end;

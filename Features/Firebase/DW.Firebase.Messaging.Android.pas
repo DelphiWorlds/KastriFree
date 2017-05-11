@@ -52,7 +52,7 @@ implementation
 
 uses
   // RTL
-  System.Classes,
+  System.SysUtils, System.Classes, System.Threading,
   // Android
   Androidapi.JNI.Os, Androidapi.Helpers,
   // FMX
@@ -123,6 +123,15 @@ var
   LValueObject: JObject;
   LValue: string;
 begin
+  if not IsForeground then
+  begin
+    TTask.Run(
+      procedure
+      begin
+        TJDWNotificationPublisher.JavaClass.sendNotification(TAndroidHelper.Context, data, False);
+      end
+    );
+  end;
   LPayload := TStringList.Create;
   try
     LBundle := data.getExtras;
