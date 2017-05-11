@@ -75,28 +75,9 @@ uses
   // iOS
   iOSapi.Helpers, iOSapi.UIKit,
   // FMX
-  FMX.Platform;
-
- // TODO: Separate unit
-function imp_implementationWithBlock(block: pointer): pointer; cdecl; external libobjc name  _PU + 'imp_implementationWithBlock';
-function imp_removeBlock(anImp: pointer): Integer; cdecl; external libobjc name _PU + 'imp_removeBlock';
-
-// TODO: Move this out
-function NSDictionaryToJSON(const ADictionary: NSDictionary): string;
-var
-  LData: NSData;
-  LString: NSString;
-  LError: NSError;
-begin
-  LData := TNSJSONSerialization.OCClass.dataWithJSONObject((ADictionary as ILocalObject).GetObjectID, 0, Addr(LError));
-  if (LData <> nil) and (LError = nil) then
-  begin
-    LString := TNSString.Wrap(TNSString.Alloc.initWithData(LData, NSUTF8StringEncoding));
-    Result :=  NSStrToStr(LString);
-  end
-  else
-    Result := '';
-end;
+  FMX.Platform,
+  // DW
+  DW.Macapi.ObjCRuntime, DW.Macapi.Helpers;
 
 { TUserNotificationCenterDelegate }
 
