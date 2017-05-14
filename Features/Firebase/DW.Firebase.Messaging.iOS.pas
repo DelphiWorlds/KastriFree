@@ -90,28 +90,28 @@ end;
 procedure TUserNotificationCenterDelegate.userNotificationCenterDidReceiveNotificationResponseWithCompletionHandler(center: UNUserNotificationCenter;
   didReceiveNotificationResponse: UNNotificationResponse; withCompletionHandler: Pointer);
 var
-  LBlockImp: procedure(self: pointer; _cmd: pointer); cdecl;
+  LBlockImp: procedure; cdecl;
   LJSON: string;
 begin
   LJSON := NSDictionaryToJSON(didReceiveNotificationResponse.notification.request.content.userInfo);
   TMessageManager.DefaultManager.SendMessage(nil, TPushRemoteNotificationMessage.Create(TPushNotificationData.Create(LJSON)));
   @LBlockImp := imp_implementationWithBlock(withCompletionHandler);
-  LBlockImp(Self, nil);
+  LBlockImp;
   imp_removeBlock(@LBlockImp);
 end;
 
 procedure TUserNotificationCenterDelegate.userNotificationCenterWillPresentNotificationWithCompletionHandler(center: UNUserNotificationCenter;
   willPresentNotification: UNNotification; withCompletionHandler: Pointer);
 var
-  LBlockImp: procedure(self: pointer; _cmd: pointer; const options); cdecl;
+  LBlockImp: procedure(options: UNNotificationPresentationOptions); cdecl;
   LOptions: UNNotificationPresentationOptions;
   LJSON: string;
 begin
   LJSON := NSDictionaryToJSON(willPresentNotification.request.content.userInfo);
   TMessageManager.DefaultManager.SendMessage(nil, TPushRemoteNotificationMessage.Create(TPushNotificationData.Create(LJSON)));
   @LBlockImp := imp_implementationWithBlock(withCompletionHandler);
-  LOptions := UNNotificationPresentationOptionNone;
-  LBlockImp(Self, nil, LOptions);
+  LOptions := UNNotificationPresentationOptionAlert;
+  LBlockImp(LOptions);
   imp_removeBlock(@LBlockImp);
 end;
 
