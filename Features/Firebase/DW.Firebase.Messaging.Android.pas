@@ -128,7 +128,7 @@ begin
     TTask.Run(
       procedure
       begin
-        TJDWNotificationPublisher.JavaClass.sendNotification(TAndroidHelper.Context, data, False);
+        TJDWNotificationPublisher.JavaClass.sendNotification(TAndroidHelper.Context, data, True);
       end
     );
   end;
