@@ -46,6 +46,8 @@ uses
   DW.OSLog.Mac;
   {$ELSEIF Defined(MSWINDOWS)}
   DW.OSLog.Win;
+  {$ELSEIF Defined(LINUX)}
+  DW.OSLog.Linux;
   {$ENDIF}
 
 { TOSLog }
