@@ -57,9 +57,17 @@ const
   FIRMessagingMessageStatusUnknown = 0;
   // New downstream message received by the app.
   FIRMessagingMessageStatusNew = 1;
+  // Unknown token type.
+  FIRMessasingAPNSTokenTypeUnknown = 0;
+  // Sandbox token type.
+  FIRMessasingAPNSTokenTypeSandbox = 1;
+  // Production token type.
+  FIRMessasingAPNSTokenTypeProd = 2;
+
 
 type
   FIRInstanceIDAPNSTokenType = NSInteger;
+  FIRMessagingAPNSTokenType = NSInteger;
   FIRInstanceIDError = NSUInteger;
   FIRMessagingError = NSUInteger;
   FIRMessagingMessageStatus = NSInteger;
@@ -119,9 +127,11 @@ type
 
   FIRMessaging = interface(NSObject)
     ['{A721C3D4-82EB-4A7B-A5E5-42EF9E8F618E}']
+    function APNSToken: NSData; cdecl;
     procedure connectWithCompletion(handler: TFIRMessagingConnectCompletion); cdecl;
     procedure disconnect; cdecl;
     function remoteMessageDelegate: Pointer; cdecl;
+    procedure setAPNSToken(apnsToken: NSData; tokenType: FIRMessagingAPNSTokenType); cdecl;
     procedure setRemoteMessageDelegate(delegate: Pointer); cdecl;
     procedure subscribeToTopic(topic: NSString); cdecl;
     procedure unsubscribeFromTopic(topic: NSString); cdecl;
