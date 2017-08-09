@@ -1,5 +1,15 @@
 unit DW.REST.Json.Helpers;
 
+{*******************************************************}
+{                                                       }
+{                    Kastri Free                        }
+{                                                       }
+{          DelphiWorlds Cross-Platform Library          }
+{                                                       }
+{*******************************************************}
+
+{$I DW.GlobalDefines.inc}
+
 interface
 
 uses
