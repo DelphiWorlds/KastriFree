@@ -37,6 +37,7 @@ function NSDictionaryToJSON(const ADictionary: NSDictionary): string;
 ///   Puts string values from an array into an NSArray
 /// </summary>
 function StringArrayToNSArray(const AArray: array of string): NSArray;
+function StrToObjectID(const AStr: string): Pointer;
 
 implementation
 
@@ -89,6 +90,11 @@ begin
   for I := 0 to Length(AArray) - 1 do
     LArray[I] := NSObjectToID(StrToNSStr(AArray[I]));
   Result := TNSArray.Wrap(TNSArray.OCClass.arrayWithObjects(@LArray[0], Length(LArray)));
+end;
+
+function StrToObjectID(const AStr: string): Pointer;
+begin
+  Result := NSObjectToID(StrToNSStr(AStr));
 end;
 
 end.
