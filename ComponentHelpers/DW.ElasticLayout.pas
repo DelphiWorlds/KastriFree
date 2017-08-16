@@ -25,18 +25,18 @@ type
   /// </remarks>
   TLayout = class(FMX.Layouts.TLayout)
   private
-    FElastic: Boolean;
+    FIsElastic: Boolean;
     procedure AdjustSize(const AAdjustWidth: Boolean);
     function GetCommonAlign: TAlignLayout;
     function GetControlSize(const AControl: TControl; const AGetWidth: Boolean): Single;
-    procedure SetElastic(const Value: Boolean);
+    procedure SetIsElastic(const Value: Boolean);
   protected
     procedure DoRealign; override;
   public
     /// <summary>
     ///   Set this property to True when you want the layout to adjust its size automatically
     /// </summary>
-    property Elastic: Boolean read FElastic write SetElastic;
+    property IsElastic: Boolean read FIsElastic write SetIsElastic;
   end;
 
 implementation
@@ -75,6 +75,8 @@ begin
   Result := TAlignLayout.None;
   for I := 0 to ControlsCount - 1 do
   begin
+    if not Controls[I].Visible then
+      Continue;
     if (Result = TAlignLayout.None) and (Controls[I].Align <> TAlignLayout.None) then
       Result := Controls[I].Align;
     if (Result <> TAlignLayout.None) and (Controls[I].Align <> Result)  then
@@ -92,11 +94,11 @@ begin
     Result := AControl.Height + AControl.Margins.Top + AControl.Margins.Bottom;
 end;
 
-procedure TLayout.SetElastic(const Value: Boolean);
+procedure TLayout.SetIsElastic(const Value: Boolean);
 begin
-  if Value = FElastic then
+  if Value = FIsElastic then
     Exit; // <======
-  FElastic := Value;
+  FIsElastic := Value;
   Realign;
 end;
 
