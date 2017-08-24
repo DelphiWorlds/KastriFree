@@ -160,6 +160,7 @@ procedure FirebaseInstanceIDLoader; cdecl; external 'FirebaseInstanceID';
 procedure GoogleToolboxForMacLoader; cdecl; external 'GoogleToolboxForMac';
 procedure FirebaseMessagingLoader; cdecl; external 'FirebaseMessaging';
 procedure FirebaseNanoPBLoader; cdecl; external 'FirebaseNanoPB';
+procedure nanoPBLoader; cdecl; external 'nanoPB';
 procedure ProtobufLoader; cdecl; external 'Protobuf';
 
 end.
