@@ -8,6 +8,7 @@ uses
 type
   TVirtualKeyboard = record
   public
+    class procedure EnableToolbar(const AEnable: Boolean); static;
     class procedure Hide; static;
     class procedure Show(const AObject: TFmxObject); static;
   end;
@@ -33,6 +34,14 @@ var
 begin
   if TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardService, LService) then
     LService.ShowVirtualKeyboard(AObject);
+end;
+
+class procedure TVirtualKeyboard.EnableToolbar(const AEnable: Boolean);
+var
+  LService: IFMXVirtualKeyboardToolbarService;
+begin
+  if TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardToolbarService, LService) then
+    LService.SetToolbarEnabled(AEnable);
 end;
 
 end.

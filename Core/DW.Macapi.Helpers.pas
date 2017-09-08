@@ -14,6 +14,9 @@ interface
 
 uses
   // Mac
+  {$IF Defined(MACOS)}
+  Macapi.CoreFoundation,
+  {$ENDIF}
   {$IF Defined(MACDEV)}
   Macapi.Foundation;
   {$ENDIF}
@@ -21,6 +24,10 @@ uses
   iOSapi.Foundation;
   {$ENDIF}
 
+/// <summary>
+///   Retrieves cocoa double constant
+/// </summary>
+function CocoaDoubleConst(const AFwk: string; const AConstStr: string): Double;
 /// <summary>
 ///   Retrieves a number value from an NSDictionary, with optional default (otherwise zero)
 /// </summary>
@@ -30,20 +37,34 @@ function GetDictionaryNumberValue(const ADictionary: NSDictionary; const AKey: N
 /// </summary>
 function GetDictionaryStringValue(const ADictionary: NSDictionary; const AKey: NSString; const ADefault: string = ''): string;
 /// <summary>
-///   Converts values in an NSDictionary to JSON
-/// </summary>
-function NSDictionaryToJSON(const ADictionary: NSDictionary): string;
-/// <summary>
 ///   Puts string values from an array into an NSArray
 /// </summary>
 function StringArrayToNSArray(const AArray: array of string): NSArray;
+/// <summary>
+///   Converts a string directly into an NSString reference (ID)
+/// </summary>
 function StrToObjectID(const AStr: string): Pointer;
+/// <summary>
+///   Converts a string into an CFStringRef
+/// </summary>
+function StrToCFStringRef(const AStr: string): CFStringRef;
 
 implementation
 
 uses
   // Mac
   Macapi.ObjectiveC, Macapi.Helpers;
+
+function CocoaDoubleConst(const AFwk: string; const AConstStr: string): Double;
+var
+  LObj: Pointer;
+begin
+  LObj := CocoaPointerConst(AFwk, AConstStr);
+  if LObj <> nil then
+    Result := Double(LObj^)
+  else
+    Result := 0;
+end;
 
 function GetDictionaryNumberValue(const ADictionary: NSDictionary; const AKey: NSString; const ADefault: Double = 0): Double;
 var
@@ -65,22 +86,6 @@ begin
     Result := NSStrToStr(TNSString.Wrap(LValuePtr));
 end;
 
-function NSDictionaryToJSON(const ADictionary: NSDictionary): string;
-var
-  LData: NSData;
-  LString: NSString;
-  LError: NSError;
-begin
-  LData := TNSJSONSerialization.OCClass.dataWithJSONObject(NSObjectToID(ADictionary), 0, Addr(LError));
-  if (LData <> nil) and (LError = nil) then
-  begin
-    LString := TNSString.Wrap(TNSString.Alloc.initWithData(LData, NSUTF8StringEncoding));
-    Result :=  NSStrToStr(LString);
-  end
-  else
-    Result := '';
-end;
-
 function StringArrayToNSArray(const AArray: array of string): NSArray;
 var
   LArray: array of Pointer;
@@ -95,6 +100,11 @@ end;
 function StrToObjectID(const AStr: string): Pointer;
 begin
   Result := NSObjectToID(StrToNSStr(AStr));
+end;
+
+function StrToCFStringRef(const AStr: string): CFStringRef;
+begin
+  Result := CFStringCreateWithCharacters(kCFAllocatorDefault, PChar(AStr), Length(AStr));
 end;
 
 end.

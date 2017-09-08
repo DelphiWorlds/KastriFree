@@ -22,6 +22,11 @@ type
   ///   DO NOT ADD ANY FMX UNITS TO THESE FUNCTIONS
   /// </remarks>
   TOSLog = record
+  private
+    /// <summary>
+    ///   Timestamps ASrc if prefixed with an '@'
+    /// </summary>
+    class function ts(const ASrc: string): string; static;
   public
     /// <summary>
     ///   Replacement functions for IFMXLoggingService
@@ -40,6 +45,8 @@ const
 implementation
 
 uses
+  // RTL
+  System.SysUtils,
   {$IF Defined(ANDROID)}
   DW.OSLog.Android;
   {$ELSEIF Defined(MACOS)}
@@ -52,34 +59,42 @@ uses
 
 { TOSLog }
 
+class function TOSLog.ts(const ASrc: string): string;
+begin
+  if ASrc.StartsWith('@') then
+    Result := Format('%s - %s', [FormatDateTime('yyyy/mm/dd hh:nn:ss.zzz', Now), ASrc.Substring(1)])
+  else
+    Result := ASrc;
+end;
+
 class procedure TOSLog.d(const AFmt: string);
 begin
-  TPlatformOSLog.Log(TLogType.Debug, AFmt, []);
+  TPlatformOSLog.Log(TLogType.Debug, ts(AFmt), []);
 end;
 
 class procedure TOSLog.d(const AFmt: string; const AParams: array of const);
 begin
-  TPlatformOSLog.Log(TLogType.Debug, AFmt, AParams);
+  TPlatformOSLog.Log(TLogType.Debug, ts(AFmt), AParams);
 end;
 
 class procedure TOSLog.e(const AFmt: string);
 begin
-  TPlatformOSLog.Log(TLogType.Error, AFmt, []);
+  TPlatformOSLog.Log(TLogType.Error, ts(AFmt), []);
 end;
 
 class procedure TOSLog.e(const AFmt: string; const AParams: array of const);
 begin
-  TPlatformOSLog.Log(TLogType.Error, AFmt, AParams);
+  TPlatformOSLog.Log(TLogType.Error, ts(AFmt), AParams);
 end;
 
 class procedure TOSLog.w(const AFmt: string);
 begin
-  TPlatformOSLog.Log(TLogType.Warning, AFmt, []);
+  TPlatformOSLog.Log(TLogType.Warning, ts(AFmt), []);
 end;
 
 class procedure TOSLog.w(const AFmt: string; const AParams: array of const);
 begin
-  TPlatformOSLog.Log(TLogType.Warning, AFmt, AParams);
+  TPlatformOSLog.Log(TLogType.Warning, ts(AFmt), AParams);
 end;
 
 end.

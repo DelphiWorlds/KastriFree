@@ -1,9 +1,8 @@
 {*******************************************************}
 {                                                       }
-{         DelphiWorlds Delphi Global Library            }
+{                    Kastri Free                        }
 {                                                       }
-{          Copyright(c) 2016 David Nottage              }
-{              All rights reserved                      }
+{          DelphiWorlds Cross-Platform Library          }
 {                                                       }
 {*******************************************************}
 
@@ -25,4 +24,11 @@
     {$DEFINE IOSSIM}
   {$ENDIF}
 {$ENDIF}
+
+// Indicates whether the app is being compiled for a mobile platform
+{$IF Defined(IOS) or Defined(ANDROID)}
+  {$DEFINE MOBILE}
+{$ENDIF}
+
+
 
