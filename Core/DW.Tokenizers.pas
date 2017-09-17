@@ -21,7 +21,7 @@ type
 
   TTokenizer = class(TObject)
   private
-    const cDefaultWhitespace: TCharArray = [#9, #32];
+    const cDefaultWhitespace: TCharArray = [#0, #9, #10, #13, #32, #160];
   private
     FText: string;
     FWhitespace: TCharArray;
@@ -88,12 +88,12 @@ begin
   LIndex := 0;
   while LIndex < Length(Result) + LLow do
   begin
-    while IsWhitespace(Text[LIndex + LLow]) and (LIndex < Length(Result) + LLow) do
+    while IsWhitespace(Result[LIndex + LLow]) and (LIndex < Length(Result) + LLow) do
       Inc(LIndex);
     if LIndex < Length(Result) + LLow then
     begin
       LStartIndex := LIndex;
-      while not IsWhitespace(Text[LIndex + LLow]) and (LIndex < Length(Result) + LLow) do
+      while not IsWhitespace(Result[LIndex + LLow]) and (LIndex < Length(Result) + LLow) do
         Inc(LIndex);
       LToken := Result.Substring(LStartIndex, LIndex - LStartIndex);
       LReplaceWith := AReplaceFunction(LToken);
