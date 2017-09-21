@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{A7519B55-D880-4BEB-8DEA-9B674548B8D0}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Application\ScheduledServiceDemo.dproj">
+            <Dependencies>Service\ScheduledService.dproj</Dependencies>
+        </Projects>
+        <Projects Include="Service\ScheduledService.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="ScheduledServiceDemo" DependsOnTargets="ScheduledService">
+        <MSBuild Projects="Application\ScheduledServiceDemo.dproj"/>
+    </Target>
+    <Target Name="ScheduledServiceDemo:Clean" DependsOnTargets="ScheduledService:Clean">
+        <MSBuild Projects="Application\ScheduledServiceDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ScheduledServiceDemo:Make" DependsOnTargets="ScheduledService:Make">
+        <MSBuild Projects="Application\ScheduledServiceDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="ScheduledService">
+        <MSBuild Projects="Service\ScheduledService.dproj"/>
+    </Target>
+    <Target Name="ScheduledService:Clean">
+        <MSBuild Projects="Service\ScheduledService.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ScheduledService:Make">
+        <MSBuild Projects="Service\ScheduledService.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="ScheduledServiceDemo;ScheduledService"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="ScheduledServiceDemo:Clean;ScheduledService:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="ScheduledServiceDemo:Make;ScheduledService:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
