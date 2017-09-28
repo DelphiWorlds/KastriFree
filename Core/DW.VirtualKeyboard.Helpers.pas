@@ -1,8 +1,19 @@
 unit DW.VirtualKeyboard.Helpers;
 
+{*******************************************************}
+{                                                       }
+{                    Kastri Free                        }
+{                                                       }
+{          DelphiWorlds Cross-Platform Library          }
+{                                                       }
+{*******************************************************}
+
+{$I DW.GlobalDefines.inc}
+
 interface
 
 uses
+  // FMX
   FMX.Types;
 
 type
@@ -16,6 +27,12 @@ type
 implementation
 
 uses
+//  {$IF Defined(IOS)}
+//  DW.VirtualKeyboardRect.iOS,
+//  {$ENDIF}
+  {$IF Defined(ANDROID)}
+  DW.VirtualKeyboardRect.Android,
+  {$ENDIF}
   FMX.Platform, FMX.VirtualKeyboard;
 
 { TVirtualKeyboard }
