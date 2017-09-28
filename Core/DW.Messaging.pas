@@ -13,7 +13,7 @@ unit DW.Messaging;
 interface
 
 uses
-  System.Messaging;
+  System.Messaging, System.Types;
 
 type
   TLaunchReason = (Unknown, Normal, LocationChange, LocalNotification, RemoteNotification);
@@ -21,6 +21,7 @@ type
   TOrientationDidChangeMessage = class(TMessage);
   TOrientationWillChangeMessage = class(TMessage);
   TApplicationLaunchMessage = class(TMessage<TLaunchReason>);
+  TVirtualKeyboardRectChangeMessage = class(TMessage<TRect>);
 
 implementation
 
