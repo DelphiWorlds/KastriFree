@@ -12,11 +12,17 @@ unit DW.VirtualKeyboardRect.Android;
 
 interface
 
+implementation
+
 uses
   // RTL
   System.Types, System.Messaging,
   // Android
-  Androidapi.JNI.GraphicsContentViewText, Androidapi.JNIBridge;
+  Androidapi.Helpers, Androidapi.JNI.Util, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNIBridge,
+  // FMX
+  FMX.Platform, FMX.Platform.Android,
+  // DW
+  DW.Messaging;
 
 type
   TVirtualKeyboardRect = class;
@@ -45,16 +51,6 @@ type
     constructor Create;
     destructor Destroy; override;
   end;
-
-implementation
-
-uses
-  // Android
-  Androidapi.Helpers, Androidapi.JNI.Util,
-  // FMX
-  FMX.Platform, FMX.Platform.Android,
-  // DW
-  DW.Messaging;
 
 { TGlobalLayoutListener }
 
