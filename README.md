@@ -20,9 +20,9 @@ These will be added to and updated over time as older articles are revisited
 
 Slack (https://slack.com/) users:
 
-I have a Slack team for Delphi Worlds, which contains a channel for discussion about Kastri Free (as well as other channels). If you would like to join, please contact me at:
+I have a Slack team for Delphi Worlds, which contains a channel for discussion about Kastri Free (as well as other channels). If you would like to join, please visit this link:
 
-  http://delphiworlds.com/#contact
+  http://slack.freedelphicode.com/
 
 
 
