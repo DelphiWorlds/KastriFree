@@ -2,12 +2,9 @@ unit DW.Compat.Android;
 
 {*******************************************************}
 {                                                       }
-{                      Kastri                           }
+{                    Kastri Free                        }
 {                                                       }
 {          DelphiWorlds Cross-Platform Library          }
-{                                                       }
-{          Copyright(c) 2017 David Nottage              }
-{              All rights reserved                      }
 {                                                       }
 {*******************************************************}
 
