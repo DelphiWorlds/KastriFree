@@ -132,7 +132,7 @@ begin
     begin
       LIsEscape := False;
     end
-    else if not LChar.IsInArray([#13, #10, #32]) then
+    else if not LChar.IsInArray([#13, #10, #32]) or LIsInString then
     begin
       LIsEOL := False;
       Result := Result + LChar;
