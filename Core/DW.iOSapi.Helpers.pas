@@ -20,12 +20,18 @@ uses
 ///   Converts values in an NSDictionary to JSON
 /// </summary>
 function NSDictionaryToJSON(const ADictionary: NSDictionary): string;
+/// <summary>
+///   Temporary helper function to support iPhone X quirks
+/// </summary>
+function IsIPhoneX: Boolean;
 
 implementation
 
 uses
+  // iOS
+  iOSapi.UIKit, iOSapi.Helpers,
   // Mac
-  Macapi.ObjCRuntime, Macapi.Helpers;
+  Macapi.ObjectiveC, Macapi.ObjCRuntime, Macapi.Helpers;
 
 function NSDictionaryToJSON(const ADictionary: NSDictionary): string;
 var
@@ -42,5 +48,26 @@ begin
   else
     Result := '';
 end;
+
+function IsIPhoneX: Boolean;
+const
+  cIPhoneXHeight = 812;
+var
+  LOrientation: UIInterfaceOrientation;
+begin
+  Result := False;
+  // Might be safe enough to just use statusBarOrientation
+  if TiOSHelper.SharedApplication.keyWindow = nil then
+    LOrientation := TiOSHelper.SharedApplication.statusBarOrientation
+  else
+    LOrientation := TiOSHelper.SharedApplication.keyWindow.rootViewController.interfaceOrientation;
+  case LOrientation of
+    UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown:
+      Result := TiOSHelper.MainScreen.bounds.size.height = cIPhoneXHeight;
+    UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight:
+      Result := TiOSHelper.MainScreen.bounds.size.width = cIPhoneXHeight;
+  end;
+end;
+
 
 end.
