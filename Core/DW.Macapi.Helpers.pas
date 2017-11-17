@@ -48,10 +48,18 @@ function StrToObjectID(const AStr: string): Pointer;
 ///   Converts a string into an CFStringRef
 /// </summary>
 function StrToCFStringRef(const AStr: string): CFStringRef;
+/// <summary>
+///   Converts GMT to local time
+/// </summary>
+function GetLocalDateTime(const ADateTime: TDateTime): TDateTime;
+function GetMainBundle: NSBundle;
+function GetBundleValue(const AKey: string): string;
 
 implementation
 
 uses
+  // RTL
+  System.DateUtils,
   // Mac
   Macapi.ObjectiveC, Macapi.Helpers;
 
@@ -105,6 +113,26 @@ end;
 function StrToCFStringRef(const AStr: string): CFStringRef;
 begin
   Result := CFStringCreateWithCharacters(kCFAllocatorDefault, PChar(AStr), Length(AStr));
+end;
+
+function GetLocalDateTime(const ADateTime: TDateTime): TDateTime;
+begin
+  Result := IncSecond(ADateTime, TNSTimeZone.Wrap(TNSTimeZone.OCClass.localTimeZone).secondsFromGMT);
+end;
+
+function GetMainBundle: NSBundle;
+begin
+  Result := TNSBundle.Wrap(TNSBundle.OCClass.mainBundle);
+end;
+
+function GetBundleValue(const AKey: string): string;
+var
+  LValueObject: Pointer;
+begin
+  Result := '';
+  LValueObject := GetMainBundle.infoDictionary.objectForKey(StrToObjectID(AKey));
+  if LValueObject <> nil then
+    Result := NSStrToStr(TNSString.Wrap(LValueObject));
 end;
 
 end.
