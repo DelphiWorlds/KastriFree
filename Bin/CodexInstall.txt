@@ -17,6 +17,9 @@ Codex installs to a menu item in the Tools menu in Delphi.
 
 Apologies for the scant documentation; I haven't had much time to do any as yet.
 
+**********************************************************************************************
+********************         Use this expert at your own risk       ************************** 
+**********************************************************************************************
 
 Builder menu item:
 
