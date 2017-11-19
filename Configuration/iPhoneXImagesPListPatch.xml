@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<patch>
+  <key>UILaunchImages</key>
+  <array relation="1">
+    <dict>
+      <key>UILaunchImageSize</key>
+      <string>{375, 812}</string>
+      <key>UILaunchImageName</key>
+      <string>Default-812h</string>
+      <key>UILaunchImageMinimumOSVersion</key>
+      <string>8.0</string>
+      <key>UILaunchImageOrientation</key>
+      <string>Portrait</string>
+    </dict>
+    <dict>
+      <key>UILaunchImageSize</key>
+      <string>{812, 375}</string>
+      <key>UILaunchImageName</key>
+      <string>Default-Landscape-812h</string>
+      <key>UILaunchImageMinimumOSVersion</key>
+      <string>8.0</string>
+      <key>UILaunchImageOrientation</key>
+      <string>Landscape</string>
+    </dict>
+  </array>
+</patch>
