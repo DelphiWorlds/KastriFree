@@ -68,7 +68,7 @@ end;
 
 class function TJsonHelper.Tidy(const AJsonValue: TJsonValue; const AIndentSize: Integer = 2): string;
 begin
-  Tidy(AJsonValue.ToString, AIndentSize);
+  Result := Tidy(AJsonValue.ToString, AIndentSize);
 end;
 
 class function TJsonHelper.Tidy(const AJson: string; const AIndentSize: Integer = 2): string;
