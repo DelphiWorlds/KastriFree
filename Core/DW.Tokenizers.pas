@@ -55,7 +55,6 @@ end;
 procedure TTokenizer.Tokenize(const ATokenProc: TTokenProc);
 var
   LIndex, LLastIndex, LStartIndex, LLow: Integer;
-  LToken: string;
 begin
   if Text.Trim.IsEmpty then
     Exit; // <======
