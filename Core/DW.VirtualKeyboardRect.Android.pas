@@ -16,9 +16,9 @@ implementation
 
 uses
   // RTL
-  System.Types, System.Messaging,
+  System.Types, System.Messaging, System.SysUtils,
   // Android
-  Androidapi.Helpers, Androidapi.JNI.Util, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNIBridge,
+  Androidapi.Helpers, Androidapi.JNI.Util, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNIBridge, Androidapi.JNI.App,
   // FMX
   FMX.Platform, FMX.Platform.Android,
   // DW
