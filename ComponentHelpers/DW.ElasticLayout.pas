@@ -75,7 +75,7 @@ begin
   Result := TAlignLayout.None;
   for I := 0 to ControlsCount - 1 do
   begin
-    if not Controls[I].Visible then
+    if not Controls[I].Visible or (Controls[I].Align = TAlignLayout.Contents) then
       Continue;
     if (Result = TAlignLayout.None) and (Controls[I].Align <> TAlignLayout.None) then
       Result := Controls[I].Align;
@@ -86,7 +86,7 @@ end;
 
 function TLayout.GetControlSize(const AControl: TControl; const AGetWidth: Boolean): Single;
 begin
-  if not AControl.Visible then
+  if not AControl.Visible or (AControl.Align = TAlignLayout.Contents) then
     Exit(0); // <======
   if AGetWidth then
     Result := AControl.Width + AControl.Margins.Left + AControl.Margins.Right
