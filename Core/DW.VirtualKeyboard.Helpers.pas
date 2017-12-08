@@ -27,9 +27,6 @@ type
 implementation
 
 uses
-//  {$IF Defined(IOS)}
-//  DW.VirtualKeyboardRect.iOS,
-//  {$ENDIF}
   {$IF Defined(ANDROID)}
   DW.VirtualKeyboardRect.Android,
   {$ENDIF}
