@@ -44,6 +44,7 @@ type
   private
     FTokenRefreshListener: TTokenRefreshNotificationListener;
   protected
+    function Start: Boolean; override;
     function GetToken: string; override;
     procedure HandleTokenRefresh;
   public
@@ -54,7 +55,7 @@ implementation
 
 uses
   // RTL
-  System.Classes,
+  System.Classes, System.SysUtils,
   // Mac
   Macapi.Helpers, Macapi.ObjCRuntime,
   // iOS
@@ -87,15 +88,26 @@ var
   LName: Pointer;
 begin
   inherited;
-  TFIRApp.OCClass.configure;
   FTokenRefreshListener := TTokenRefreshNotificationListener.Create(Self);
   LName := NSObjectToID(kFIRInstanceIdTokenRefreshNotification);
   TiOSHelper.DefaultNotificationCenter.addObserver(FTokenRefreshListener.GetObjectID, sel_getUid('onTokenRefresh:'), LName, nil);
 end;
 
+function TPlatformFirebaseInstanceId.Start: Boolean;
+begin
+  Result := False;
+  try
+    TFIRApp.OCClass.configure;
+    Result := True;
+  except
+    on E: Exception do
+      DoException(E)
+  end;
+end;
+
 function TPlatformFirebaseInstanceId.GetToken: string;
 begin
-  Result := NSStrToStr(TFIRInstanceId.Wrap(TFIRInstanceId.OCClass.instanceID).token)
+  Result := NSStrToStr(TFIRInstanceId.Wrap(TFIRInstanceId.OCClass.instanceID).token);
 end;
 
 procedure TPlatformFirebaseInstanceId.HandleTokenRefresh;

@@ -5,8 +5,8 @@
         <FrameworkType>FMX</FrameworkType>
         <MainSource>KastriFree.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
-        <Platform Condition="'$(Platform)'==''">iOSDevice64</Platform>
+        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>1119</TargetedPlatforms>
         <AppType>Application</AppType>
     </PropertyGroup>
@@ -330,8 +330,6 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="..\..\ComponentHelpers\DW.DragDropLayout.pas"/>
-        <DCCReference Include="..\..\ComponentHelpers\DW.DragListenerListView.pas"/>
         <DCCReference Include="..\..\ComponentHelpers\DW.ElasticLayout.pas"/>
         <DCCReference Include="..\..\Core\DW.Base64.Helpers.pas"/>
         <DCCReference Include="..\..\Core\DW.Forms.Helpers.pas"/>
@@ -390,7 +388,7 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win32\Debug\KastriFree.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="S:\Binaries\Delphi\BlackHole\KastriFree.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>KastriFree.exe</RemoteName>
                         <Overwrite>true</Overwrite>

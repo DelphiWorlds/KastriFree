@@ -14,12 +14,11 @@ interface
 
 uses
   // RTL
-  System.Classes, System.Messaging,
-  // DW
-  DW.Firebase.InstanceID;
+  System.Classes, System.Messaging, System.SysUtils;
 
 type
   TFirebaseMessageReceivedEvent = procedure(Sender: TObject; const APayload: TStrings) of object;
+  TFirebaseTokenReceivedEvent = procedure(Sender: TObject; const AToken: string) of object;
 
   TFirebaseMessaging = class;
 
@@ -37,8 +36,11 @@ type
     procedure DoApplicationBecameActive; virtual;
     procedure DoApplicationEnteredBackground; virtual;
     procedure DoAuthorizationRefused;
+    procedure DoException(const AException: Exception);
     procedure DoMessageReceived(const APayload: TStrings);
+    procedure DoTokenReceived(const AToken: string);
     procedure SubscribeToTopic(const ATopicName: string); virtual; abstract;
+    function Start: Boolean; virtual;
     procedure UnsubscribeFromTopic(const ATopicName: string); virtual; abstract;
     property IsConnected: Boolean read FIsConnected write FIsConnected;
     property IsForeground: Boolean read FIsForeground write FIsForeground;
@@ -49,9 +51,12 @@ type
 
   TFirebaseMessaging = class(TObject)
   private
+    FIsActive: Boolean;
     FPlatformFirebaseMessaging: TCustomPlatformFirebaseMessaging;
+    FToken: string;
     FOnAuthorizationRefused: TNotifyEvent;
     FOnMessageReceived: TFirebaseMessageReceivedEvent;
+    FOnTokenReceived: TFirebaseTokenReceivedEvent;
     procedure ApplicationEventMessageHandler(const Sender: TObject; const M: TMessage);
     function GetIsConnected: Boolean;
     procedure PushFailToRegisterMessageHandler(const Sender: TObject; const M: TMessage);
@@ -59,16 +64,21 @@ type
   protected
     procedure DoAuthorizationRefused;
     procedure DoMessageReceived(const APayload: TStrings);
+    procedure DoTokenReceived(const AToken: string);
   public
     constructor Create;
     destructor Destroy; override;
     procedure Connect;
     procedure Disconnect;
     procedure SubscribeToTopic(const ATopicName: string);
+    function Start: Boolean;
     procedure UnsubscribeFromTopic(const ATopicName: string);
+    property IsActive: Boolean read FIsActive;
     property IsConnected: Boolean read GetIsConnected;
+    property Token: string read FToken;
     property OnAuthorizationRefused: TNotifyEvent read FOnAuthorizationRefused write FOnAuthorizationRefused;
     property OnMessageReceived: TFirebaseMessageReceivedEvent read FOnMessageReceived write FOnMessageReceived;
+    property OnTokenReceived: TFirebaseTokenReceivedEvent read FOnTokenReceived write FOnTokenReceived;
   end;
 
 implementation
@@ -76,11 +86,13 @@ implementation
 uses
   // FMX
   FMX.Platform,
+  DW.OSLog,
   {$IF Defined(IOS)}
   DW.Firebase.Messaging.iOS;
-  {$ENDIF}
-  {$IF Defined(ANDROID)}
+  {$ELSEIF Defined(ANDROID)}
   DW.Firebase.Messaging.Android;
+  {$ELSE}
+  DW.Firebase.Default;
   {$ENDIF}
 
 { TCustomPlatformFirebaseMessaging }
@@ -95,6 +107,11 @@ destructor TCustomPlatformFirebaseMessaging.Destroy;
 begin
   //
   inherited;
+end;
+
+procedure TCustomPlatformFirebaseMessaging.DoException(const AException: Exception);
+begin
+  //
 end;
 
 procedure TCustomPlatformFirebaseMessaging.ApplicationBecameActive;
@@ -130,6 +147,16 @@ end;
 procedure TCustomPlatformFirebaseMessaging.DoMessageReceived(const APayload: TStrings);
 begin
   FFirebaseMessaging.DoMessageReceived(APayload);
+end;
+
+procedure TCustomPlatformFirebaseMessaging.DoTokenReceived(const AToken: string);
+begin
+  FFirebaseMessaging.DoTokenReceived(AToken);
+end;
+
+function TCustomPlatformFirebaseMessaging.Start: Boolean;
+begin
+  Result := False;
 end;
 
 { TFirebaseMessaging }
@@ -174,6 +201,14 @@ begin
     FOnMessageReceived(Self, APayload);
 end;
 
+procedure TFirebaseMessaging.DoTokenReceived(const AToken: string);
+begin
+  FToken := AToken;
+  TOSLog.d('FCM Token: %s', [FToken]);
+  if Assigned(FOnTokenReceived) then
+    FOnTokenReceived(Self, AToken);
+end;
+
 function TFirebaseMessaging.GetIsConnected: Boolean;
 begin
   Result := FPlatformFirebaseMessaging.IsConnected;
@@ -215,6 +250,14 @@ begin
   finally
     LPayload.Free;
   end;
+end;
+
+function TFirebaseMessaging.Start: Boolean;
+begin
+  Result := FIsActive;
+  if not Result then
+    Result := FPlatformFirebaseMessaging.Start;
+  FIsActive := Result;
 end;
 
 procedure TFirebaseMessaging.SubscribeToTopic(const ATopicName: string);

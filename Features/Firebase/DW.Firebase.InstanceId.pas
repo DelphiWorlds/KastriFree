@@ -12,7 +12,11 @@ unit DW.Firebase.InstanceId;
 
 interface
 
+uses
+  System.SysUtils;
+
 type
+  TFirebaseExceptionEvent = procedure(Sender: TObject; const AException: Exception) of object;
   TFirebaseTokenRefreshEvent = procedure(Sender: TObject; const AToken: string) of object;
 
   TFirebaseInstanceId = class;
@@ -21,6 +25,8 @@ type
   private
     FFirebaseInstanceId: TFirebaseInstanceId;
   protected
+    function Start: Boolean; virtual; abstract;
+    procedure DoException(const AException: Exception);
     procedure DoTokenRefresh(const AToken: string);
     function GetToken: string; virtual; abstract;
   public
@@ -29,15 +35,21 @@ type
 
   TFirebaseInstanceId = class(TObject)
   private
+    FIsActive: Boolean;
     FPlatformFirebaseInstanceId: TCustomPlatformFirebaseInstanceId;
+    FOnException: TFirebaseExceptionEvent;
     FOnTokenRefresh: TFirebaseTokenRefreshEvent;
     function GetToken: string;
   protected
+    procedure DoException(const AException: Exception);
     procedure DoTokenRefresh(const AToken: string);
   public
     constructor Create;
     destructor Destroy; override;
+    function Start: Boolean;
+    property IsActive: Boolean read FIsActive;
     property Token: string read GetToken;
+    property OnException: TFirebaseExceptionEvent read FOnException write FOnException;
     property OnTokenRefresh: TFirebaseTokenRefreshEvent read FOnTokenRefresh write FOnTokenRefresh;
   end;
 
@@ -46,9 +58,10 @@ implementation
 uses
   {$IF Defined(IOS)}
   DW.Firebase.InstanceId.iOS;
-  {$ENDIF}
-  {$IF Defined(ANDROID)}
+  {$ELSEIF Defined(ANDROID)}
   DW.Firebase.InstanceId.Android;
+  {$ELSE}
+  DW.Firebase.Default;
   {$ENDIF}
 
 { TCustomPlatformFirebaseInstanceId }
@@ -57,6 +70,11 @@ constructor TCustomPlatformFirebaseInstanceId.Create(const AFirebaseInstanceId: 
 begin
   inherited Create;
   FFirebaseInstanceId := AFirebaseInstanceId;
+end;
+
+procedure TCustomPlatformFirebaseInstanceId.DoException(const AException: Exception);
+begin
+  //
 end;
 
 procedure TCustomPlatformFirebaseInstanceId.DoTokenRefresh(const AToken: string);
@@ -78,6 +96,12 @@ begin
   inherited;
 end;
 
+procedure TFirebaseInstanceId.DoException(const AException: Exception);
+begin
+  if Assigned(FOnException) then
+    FOnException(Self, AException);
+end;
+
 procedure TFirebaseInstanceId.DoTokenRefresh(const AToken: string);
 begin
   if Assigned(FOnTokenRefresh) then
@@ -87,6 +111,13 @@ end;
 function TFirebaseInstanceId.GetToken: string;
 begin
   Result := FPlatformFirebaseInstanceId.GetToken;
+end;
+
+function TFirebaseInstanceId.Start: Boolean;
+begin
+  Result := FIsActive;
+  if not Result then
+    Result := FPlatformFirebaseInstanceId.Start;
 end;
 
 end.

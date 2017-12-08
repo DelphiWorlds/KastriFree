@@ -41,9 +41,16 @@ type
   TFIRMessagingDelegate = class(TOCLocal, FIRMessagingDelegate)
   private
     FFirebaseMessaging: TPlatformFirebaseMessaging;
+    procedure ReceivedMessage(remoteMessage: FIRMessagingRemoteMessage);
   public
     constructor Create(const AFirebaseMessaging: TPlatformFirebaseMessaging);
     procedure applicationReceivedRemoteMessage(remoteMessage: FIRMessagingRemoteMessage); cdecl;
+    [MethodName('messaging:didReceiveMessage:')]
+    procedure didReceiveMessage(messaging: FIRMessaging; remoteMessage: FIRMessagingRemoteMessage); cdecl;
+    [MethodName('messaging:didRefreshRegistrationToken:')]
+    procedure didRefreshRegistrationToken(messaging: FIRMessaging; fcmToken: NSString); cdecl;
+    [MethodName('messaging:didReceiveRegistrationToken:')]
+    procedure didReceiveRegistrationToken(messaging: FIRMessaging; fcmToken: NSString); cdecl;
   end;
 
   TPlatformFirebaseMessaging = class(TCustomPlatformFirebaseMessaging)
@@ -52,13 +59,16 @@ type
     FUserNotificationCenterDelegate: TUserNotificationCenterDelegate;
     function Messaging: FIRMessaging;
     procedure FIRMessagingConnectCompletionHandler(error: NSError);
+    procedure PushDeviceTokenMessageHandler(const Sender: TObject; const M: TMessage);
     procedure RegisterRemoteNotificationsIOS10OrLater(const AOptions: UNAuthorizationOptions);
     procedure RegisterRemoteNotificationsIOS8OrLater(const AOptions: UNAuthorizationOptions);
     procedure RequestAuthorizationWithOptionsCompletionHandler(granted: Boolean; error: NSError);
   protected
     procedure Connect; override;
     procedure Disconnect; override;
+    procedure TokenReceived(const AToken: string);
     procedure SubscribeToTopic(const ATopicName: string); override;
+    function Start: Boolean; override;
     procedure UnsubscribeFromTopic(const ATopicName: string); override;
   public
     constructor Create(const AFirebaseMessaging: TFirebaseMessaging); override;
@@ -77,7 +87,12 @@ uses
   // FMX
   FMX.Platform,
   // DW
-  DW.Macapi.ObjCRuntime, DW.iOSapi.Helpers;
+  DW.OSLog, DW.Macapi.ObjCRuntime, DW.iOSapi.Helpers;
+
+function StringToNSData(const AString: string): NSData;
+begin
+  Result := StrToNSStr(AString).dataUsingEncoding(NSUTF8StringEncoding);
+end;
 
 { TUserNotificationCenterDelegate }
 
@@ -124,10 +139,31 @@ begin
 end;
 
 procedure TFIRMessagingDelegate.applicationReceivedRemoteMessage(remoteMessage: FIRMessagingRemoteMessage);
+begin
+  ReceivedMessage(remoteMessage);
+end;
+
+procedure TFIRMessagingDelegate.didReceiveMessage(messaging: FIRMessaging; remoteMessage: FIRMessagingRemoteMessage);
+begin
+  ReceivedMessage(remoteMessage);
+end;
+
+procedure TFIRMessagingDelegate.didReceiveRegistrationToken(messaging: FIRMessaging; fcmToken: NSString);
+begin
+  FFirebaseMessaging.TokenReceived(NSStrToStr(fcmToken));
+end;
+
+procedure TFIRMessagingDelegate.didRefreshRegistrationToken(messaging: FIRMessaging; fcmToken: NSString);
+begin
+  FFirebaseMessaging.TokenReceived(NSStrToStr(fcmToken));
+end;
+
+procedure TFIRMessagingDelegate.ReceivedMessage(remoteMessage: FIRMessagingRemoteMessage);
 var
   LJSON: string;
 begin
   LJSON := NSDictionaryToJSON(remoteMessage.appData);
+  TOSLog.d('FCM Incoming Message: %s', [LJSON]);
   TMessageManager.DefaultManager.SendMessage(nil, TPushRemoteNotificationMessage.Create(TPushNotificationData.Create(LJSON)));
 end;
 
@@ -138,6 +174,9 @@ var
   LOptions: UNAuthorizationOptions;
 begin
   inherited;
+  TMessageManager.DefaultManager.SubscribeToMessage(TPushDeviceTokenMessage, PushDeviceTokenMessageHandler);
+  FFIRMessagingDelegate := TFIRMessagingDelegate.Create(self);
+  TFIRMessaging.Wrap(TFIRMessaging.OCClass.messaging).setDelegate(FFIRMessagingDelegate.GetObjectID);
   LOptions := UNAuthorizationOptionSound or UNAuthorizationOptionAlert or UNAuthorizationOptionBadge;
   if TOSVersion.Check(10) then
     RegisterRemoteNotificationsIOS10OrLater(LOptions)
@@ -149,8 +188,25 @@ end;
 
 destructor TPlatformFirebaseMessaging.Destroy;
 begin
-  //
+  TMessageManager.DefaultManager.Unsubscribe(TPushDeviceTokenMessage, PushDeviceTokenMessageHandler);
   inherited;
+end;
+
+function TPlatformFirebaseMessaging.Start: Boolean;
+begin
+  Result := False;
+  try
+    TFIRApp.OCClass.configure;
+    Result := True;
+  except
+    on E: Exception do
+      DoException(E);
+  end;
+end;
+
+procedure TPlatformFirebaseMessaging.PushDeviceTokenMessageHandler(const Sender: TObject; const M: TMessage);
+begin
+  // Messaging.setAPNSToken(StringToNSData(TPushDeviceTokenMessage(M).Value.Token));
 end;
 
 procedure TPlatformFirebaseMessaging.Connect;
@@ -167,7 +223,17 @@ end;
 
 procedure TPlatformFirebaseMessaging.FIRMessagingConnectCompletionHandler(error: NSError);
 begin
-  IsConnected := True;
+  IsConnected := error = nil;
+end;
+
+procedure TPlatformFirebaseMessaging.TokenReceived(const AToken: string);
+begin
+  TThread.Queue(nil,
+    procedure
+    begin
+      DoTokenReceived(AToken);
+    end
+  );
 end;
 
 procedure TPlatformFirebaseMessaging.RegisterRemoteNotificationsIOS10OrLater(const AOptions: UNAuthorizationOptions);
@@ -175,8 +241,6 @@ begin
   FUserNotificationCenterDelegate := TUserNotificationCenterDelegate.Create(self);
   TUNUserNotificationCenter.OCClass.currentNotificationCenter.setdelegate(FUserNotificationCenterDelegate.GetObjectID);
   UserNotificationCenter.requestAuthorizationWithOptions(AOptions, RequestAuthorizationWithOptionsCompletionHandler);
-  FFIRMessagingDelegate := TFIRMessagingDelegate.Create(self);
-  TFIRMessaging.Wrap(TFIRMessaging.OCClass.messaging).setRemoteMessageDelegate(FFIRMessagingDelegate.GetObjectID);
   TiOSHelper.SharedApplication.registerForRemoteNotifications;
 end;
 

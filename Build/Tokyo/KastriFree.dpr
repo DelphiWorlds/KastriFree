@@ -3,8 +3,6 @@ program KastriFree;
 uses
   System.StartUpCopy,
   FMX.Forms,
-  DW.DragDropLayout in '..\..\ComponentHelpers\DW.DragDropLayout.pas',
-  DW.DragListenerListView in '..\..\ComponentHelpers\DW.DragListenerListView.pas',
   DW.ElasticLayout in '..\..\ComponentHelpers\DW.ElasticLayout.pas',
   DW.Base64.Helpers in '..\..\Core\DW.Base64.Helpers.pas',
   DW.Forms.Helpers in '..\..\Core\DW.Forms.Helpers.pas',
