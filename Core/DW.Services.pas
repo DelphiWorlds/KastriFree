@@ -84,7 +84,6 @@ begin
     FServices.List.Add(AServiceGUID, AService);
 end;
 
-
 class function TServices.Get(const AServiceGUID: TGUID; out AService): Boolean;
 begin
   if not FServices.List.ContainsKey(AServiceGUID) then
