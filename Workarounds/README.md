@@ -12,8 +12,7 @@ e.g. RSP-19525.txt refers to:
 
 Each file will have a link to the report in it, plus instructions on how to apply the workaround.
 
-***USE THESE WORKAROUNDS AT YOUR OWN RISK***
-***NO LIABILITY WILL BE ACCEPTED***
+***USE THESE WORKAROUNDS AT YOUR OWN RISK - NO LIABILITY WILL BE ACCEPTED***
 
 However, please report any issues to:
 
