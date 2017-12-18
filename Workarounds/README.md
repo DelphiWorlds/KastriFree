@@ -15,6 +15,8 @@ Each file will have a link to the report in it, plus instructions on how to appl
 ***USE THESE WORKAROUNDS AT YOUR OWN RISK***
 ***NO LIABILITY WILL BE ACCEPTED***
 
+However, please report any issues to:
 
+  https://github.com/DelphiWorlds/KastriFree/issues
 
 
