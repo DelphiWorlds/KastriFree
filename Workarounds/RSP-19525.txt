@@ -1,0 +1,28 @@
+Quality Portal Report:
+
+  https://quality.embarcadero.com/browse/RSP-19525
+
+Applies to:
+
+Delphi Tokyo 10.2.2
+
+Instructions:
+
+1. Copy FMX.Ani.pas from source\fmx in the Delphi source and put it your project path
+2. Copy https://github.com/DelphiWorlds/KastriFree/blob/master/Core/DW.ThreadedTimer.pas and put it in your project path
+3. Modify FMX.Ani.pas:
+  3.1 Add DW.ThreadedTimer to the implementation uses clause of the copy of FMX.Ani
+  3.2 Change the line:
+
+      TAniThread = class(TTimer)
+
+      to:
+
+      TAniThread = class(TThreadedTimer)
+      
+4. Rebuild your project
+
+
+
+
+       
