@@ -1,0 +1,97 @@
+Quality Portal Report:
+
+  https://quality.embarcadero.com/browse/RSP-17272
+
+Applies to:
+
+Delphi 10.2 Tokyo, Delphi 10.1 Berlin, and possibly earlier 
+
+Instructions:
+
+1. Ensure that you have copies of FMX.VirtualKeyboardiOS.pas and FMX.Platform.iOS.pas from source\fmx in your project path
+2. Ensure that https://github.com/DelphiWorlds/KastriFree/blob/master/Core/DW.iOSapi.Helpers.pas is in your project path
+3. Modify FMX.VirtualKeyboardiOS.pas:
+  3.1 Add DW.iOSapi.Helpers to the implementation uses clause
+  3.2 Add the following code to just before the TCocoaVirtualKeyboardService.GetToolbarFrame method:
+
+      // DW - https://quality.embarcadero.com/browse/RSP-17272
+      function StatusBarOffset: Single;
+      var
+        LSize: CGSize;
+      begin
+        LSize := SharedApplication.statusBarFrame.size;
+        Result := Min(LSize.height, LSize.width);
+        // Sadly, hard-coding might be the only solution here
+        if not IsIPhoneX and (Result > 20) then
+          Result := Result - 20
+        else
+          Result := 0;
+      end;
+
+  3.3 Modify the TCocoaVirtualKeyboardService.GetToolbarFrame method to look like this:
+
+      function TCocoaVirtualKeyboardService.GetToolbarFrame: NSRect;
+      var
+        ScreenRect: NSRect;
+        InterfaceOrientation: TScreenOrientation;
+        ScreenService: IFMXScreenService;
+      begin
+        ScreenRect := MainScreen.bounds;
+        Result.origin.x := 0;
+        Result.size.height := ToolbarHeight;
+
+        if TOSVersion.Check(8) then
+          InterfaceOrientation := TScreenOrientation.Portrait
+        else if TPlatformServices.Current.SupportsPlatformService(IFMXScreenService, ScreenService) then
+          InterfaceOrientation := ScreenService.GetScreenOrientation
+        else
+          InterfaceOrientation := TScreenOrientation.Portrait;
+
+        case InterfaceOrientation of
+          TScreenOrientation.Portrait,
+          TScreenOrientation.InvertedPortrait:
+            begin
+              if (FToolBar <> nil) and ToolbarVisible and IsToolbarEnabled then
+                // DW - https://quality.embarcadero.com/browse/RSP-17272
+                // Subtracting StatusBarOffset when it's likely that the in-call status is showing
+                Result.origin.y := ScreenRect.size.height - FKeyboardFrame.size.height - FToolBar.bounds.size.height - StatusBarOffset
+              else
+                Result.origin.y := ScreenRect.size.height;
+              Result.size.width := ScreenRect.size.width;
+            end;
+          TScreenOrientation.Landscape,
+          TScreenOrientation.InvertedLandscape:
+            begin
+              if (FToolBar <> nil) and ToolbarVisible and IsToolbarEnabled then
+                // DW - https://quality.embarcadero.com/browse/RSP-17272
+                // Subtracting StatusBarOffset when it's likely that the in-call status is showing
+                Result.origin.y := ScreenRect.size.width - FKeyboardFrame.size.height - FToolBar.bounds.size.height - StatusBarOffset
+              else
+                Result.origin.y := ScreenRect.size.width;
+              Result.size.width := ScreenRect.size.height;
+            end;
+        end;
+      end;
+
+4. Modify FMX.Platform.iOS.pas:
+  4.1 Modify the TFMXViewController.viewDidLayoutSubviews method to look like this:
+
+      procedure TFMXViewController.viewDidLayoutSubviews;
+      begin
+        // Send notification to our controls, that UIViewController changed frame
+        if FRootViewSavedFrame <> View.Frame then
+        begin
+          TiOSHelper.DefaultNotificationCenter.postNotificationName(StringToID(FMXViewControllerFrameChanged), nil);
+          // DW - https://quality.embarcadero.com/browse/RSP-17272
+          // View size may have changed due to in-call status changing
+          TiOSHelper.DefaultNotificationCenter.postNotificationName(StringToID('UIKeyboardDidChangeFrameNotification'), nil);
+          FRootViewSavedFrame := View.frame;
+        end;
+      end;
+
+5. Rebuild your project
+
+
+
+
+       
