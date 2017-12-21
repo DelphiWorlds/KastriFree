@@ -1,0 +1,35 @@
+List of some reports that I have been tracking, that have workarounds in the reports themselves:
+
+https://quality.embarcadero.com/browse/RSP-15717
+Declaration for CLRegion.initCircularRegionWithCenter is incorrect
+
+https://quality.embarcadero.com/browse/RSP-17771
+Form.StyleBook change is not drawn correctly on Android by Tokyo
+
+https://quality.embarcadero.com/browse/RSP-17989
+Selecting a cell in TGrid on Android is very unreliable
+
+https://quality.embarcadero.com/browse/RSP-18329
+FireDAC using SQLite is incompatible with the Firebase Cloud Messaging SDKs on iOS
+
+https://quality.embarcadero.com/browse/RSP-18536
+GetGMTDateTime function in Macapi.Helpers and FMX.Helpers.Mac does not support fractional time zones
+
+https://quality.embarcadero.com/browse/RSP-18797
+Make CanvasHelper of TCanvasGpu public [Feature Request]
+
+https://quality.embarcadero.com/browse/RSP-18961
+ExecuteTarget method of TTakePhotoFromLibraryAction and TTakePhotoFromCameraAction no longer uses Target parameter
+
+https://quality.embarcadero.com/browse/RSP-19589
+TApplicationEvent not implemented in FMX/Win32 applications
+
+https://quality.embarcadero.com/browse/RSP-19594
+FMX with GlobalUseDX := False causes GDI Object Leak, causing crash.
+
+
+
+
+
+
+       
