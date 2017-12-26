@@ -65,7 +65,7 @@ end;
 
 procedure TThreadedTimer.DoInterval;
 begin
-  TThread.Queue(nil,
+  TThread.Synchronize(nil,
     procedure
     begin
       DoOnTimer;
