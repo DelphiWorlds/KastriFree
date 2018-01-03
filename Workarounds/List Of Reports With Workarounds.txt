@@ -21,11 +21,20 @@ Make CanvasHelper of TCanvasGpu public [Feature Request]
 https://quality.embarcadero.com/browse/RSP-18961
 ExecuteTarget method of TTakePhotoFromLibraryAction and TTakePhotoFromCameraAction no longer uses Target parameter
 
+https://quality.embarcadero.com/browse/RSP-19322
+iOS Camera Action with "NeedSaveToAlbum" fails[Crash] 
+
+https://quality.embarcadero.com/browse/RSP-19579
+Memory Leak with Delphi 10.2.2 (specifically, style object leaks)
+
 https://quality.embarcadero.com/browse/RSP-19589
 TApplicationEvent not implemented in FMX/Win32 applications
 
 https://quality.embarcadero.com/browse/RSP-19594
 FMX with GlobalUseDX := False causes GDI Object Leak, causing crash.
+
+https://quality.embarcadero.com/browse/RSP-19655
+Implement FullScreen on iOS including visible status bar
 
 
 
