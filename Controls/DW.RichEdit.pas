@@ -164,6 +164,7 @@ end;
 
 constructor TCustomRichEdit.Create(AOwner: TComponent);
 begin
+  FColor := TAlphaColors.White;
   inherited;
   ControlType := TControlType.Platform;
 end;

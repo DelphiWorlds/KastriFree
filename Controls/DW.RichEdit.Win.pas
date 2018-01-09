@@ -36,11 +36,13 @@ type
   private
     FConverter: TConversion;
     FModel: TCustomRichEditModel;
+    procedure ColorChanged;
     function GetRichEdit: TCustomRichEdit;
     procedure LoadFromStream(const AStream: TStream; AEncoding: TEncoding);
     procedure LoadFromStreamHandler(Sender: TObject; const AStream: TStream; const AEncoding: TEncoding);
     function PlainText: Boolean;
   protected
+    procedure CreateHandle; override;
     procedure CreateParams(var Params: TCreateParams); override;
     function DefineModelClass: TDataModelClass; override;
     procedure PMRichEditColorChanged(var Message: TDispatchMessage); message PM_RICHEDIT_COLOR_CHANGED;
@@ -287,6 +289,12 @@ begin
     inherited DefaultHandler(Message);
 end;
 
+procedure TWinNativeRichEdit.CreateHandle;
+begin
+  inherited;
+  ColorChanged;
+end;
+
 procedure TWinNativeRichEdit.CreateParams(var Params: TCreateParams);
 const
   RichEditClassName = 'RICHEDIT20W';
@@ -322,6 +330,11 @@ begin
 end;
 
 procedure TWinNativeRichEdit.PMRichEditColorChanged(var Message: TDispatchMessage);
+begin
+  ColorChanged;
+end;
+
+procedure TWinNativeRichEdit.ColorChanged;
 begin
   SendMessage(Handle, EM_SETBKGNDCOLOR, 0, TAlphaColors.ColorToRGB(RichEdit.Color));
 end;
