@@ -28,11 +28,13 @@ package com.delphiworlds.kastri;
     <meta-data android:name="DWMultiBroadcastReceiver.KEY_RESTART_AFTER_REPLACE" android:value="true" />
     <meta-data android:name="DWMultiBroadcastReceiver.KEY_START_ON_BOOT" android:value="true" />
 
-    <!-- **** This is the BroadcastReceiver **** -->
+    <!-- **** This is the BroadcastReceiver. It handles the intents listed in the intent-filter tag. 
+      Note: QUICKBOOT_POWERON is the intent for a restart, as opposed to a cold boot **** -->
     <receiver android:name="com.delphiworlds.kastri.DWMultiBroadcastReceiver">
       <intent-filter>
         <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
         <action android:name="android.intent.action.BOOT_COMPLETED"/>
+        <action android:name="android.intent.action.QUICKBOOT_POWERON" />
       </intent-filter>
     </receiver>
   </application>
@@ -83,6 +85,7 @@ public class DWMultiBroadcastReceiver extends BroadcastReceiver {
     // This action will start the application or service on bootup of the device
     // Note: This action also needs <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />  in the manifest    
     if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
+      Log.v(TAG, "Intent.ACTION_BOOT_COMPLETED");
       if ((metaData != null) && metaData.containsKey(DWMultiBroadcastReceiver.KEY_START_ON_BOOT)) {
         if (metaData.getBoolean(DWMultiBroadcastReceiver.KEY_START_ON_BOOT))
           return startApp(context);
