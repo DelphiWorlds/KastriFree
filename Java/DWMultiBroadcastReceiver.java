@@ -25,8 +25,8 @@ package com.delphiworlds.kastri;
     </activity>
 
     <!-- **** This is the metadata **** -->
-    <meta-data android:name="apploader.restartAfterReplace" android:value="true" />
-    <meta-data android:name="apploader.startOnBoot" android:value="true" />
+    <meta-data android:name="DWMultiBroadcastReceiver.KEY_RESTART_AFTER_REPLACE" android:value="true" />
+    <meta-data android:name="DWMultiBroadcastReceiver.KEY_START_ON_BOOT" android:value="true" />
 
     <!-- **** This is the BroadcastReceiver **** -->
     <receiver android:name="com.delphiworlds.kastri.DWMultiBroadcastReceiver">
