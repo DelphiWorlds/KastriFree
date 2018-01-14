@@ -37,6 +37,10 @@ type
     class procedure e(const AFmt: string; const AParams: array of const); overload; static;
     class procedure w(const AFmt: string); overload; static;
     class procedure w(const AFmt: string; const AParams: array of const); overload; static;
+    /// <summary>
+    ///   Dumps a stack trace to the OS log. ANDROID ONLY at present
+    /// </summary>
+    class procedure Trace; static;
   end;
 
 const
@@ -95,6 +99,13 @@ end;
 class procedure TOSLog.w(const AFmt: string; const AParams: array of const);
 begin
   TPlatformOSLog.Log(TLogType.Warning, ts(AFmt), AParams);
+end;
+
+class procedure TOSLog.Trace;
+begin
+  {$IF Defined(ANDROID)}
+  TPlatformOSLog.Trace;
+  {$ENDIF}
 end;
 
 end.
