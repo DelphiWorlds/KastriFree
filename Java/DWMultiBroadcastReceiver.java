@@ -27,6 +27,7 @@ package com.delphiworlds.kastri;
     <!-- **** This is the metadata **** -->
     <meta-data android:name="DWMultiBroadcastReceiver.KEY_RESTART_AFTER_REPLACE" android:value="true" />
     <meta-data android:name="DWMultiBroadcastReceiver.KEY_START_ON_BOOT" android:value="true" />
+    <meta-data android:name="DWMultiBroadcastReceiver.KEY_START_SERVICE_ON_BOOT" android:value="[yourservicename]>" />
 
     <!-- **** This is the BroadcastReceiver. It handles the intents listed in the intent-filter tag. 
       Note: QUICKBOOT_POWERON is the intent for a restart, as opposed to a cold boot **** -->
@@ -35,6 +36,7 @@ package com.delphiworlds.kastri;
         <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
         <action android:name="android.intent.action.BOOT_COMPLETED"/>
         <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+        <action android:name="com.delphiworlds.kastri.DWMultiBroadcastReceiver.ACTION_SERVICE_ALARM" />
       </intent-filter>
     </receiver>
   </application>
