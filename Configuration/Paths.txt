@@ -1,1 +1,1 @@
-%KastriFree%\API;%KastriFree%\ComponentHelpers;%KastriFree%\Controls;%KastriFree%\Core;%KastriFree%\Features\Firebase;%KastriFree%\Features\NFC;%KastriFree%\Include
+$(KastriFree)\API;$(KastriFree)\ComponentHelpers;$(KastriFree)\Controls;$(KastriFree)\Core;$(KastriFree)\Features\Firebase;$(KastriFree)\Features\NFC;$(KastriFree)\Include
