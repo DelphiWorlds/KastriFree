@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{0EF6FD16-1D3B-42CB-AE14-75045DC49276}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Application\LocationApp.dproj">
+            <Dependencies>Service\LocationService.dproj</Dependencies>
+        </Projects>
+        <Projects Include="Service\LocationService.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="LocationApp" DependsOnTargets="LocationService">
+        <MSBuild Projects="Application\LocationApp.dproj"/>
+    </Target>
+    <Target Name="LocationApp:Clean" DependsOnTargets="LocationService:Clean">
+        <MSBuild Projects="Application\LocationApp.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LocationApp:Make" DependsOnTargets="LocationService:Make">
+        <MSBuild Projects="Application\LocationApp.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="LocationService">
+        <MSBuild Projects="Service\LocationService.dproj"/>
+    </Target>
+    <Target Name="LocationService:Clean">
+        <MSBuild Projects="Service\LocationService.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LocationService:Make">
+        <MSBuild Projects="Service\LocationService.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="LocationApp;LocationService"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="LocationApp:Clean;LocationService:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="LocationApp:Make;LocationService:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
