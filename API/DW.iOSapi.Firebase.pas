@@ -115,11 +115,6 @@ type
   end;
   TFIRMessagingRemoteMessage = class(TOCGenericImport<FIRMessagingRemoteMessageClass, FIRMessagingRemoteMessage>) end;
 
-  FIRMessagingDelegate = interface(IObjectiveC)
-    ['{264C1F0E-3EA9-42AC-9802-EF1BC9A7E321}']
-    procedure applicationReceivedRemoteMessage(remoteMessage: FIRMessagingRemoteMessage); cdecl;
-  end;
-
   FIRMessagingClass = interface(NSObjectClass)
     ['{62AF9A4C-681E-4BCD-9063-6209CAE08296}']
     {class} function messaging: pointer; cdecl;
@@ -131,12 +126,24 @@ type
     procedure connectWithCompletion(handler: TFIRMessagingConnectCompletion); cdecl;
     procedure disconnect; cdecl;
     function remoteMessageDelegate: Pointer; cdecl;
-    procedure setAPNSToken(apnsToken: NSData; tokenType: FIRMessagingAPNSTokenType); cdecl;
-    procedure setRemoteMessageDelegate(delegate: Pointer); cdecl;
+    procedure setAPNSToken(apnsToken: NSData); cdecl; overload;
+    procedure setAPNSToken(apnsToken: NSData; tokenType: FIRMessagingAPNSTokenType); cdecl; overload;
+    procedure setDelegate(delegate: Pointer); cdecl;
     procedure subscribeToTopic(topic: NSString); cdecl;
     procedure unsubscribeFromTopic(topic: NSString); cdecl;
   end;
   TFIRMessaging = class(TOCGenericImport<FIRMessagingClass, FIRMessaging>) end;
+
+  FIRMessagingDelegate = interface(IObjectiveC)
+    ['{264C1F0E-3EA9-42AC-9802-EF1BC9A7E321}']
+    procedure applicationReceivedRemoteMessage(remoteMessage: FIRMessagingRemoteMessage); cdecl;
+    [MethodName('messaging:didReceiveMessage:')]
+    procedure didReceiveMessage(messaging: FIRMessaging; remoteMessage: FIRMessagingRemoteMessage); cdecl;
+    [MethodName('messaging:didReceiveRegistrationToken:')]
+    procedure didReceiveRegistrationToken(messaging: FIRMessaging; fcmToken: NSString); cdecl;
+    [MethodName('messaging:didRefreshRegistrationToken:')]
+    procedure didRefreshRegistrationToken(messaging: FIRMessaging; fcmToken: NSString); cdecl;
+  end;
 
   function kFIRInstanceIDTokenRefreshNotification: NSString; cdecl;
 
@@ -146,7 +153,9 @@ uses
   // RTL
   System.Sqlite, System.ZLib,
   // Mac
-  Macapi.Helpers;
+  Macapi.Helpers,
+  // DW
+  DW.iOSapi.StoreKit;
 
 function kFIRInstanceIDTokenRefreshNotification: NSString;
 begin

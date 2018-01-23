@@ -18,15 +18,18 @@ implementation
 // This unit should not be included in a regular application
 
 // DW
-{$IF Defined(ANDROID) and (CompilerVersion < 32)}
+{$IF Defined(ANDROID)}
 uses
-  DW.Compat.Android;
+  {$IF CompilerVersion < 32}
+  DW.Compat.Android,
+  {$ENDIF}
+  DW.Android.Helpers;
 {$ENDIF}
 
 {$IF Defined(MACOS)}
 uses
 {$IF Defined(IOS)}
-  DW.iOSapi.Helpers,
+  DW.iOSapi.Helpers, DW.Orientation.iOS,
 {$ENDIF}
 {$IF Defined(MACDEV)}
 
