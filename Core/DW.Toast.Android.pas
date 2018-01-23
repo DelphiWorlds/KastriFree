@@ -43,7 +43,7 @@ uses
 constructor TToast.Create;
 begin
   inherited;
-  FHandler := TJHandler.JavaClass.init(TJLooper.JavaClass.getMainLooper);
+  FHandler := TJHandler.JavaClass.init;
 end;
 
 procedure TToast.MakeToast(const AMsg: string; const AShort: Boolean);

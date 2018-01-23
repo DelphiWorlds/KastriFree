@@ -2,8 +2,7 @@ program LocationService;
 
 uses
   System.Android.ServiceApplication,
-  LS.ServiceModule in 'LS.ServiceModule.pas' {ServiceModule: TAndroidService},
-  DW.AppLog in '..\..\..\..\..\Private\Kastri\Core\DW.AppLog.pas';
+  LS.ServiceModule in 'LS.ServiceModule.pas' {ServiceModule: TAndroidService};
 
 {$R *.res}
 

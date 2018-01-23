@@ -91,7 +91,7 @@ implementation
 uses
   System.IOUtils, System.Threading, System.DateUtils, System.NetConsts, System.Net.URLClient, System.Net.HttpClient, REST.Types, REST.Json,
   Androidapi.Helpers, Androidapi.JNI.Support,
-  DW.Androidapi.JNI.LocalBroadcastManager, DW.OSLog, DW.OSPower,
+  DW.Androidapi.JNI.LocalBroadcastManager, DW.OSLog,
   LS.Consts;
 
 const
@@ -105,8 +105,7 @@ const
   // https://developer.android.com/training/monitoring-device-state/doze-standby.html#assessing_your_app
   cMinDozeAlarmIntervalSecs = 9 * 60; // Once per 9 minutes is the minimum when "dozed", apparently
   // ***** Modify the following 2 lines to suit your requirements *****
-  // cLocationUpdateURL = 'http://your.locationupdate.url';
-  cLocationUpdateURL = 'http://dw.castlegrab.com/api/location/store';
+  cLocationUpdateURL = 'http://your.locationupdate.url';
   cLocationRequestJSON = '{"deviceid":"%s", "latitude":"%2.6f","longitude":"%2.6f", "tag":"%S"}';
 
   cHTTPResultOK = 200;
@@ -437,14 +436,14 @@ end;
 
 procedure TServiceModule.SendNewLocation(const NewLocation: TLocationCoord2D; const AFrom: TLocationChangeFrom);
 const
-  cLocationUpdateTag = '%s: %s @ %s, Batt: %d';
+  cLocationUpdateTag = '%s: %s @ %s';
 var
   LStream: TStringStream;
   LTag: string;
 begin
   // Format the request, and post it
   // ****** Modify the following 2 lines to suit your location update request requirements *******
-  LTag := Format(cLocationUpdateTag, ['DW', cLocationFromCaptions[AFrom], FormatDateTime('mm-dd hh:nn:ss.zzz', Now), TOSPower.GetBatteryLevel]);
+  LTag := Format(cLocationUpdateTag, ['DW', cLocationFromCaptions[AFrom], FormatDateTime('mm-dd hh:nn:ss.zzz', Now)]);
   LStream := TStringStream.Create(Format(cLocationRequestJSON, ['x', NewLocation.Latitude, NewLocation.Longitude, LTag]));
   try
     TOSLog.d('Posting request: %s', [LStream.DataString]);
