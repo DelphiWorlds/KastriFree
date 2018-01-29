@@ -144,42 +144,42 @@ type
 
   JRemoteMessage_BuilderClass = interface(JObjectClass)
     ['{35B9F744-43A1-4297-9252-ED2BF9D1D85A}']
-    {class} function addData(P1: JString; P2: JString): JRemoteMessage_Builder; cdecl;
-    {class} function build: JRemoteMessage; cdecl;
-    {class} function clearData: JRemoteMessage_Builder; cdecl;
     {class} function init(P1: JString): JRemoteMessage_Builder; cdecl;
-    {class} function setCollapseKey(P1: JString): JRemoteMessage_Builder; cdecl;
-    {class} function setData(P1: JMap): JRemoteMessage_Builder; cdecl;
-    {class} function setMessageId(P1: JString): JRemoteMessage_Builder; cdecl;
-    {class} function setMessageType(P1: JString): JRemoteMessage_Builder; cdecl;
-    {class} function setTtl(P1: Integer): JRemoteMessage_Builder; cdecl;
   end;
 
   [JavaSignature('com/google/firebase/messaging/RemoteMessage$Builder')]
   JRemoteMessage_Builder = interface(JObject)
     ['{6752DCDD-3F0B-42AE-B975-7169E534BCE6}']
+    function addData(P1: JString; P2: JString): JRemoteMessage_Builder; cdecl;
+    function build: JRemoteMessage; cdecl;
+    function clearData: JRemoteMessage_Builder; cdecl;
+    function setCollapseKey(P1: JString): JRemoteMessage_Builder; cdecl;
+    function setData(P1: JMap): JRemoteMessage_Builder; cdecl;
+    function setMessageId(P1: JString): JRemoteMessage_Builder; cdecl;
+    function setMessageType(P1: JString): JRemoteMessage_Builder; cdecl;
+    function setTtl(P1: Integer): JRemoteMessage_Builder; cdecl;
   end;
   TJRemoteMessage_Builder = class(TJavaGenericImport<JRemoteMessage_BuilderClass, JRemoteMessage_Builder>) end;
 
   JRemoteMessage_NotificationClass = interface(JObjectClass)
     ['{F1A80B5D-CD0D-45A1-91D2-8A2114D83C4A}']
-    {class} function getBody: JString; cdecl;
-    {class} function getBodyLocalizationArgs: TJavaObjectArray<JString>; cdecl;
-    {class} function getBodyLocalizationKey: JString; cdecl;
-    {class} function getClickAction: JString; cdecl;
-    {class} function getColor: JString; cdecl;
-    {class} function getIcon: JString; cdecl;
-    {class} function getLink: Jnet_Uri; cdecl;
-    {class} function getSound: JString; cdecl;
-    {class} function getTag: JString; cdecl;
-    {class} function getTitle: JString; cdecl;
-    {class} function getTitleLocalizationArgs: TJavaObjectArray<JString>; cdecl;
-    {class} function getTitleLocalizationKey: JString; cdecl;
   end;
 
   [JavaSignature('com/google/firebase/messaging/RemoteMessage$Notification')]
   JRemoteMessage_Notification = interface(JObject)
     ['{FDFAB296-F7C9-4BB6-A482-7AF50ED8D5C1}']
+    function getBody: JString; cdecl;
+    function getBodyLocalizationArgs: TJavaObjectArray<JString>; cdecl;
+    function getBodyLocalizationKey: JString; cdecl;
+    function getClickAction: JString; cdecl;
+    function getColor: JString; cdecl;
+    function getIcon: JString; cdecl;
+    function getLink: Jnet_Uri; cdecl;
+    function getSound: JString; cdecl;
+    function getTag: JString; cdecl;
+    function getTitle: JString; cdecl;
+    function getTitleLocalizationArgs: TJavaObjectArray<JString>; cdecl;
+    function getTitleLocalizationKey: JString; cdecl;
   end;
   TJRemoteMessage_Notification = class(TJavaGenericImport<JRemoteMessage_NotificationClass, JRemoteMessage_Notification>) end;
 
