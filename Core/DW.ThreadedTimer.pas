@@ -25,6 +25,8 @@ type
     procedure DoInterval;
   protected
     procedure CheckInterval;
+    procedure KillTimer; override;
+    procedure UpdateTimer; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -71,6 +73,16 @@ begin
       DoOnTimer;
     end
   );
+end;
+
+procedure TThreadedTimer.KillTimer;
+begin
+  // No implementation of this method, as this timer does not use the platform timer service
+end;
+
+procedure TThreadedTimer.UpdateTimer;
+begin
+  // No implementation of this method, as this timer does not use the platform timer service
 end;
 
 { TTimerThread }
