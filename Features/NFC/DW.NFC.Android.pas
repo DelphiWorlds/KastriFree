@@ -57,7 +57,7 @@ uses
   // FMX
   FMX.Platform.Android, FMX.Platform,
   // DW
-  DW.OSLog;
+  DW.Toast.Android, DW.OSLog;
 
 function JavaBytesToString(const ABytes: TJavaArray<Byte>): string;
 begin
@@ -75,8 +75,8 @@ begin
   TMessageManager.DefaultManager.SubscribeToMessage(TMessageReceivedNotification, MessageReceivedNotificationHandler);
   TMessageManager.DefaultManager.SubscribeToMessage(TApplicationEventMessage, ApplicationEventMessageHandler);
   MainActivity.registerIntentAction(TJNfcAdapter.JavaClass.ACTION_NDEF_DISCOVERED);
-  // MainActivity.registerIntentAction(TJNfcAdapter.JavaClass.ACTION_TECH_DISCOVERED);
-  // MainActivity.registerIntentAction(TJNfcAdapter.JavaClass.ACTION_TAG_DISCOVERED);
+  MainActivity.registerIntentAction(TJNfcAdapter.JavaClass.ACTION_TECH_DISCOVERED);
+  MainActivity.registerIntentAction(TJNfcAdapter.JavaClass.ACTION_TAG_DISCOVERED);
   LIntent := TJIntent.JavaClass.init(TAndroidHelper.Context, TAndroidHelper.Activity.getClass);
   FPendingIntent := TJPendingIntent.JavaClass.getActivity(TAndroidHelper.Context, 0, LIntent.addFlags(TJIntent.JavaClass.FLAG_ACTIVITY_SINGLE_TOP), 0);
   TOSLog.d('-TPlatformNFCReader.Create');
@@ -143,12 +143,12 @@ begin
   case TApplicationEventMessage(M).Value.Event of
     TApplicationEvent.BecameActive:
     begin
-//      LIntent := TAndroidHelper.Activity.getIntent;
-//      if (LIntent <> nil) and not TJIntent.JavaClass.ACTION_MAIN.equals(LIntent.getAction) then
-//      begin
-//        TOSLog.d('TPlatformNFCReader.ApplicationEventMessageHandler HandleNfcIntent');
-//        HandleNfcIntent(LIntent);
-//      end;
+      LIntent := TAndroidHelper.Activity.getIntent;
+      if (LIntent <> nil) and not TJIntent.JavaClass.ACTION_MAIN.equals(LIntent.getAction) then
+      begin
+        TOSLog.d('TPlatformNFCReader.ApplicationEventMessageHandler HandleNfcIntent');
+        HandleNfcIntent(LIntent);
+      end;
     end;
   end;
 end;
@@ -172,12 +172,15 @@ end;
 
 procedure TPlatformNFCReader.RequestEnableNfc;
 begin
-  // TODO
+  TToast.Make('Please enable NFC and press Back to return to the application', False);
+  if TJBuild_VERSION.JavaClass.SDK_INT > 16 then
+    TAndroidHelper.Activity.startActivity(TJIntent.JavaClass.init(StringToJString('android.settings.NFC_SETTINGS')))
+  else
+    TAndroidHelper.Activity.startActivity(TJIntent.JavaClass.init(StringToJString('android.settings.WIRELESS_SETTINGS')));
 end;
 
 procedure TPlatformNFCReader.HandleNfcIntent(const AIntent: JIntent);
 var
-  LAction: JString;
   LMessages: TJavaObjectArray<JParcelable>;
   LRecords: TJavaObjectArray<JNdefRecord>;
   LRecord: JNdefRecord;
