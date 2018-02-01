@@ -19,6 +19,9 @@ uses
 type
   TToast = class(TJavaLocal, JRunnable)
   private
+    class var FToast: TToast;
+    class destructor DestroyToast;
+  private
     FHandler: JHandler;
     FMsg: string;
     FShort: Boolean;
@@ -26,7 +29,15 @@ type
     { JRunnable }
     procedure run; cdecl;
   public
+    /// <summary>
+    ///   Convenience equivalent of MakeToast
+    /// </summary>
+    class procedure Make(const AMsg: string; const AShort: Boolean);
+  public
     constructor Create;
+    /// <summary>
+    ///   Shows a toast with the message provided, for the length specified
+    /// </summary>
     procedure MakeToast(const AMsg: string; const AShort: Boolean);
   end;
 
@@ -44,6 +55,18 @@ constructor TToast.Create;
 begin
   inherited;
   FHandler := TJHandler.JavaClass.init;
+end;
+
+class destructor TToast.DestroyToast;
+begin
+  FToast.Free;
+end;
+
+class procedure TToast.Make(const AMsg: string; const AShort: Boolean);
+begin
+  if FToast = nil then
+    FToast := TToast.Create;
+  FToast.MakeToast(AMsg, AShort);
 end;
 
 procedure TToast.MakeToast(const AMsg: string; const AShort: Boolean);
