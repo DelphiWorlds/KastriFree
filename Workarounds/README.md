@@ -12,6 +12,14 @@ e.g. RSP-19525.txt refers to:
 
 Each file will have a link to the report in it, plus instructions on how to apply the workaround.
 
+For workarounds that have a .patch file, please use the Patch utility from here:
+
+  http://gnuwin32.sourceforge.net/packages/patch.htm
+  
+To apply a patch, firstly *copy the file to be patched*, and use the Patch command thus (for example):
+
+  C:\Utils\Patch C:\Copied\FMX.VirtualKeyboard.Android.pas < FMX.VirtualKeyboard.Android.10.2.2.patch
+
 ***USE THESE WORKAROUNDS AT YOUR OWN RISK - NO LIABILITY WILL BE ACCEPTED***
 
 However, please report any issues to:
