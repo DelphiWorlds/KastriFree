@@ -1,0 +1,152 @@
+64c64,182
+<   System.Messaging, FMX.Forms, FMX.Platform.Android, FMX.Platform;
+---
+>   System.Messaging, FMX.Forms, FMX.Platform.Android, FMX.Platform,
+> // DW - https://quality.embarcadero.com/browse/RSP-17917 - BEGIN
+>   Androidapi.JNI.Util;
+> 
+> type
+>   TVirtualKeyboardRect = class;
+> 
+>   TGlobalLayoutListener = class(TJavaLocal, JViewTreeObserver_OnGlobalLayoutListener)
+>   private
+>     FVirtualKeyboardRect: TVirtualKeyboardRect;
+>   public
+>     { JViewTreeObserver_OnGlobalLayoutListener }
+>     procedure onGlobalLayout; cdecl;
+>   public
+>     constructor Create(const AVirtualKeyboardRect: TVirtualKeyboardRect);
+>   end;
+> 
+>   TVirtualKeyboardRect = class(TInterfacedObject)
+>   private
+>     FCanFireEvent: Boolean;
+>     FListener: JViewTreeObserver_OnGlobalLayoutListener;
+>     FPendingShow: Boolean;
+>     FVKListener: TVKListener;
+>     FVKVisible: Boolean;
+>     procedure ApplicationEventMessageHandler(const Sender: TObject; const M: TMessage);
+>     procedure InstallListener;
+>     procedure RemoveListener;
+>     procedure VirtualKeyboardHidden;
+>     procedure VirtualKeyboardShown;
+>   protected
+>     procedure GlobalLayoutChange;
+>     property CanFireEvent: Boolean read FCanFireEvent;
+>     property VKListener: TVKListener read FVKListener write FVKListener;
+>   public
+>     constructor Create;
+>     destructor Destroy; override;
+>   end;
+> 
+> { TGlobalLayoutListener }
+> 
+> constructor TGlobalLayoutListener.Create(const AVirtualKeyboardRect: TVirtualKeyboardRect);
+> begin
+>   inherited Create;
+>   FVirtualKeyboardRect := AVirtualKeyboardRect;
+> end;
+> 
+> procedure TGlobalLayoutListener.onGlobalLayout;
+> begin
+>   FVirtualKeyboardRect.GlobalLayoutChange;
+> end;
+> 
+> { TVirtualKeyboardRect }
+> 
+> constructor TVirtualKeyboardRect.Create;
+> begin
+>   inherited;
+>   TMessageManager.DefaultManager.SubscribeToMessage(TApplicationEventMessage, ApplicationEventMessageHandler);
+> end;
+> 
+> destructor TVirtualKeyboardRect.Destroy;
+> begin
+>   if FListener <> nil then
+>     RemoveListener;
+>   TMessageManager.DefaultManager.Unsubscribe(TApplicationEventMessage, ApplicationEventMessageHandler);
+>   inherited;
+> end;
+> 
+> procedure TVirtualKeyboardRect.ApplicationEventMessageHandler(const Sender: TObject; const M: TMessage);
+> begin
+>   case TApplicationEventMessage(M).Value.Event of
+>     TApplicationEvent.BecameActive:
+>     begin
+>       if FListener = nil then
+>         InstallListener;
+>     end;
+>   end;
+> end;
+> 
+> procedure TVirtualKeyboardRect.VirtualKeyboardHidden;
+> begin
+>   FVKVisible := False;
+> end;
+> 
+> procedure TVirtualKeyboardRect.VirtualKeyboardShown;
+> begin
+>   FPendingShow := True;
+>   FVKVisible := True;
+> end;
+> 
+> procedure TVirtualKeyboardRect.GlobalLayoutChange;
+> begin
+>   if FPendingShow then
+>   begin
+>     FCanFireEvent := True;
+>     try
+>       FVKListener.onVirtualKeyboardShown;
+>     finally
+>       FCanFireEvent := False;
+>     end;
+>   end
+>   else if FVKVisible and not FCanFireEvent then
+>     TMessageManager.DefaultManager.SendMessage(Self, TVKStateChangeMessage.Create(True, FVKListener.ObtainKeyboardRect), True);
+>   FPendingShow := False;
+> end;
+> 
+> procedure TVirtualKeyboardRect.InstallListener;
+> begin
+>   FListener := TGlobalLayoutListener.Create(Self);
+>   MainActivity.getWindow.getDecorView.getViewTreeObserver.addOnGlobalLayoutListener(FListener);
+> end;
+> 
+> procedure TVirtualKeyboardRect.RemoveListener;
+> begin
+>   MainActivity.getWindow.getDecorView.getViewTreeObserver.removeGlobalOnLayoutListener(FListener);
+> end;
+> 
+> var
+>   VirtualKeyboardRect: TVirtualKeyboardRect;
+> // DW - https://quality.embarcadero.com/browse/RSP-17917 - END
+173a292,293
+>   // DW
+>   VirtualKeyboardRect.VKListener := Self;
+210,211c330,333
+<   WaitingForContentChanged(Self);
+<   TThread.Synchronize(nil, procedure
+---
+>   // DW - https://quality.embarcadero.com/browse/RSP-17917
+>   // Removing less than optimal routine
+>   // WaitingForContentChanged(Self);
+>   if VirtualKeyboardRect.CanFireEvent then
+213,215c335,342
+<     FKeyboardService.SetState(TVirtualKeyboardAndroid.TvkbState.Shown);
+<     FEvent.SetEvent;
+<   end);
+---
+>     TThread.Synchronize(nil, procedure
+>     begin
+>       FKeyboardService.SetState(TVirtualKeyboardAndroid.TvkbState.Shown);
+>       FEvent.SetEvent;
+>     end);
+>   end
+>   else
+>     VirtualKeyboardRect.VirtualKeyboardShown;
+219a347
+>   VirtualKeyboardRect.VirtualKeyboardHidden;
+243a372,374
+> 
+> initialization
+>   VirtualKeyboardRect := TVirtualKeyboardRect.Create;

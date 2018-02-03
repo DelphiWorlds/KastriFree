@@ -1,0 +1,21 @@
+Quality Portal Report:
+
+  https://quality.embarcadero.com/browse/RSP-17917
+
+Applies to:
+
+Delphi 10.2.2 ONLY
+
+Instructions:
+
+1. Obtain the patch, here:
+
+https://github.com/DelphiWorlds/KastriFree/blob/master/Workarounds/FMX.VirtualKeyboard.Android.10.2.2.patch
+
+2. Follow the instructions regarding patches, here:
+
+https://github.com/DelphiWorlds/KastriFree/blob/master/Workarounds/README.md
+
+3. This project serves as a demo of how you might benefit from the patch:
+
+       
