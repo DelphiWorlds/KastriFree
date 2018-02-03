@@ -26,6 +26,7 @@ uses
 type
   TVertScrollBox = class(FMX.Layouts.TVertScrollBox)
   private
+    FFocusChanged: Boolean;
     FFocusedControl: TControl;
     FControlsLayout: TLayout;
     FVKRect: TRect;
@@ -52,8 +53,20 @@ type
 implementation
 
 uses
+{$IF Defined(IOS)}
+  iOSapi.Helpers,
+{$ENDIF}
   // FMX
   FMX.Forms, FMX.Types, FMX.Edit, FMX.Memo;
+
+function GetStatusBarHeight: Single;
+begin
+{$IF Defined(IOS)}
+  Result := TiOSHelper.SharedApplication.statusBarFrame.size.height;
+{$ELSE}
+  Result := 0;
+{$ENDIF}
+end;
 
 { TVertScrollBox }
 
@@ -102,7 +115,12 @@ procedure TVertScrollBox.IdleMessageHandler(const Sender: TObject; const M: TMes
 begin
   // TIdleMessage is being used to check if the focused control has changed. This may happen without the VK hiding/showing
   if not FVKRect.IsEmpty and (Root <> nil) and (Root.Focused <> nil) and (Root.Focused.GetObject <> FFocusedControl) then
+  begin
     MoveControls;
+    FFocusChanged := True;
+  end
+  else
+    FFocusChanged := False;
 end;
 
 procedure TVertScrollBox.MoveControls;
@@ -127,8 +145,9 @@ begin
     LControlBottom := LMemo.Position.Y + (LMemo.Caret.Pos.Y - LMemo.ViewportPosition.Y) + LMemo.Caret.size.Height + 4;
   end;
   // + 2 = to give a tiny bit of clearance between the control "bottom" and the VK
-  LOffset := LControlBottom + 2 - FVKRect.Top;
-  ViewportPosition := PointF(0, LOffset);
+  LOffset := LControlBottom + 2 + GetStatusBarHeight - FVKRect.Top;
+  if LOffset > 0 then
+    ViewportPosition := PointF(0, LOffset);
 end;
 
 procedure TVertScrollBox.Notification(AComponent: TComponent; Operation: TOperation);
@@ -141,7 +160,7 @@ end;
 procedure TVertScrollBox.RestoreControls;
 begin
   FVKRect := TRect.Empty;
-  if FControlsLayout = nil then
+  if (FControlsLayout = nil) or FFocusChanged then
     Exit; // <======
   ViewportPosition := PointF(0, 0);
   FControlsLayout.Height := Height;
