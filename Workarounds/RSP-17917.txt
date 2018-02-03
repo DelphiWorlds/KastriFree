@@ -18,4 +18,4 @@ https://github.com/DelphiWorlds/KastriFree/blob/master/Workarounds/README.md
 
 3. This project serves as a demo of how you might benefit from the patch:
 
-       
+https://github.com/DelphiWorlds/KastriFree/tree/master/Demos/VKVertScrollbox

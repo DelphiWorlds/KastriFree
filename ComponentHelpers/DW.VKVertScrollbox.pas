@@ -11,7 +11,7 @@ unit DW.VKVertScrollbox;
 // ***** NOTE: This unit should be used only in conjunction with the workaround described here:
 //   https://https://github.com/DelphiWorlds/KastriFree/blob/master/Workarounds/RSP-17917.txt
 // For an example of how to use this unit, please refer to the demo, here:
-//
+//   https://github.com/DelphiWorlds/KastriFree/tree/master/Demos/VKVertScrollbox
 
 {$I DW.GlobalDefines.inc}
 
