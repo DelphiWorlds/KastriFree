@@ -26,7 +26,7 @@ type
   private
     FStream: TStream;
   public
-    constructor Create(const Filename: string; Append: Boolean = False); overload;
+    constructor Create(const Filename: string; Append: Boolean = False); overload; virtual;
     destructor Destroy; override;
   end;
 
@@ -43,7 +43,7 @@ begin
     FStream := TFileStream.Create(Filename, fmCreate)
   else
   begin
-    FStream := TFileStream.Create(Filename, fmOpenWrite); // or fmShareDenyWrite);
+    FStream := TFileStream.Create(Filename, fmOpenWrite or fmShareDenyWrite);
     FStream.Seek(0, soEnd);
   end;
   inherited Create(FStream);
