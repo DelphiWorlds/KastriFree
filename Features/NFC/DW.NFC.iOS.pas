@@ -107,7 +107,7 @@ end;
 
 class function TPlatformNFCReader.IsSupported: Boolean;
 begin
-  Result := TOSVersion.Check(11);
+  Result := TOSVersion.Check(11) and TNFCNDEFReaderSession.OCClass.readingAvailable;
 end;
 
 procedure TPlatformNFCReader.readerSessionDidDetectNDEFs(session: NFCNDEFReaderSession; didDetectNDEFs: NSArray);

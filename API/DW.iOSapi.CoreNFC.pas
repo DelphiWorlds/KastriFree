@@ -96,12 +96,11 @@ type
 
   NFCNDEFReaderSessionClass = interface(NFCReaderSessionClass)
     ['{9A6298C7-E555-450B-B8DE-149696530FF7}']
+    function readingAvailable: Boolean; cdecl;
   end;
 
   NFCNDEFReaderSession = interface(NFCReaderSession)
     ['{E79D6F63-D139-401C-A891-6055103D6782}']
-    procedure setReadingAvailable(readingAvailable: Boolean); cdecl;
-    function readingAvailable: Boolean; cdecl;
     function initWithDelegate(delegate: Pointer; queue: dispatch_queue_t; invalidateAfterFirstRead: Boolean): Pointer; cdecl;
   end;
   TNFCNDEFReaderSession = class(TOCGenericImport<NFCNDEFReaderSessionClass, NFCNDEFReaderSession>)
