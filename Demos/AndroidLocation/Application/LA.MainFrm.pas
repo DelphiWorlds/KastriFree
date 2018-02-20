@@ -3,10 +3,10 @@ unit LA.MainFrm;
 interface
 
 uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants, System.Android.Service,
+  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants, System.Android.Service, System.Actions, System.Messaging,
   Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.App, Androidapi.JNI.Location,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Controls.Presentation, FMX.StdCtrls, FMX.ScrollBox, FMX.Memo,
-  FMX.Layouts, FMX.TabControl,
+  FMX.Layouts, FMX.TabControl, FMX.ActnList,
   DW.MultiReceiver.Android,
   LS.ServiceModule;
 
@@ -31,17 +31,26 @@ type
     TitleLabel: TLabel;
     MessagesMemo: TMemo;
     BottomLayout: TLayout;
-    ClearButton: TButton;
     TabControl: TTabControl;
     MessagesTab: TTabItem;
     LogTab: TTabItem;
     LogMemo: TMemo;
     RefreshLogButton: TButton;
+    PauseUpdatesButton: TButton;
+    ActionList: TActionList;
+    PauseUpdatesAction: TAction;
+    RefreshLogAction: TAction;
     procedure TabControlChange(Sender: TObject);
-    procedure RefreshLogButtonClick(Sender: TObject);
+    procedure ActionListUpdate(Action: TBasicAction; var Handled: Boolean);
+    procedure PauseUpdatesActionExecute(Sender: TObject);
+    procedure RefreshLogActionExecute(Sender: TObject);
   private
     FReceiver: TServiceMessageReceiver;
+    [Unsafe] FService: TServiceModule; // <--- This is a reference to the actual service datamodule
+    FServiceConnection: TLocalServiceConnection;
+    procedure ApplicationEventMessageHandler(const Sender: TObject; const M: TMessage);
     procedure RefreshLog;
+    procedure ServiceConnectedHandler(const ALocalService: TAndroidBaseService);  // <--- Event called once the service is connected
     procedure ServiceMessageHandler(Sender: TObject; const AMsg: string);
   public
     constructor Create(AOwner: TComponent); override;
@@ -58,6 +67,7 @@ implementation
 uses
   System.IOUtils,
   Androidapi.Helpers, Androidapi.JNIBridge, Androidapi.JNI.JavaTypes,
+  FMX.Platform,
   DW.OSLog,
   LS.Consts;
 
@@ -89,13 +99,28 @@ begin
   TabControl.ActiveTab := MessagesTab;
   FReceiver := TServiceMessageReceiver.Create(True);
   FReceiver.OnMessageReceived := ServiceMessageHandler;
-  TLocalServiceConnection.StartService('LocationService');
+  FServiceConnection := TLocalServiceConnection.Create;
+  FServiceConnection.OnConnected := ServiceConnectedHandler;
+  FServiceConnection.StartService('LocationService');
+  TMessageManager.DefaultManager.SubscribeToMessage(TApplicationEventMessage, ApplicationEventMessageHandler);
 end;
 
 destructor TfrmMain.Destroy;
 begin
+  TMessageManager.DefaultManager.Unsubscribe(TApplicationEventMessage, ApplicationEventMessageHandler);
   FReceiver.Free;
   inherited;
+end;
+
+procedure TfrmMain.PauseUpdatesActionExecute(Sender: TObject);
+begin
+  if FService <> nil then
+  begin
+    if FService.IsPaused then
+      FService.Resume
+    else
+      FService.Pause;
+  end;
 end;
 
 procedure TfrmMain.RefreshLog;
@@ -104,9 +129,43 @@ begin
   LogMemo.Lines.LoadFromFile(TPath.Combine(TPath.GetDocumentsPath, 'Location.log'));
 end;
 
-procedure TfrmMain.RefreshLogButtonClick(Sender: TObject);
+procedure TfrmMain.RefreshLogActionExecute(Sender: TObject);
 begin
   RefreshLog;
+end;
+
+procedure TfrmMain.ActionListUpdate(Action: TBasicAction; var Handled: Boolean);
+begin
+  PauseUpdatesAction.Enabled := FService <> nil;
+  if FService <> nil then
+  begin
+    if FService.IsPaused then
+      PauseUpdatesAction.Text := 'Resume Updates'
+    else
+      PauseUpdatesAction.Text := 'Pause Updates';
+  end;
+  Handled := True;
+end;
+
+procedure TfrmMain.ApplicationEventMessageHandler(const Sender: TObject; const M: TMessage);
+begin
+  case TApplicationEventMessage(M).Value.Event of
+    TApplicationEvent.BecameActive:
+      // Bind the service, so an reference to the service datamodule can be obtained
+      FServiceConnection.BindService('LocationService');
+    TApplicationEvent.EnteredBackground:
+    begin
+      // Make sure to "unbind" when the app becomes inactive!
+      FServiceConnection.UnbindService;
+      FService := nil;
+    end;
+  end;
+end;
+
+procedure TfrmMain.ServiceConnectedHandler(const ALocalService: TAndroidBaseService);
+begin
+  // Obtain a reference to the service datamodule
+  FService := TServiceModule(ALocalService);
 end;
 
 procedure TfrmMain.ServiceMessageHandler(Sender: TObject; const AMsg: string);

@@ -45,6 +45,7 @@ type
     FGPSLocationListener: JLocationListener;
     FIsDozed: Boolean;
     FIsForeground: Boolean;
+    FIsPaused: Boolean;
     FKeyguardManager: JKeyguardManager;
     FLastSend: TDateTime;
     FNetworkLocationListener: JLocationListener;
@@ -77,6 +78,9 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure Pause;
+    procedure Resume;
+    property IsPaused: Boolean read FIsPaused;
   end;
 
 var
@@ -413,6 +417,12 @@ end;
 
 procedure TServiceModule.LocationChanged(const ANewLocation: TLocationCoord2D; const AFrom: TLocationChangeFrom);
 begin
+  // Don't send any updates if paused
+  if FIsPaused then
+  begin
+    WriteLog('Updates paused; not sending');
+    Exit; // <======
+  end;
   // Only send if a location change has been obtained within the specified interval
   if not FSending and (SecondsBetween(Now, FLastSend) >= cSendIntervalMinimum) then
   begin
@@ -490,6 +500,16 @@ begin
   end;
   WriteLog('Successfully sent new location');
   TOSLog.d('-TServiceModule.PostRequest');
+end;
+
+procedure TServiceModule.Pause;
+begin
+  FIsPaused := True;
+end;
+
+procedure TServiceModule.Resume;
+begin
+  FIsPaused := False;
 end;
 
 end.

@@ -25,24 +25,26 @@ object frmMain: TfrmMain
     Padding.Top = 4.000000000000000000
     Padding.Right = 4.000000000000000000
     Padding.Bottom = 4.000000000000000000
-    Position.Y = 488.000000000000000000
+    Position.Y = 480.000000000000000000
     Size.Width = 416.000000000000000000
-    Size.Height = 50.000000000000000000
+    Size.Height = 58.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 1
-    object ClearButton: TButton
+    object PauseUpdatesButton: TButton
+      Action = PauseUpdatesAction
       Align = Center
-      Size.Width = 80.000000000000000000
-      Size.Height = 28.000000000000000000
+      Enabled = True
+      ImageIndex = -1
+      Size.Width = 150.000000000000000000
+      Size.Height = 41.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 0
-      Text = 'Clear'
     end
   end
   object TabControl: TTabControl
     Align = Client
     Size.Width = 416.000000000000000000
-    Size.Height = 447.000000000000000000
+    Size.Height = 439.000000000000000000
     Size.PlatformDefault = False
     TabIndex = 1
     TabOrder = 2
@@ -50,9 +52,9 @@ object frmMain: TfrmMain
     OnChange = TabControlChange
     Sizes = (
       416s
-      421s
+      413s
       416s
-      421s)
+      413s)
     object MessagesTab: TTabItem
       CustomIcon = <
         item
@@ -75,11 +77,11 @@ object frmMain: TfrmMain
         Margins.Right = 4.000000000000000000
         Margins.Bottom = 4.000000000000000000
         Size.Width = 408.000000000000000000
-        Size.Height = 413.000000000000000000
+        Size.Height = 405.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
         Viewport.Width = 404.000000000000000000
-        Viewport.Height = 409.000000000000000000
+        Viewport.Height = 401.000000000000000000
       end
     end
     object LogTab: TTabItem
@@ -103,27 +105,41 @@ object frmMain: TfrmMain
         Margins.Top = 4.000000000000000000
         Margins.Right = 4.000000000000000000
         Size.Width = 408.000000000000000000
-        Size.Height = 372.000000000000000000
+        Size.Height = 360.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
         Viewport.Width = 404.000000000000000000
-        Viewport.Height = 368.000000000000000000
+        Viewport.Height = 356.000000000000000000
       end
       object RefreshLogButton: TButton
+        Action = RefreshLogAction
         Align = Bottom
+        Enabled = True
+        ImageIndex = -1
         Margins.Left = 4.000000000000000000
         Margins.Top = 4.000000000000000000
         Margins.Right = 4.000000000000000000
         Margins.Bottom = 4.000000000000000000
         Position.X = 4.000000000000000000
-        Position.Y = 380.000000000000000000
+        Position.Y = 368.000000000000000000
         Size.Width = 408.000000000000000000
-        Size.Height = 37.000000000000000000
+        Size.Height = 41.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
-        Text = 'Refresh'
-        OnClick = RefreshLogButtonClick
       end
+    end
+  end
+  object ActionList: TActionList
+    OnUpdate = ActionListUpdate
+    Left = 201
+    Top = 205
+    object PauseUpdatesAction: TAction
+      Text = 'Pause Updates'
+      OnExecute = PauseUpdatesActionExecute
+    end
+    object RefreshLogAction: TAction
+      Text = 'Refresh'
+      OnExecute = RefreshLogActionExecute
     end
   end
 end
