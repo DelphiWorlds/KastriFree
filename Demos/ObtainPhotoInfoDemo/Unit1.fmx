@@ -1,0 +1,49 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  Caption = 'Form1'
+  ClientHeight = 526
+  ClientWidth = 408
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  DesignerMasterStyle = 0
+  object Layout1: TLayout
+    Align = Bottom
+    Position.Y = 472.000000000000000000
+    Size.Width = 408.000000000000000000
+    Size.Height = 54.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object Button1: TButton
+      Align = Center
+      Size.Width = 116.000000000000000000
+      Size.Height = 41.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'Take Photo'
+      OnClick = Button1Click
+    end
+  end
+  object Image1: TImage
+    MultiResBitmap = <
+      item
+      end>
+    Align = Client
+    Size.Width = 408.000000000000000000
+    Size.Height = 380.000000000000000000
+    Size.PlatformDefault = False
+  end
+  object Memo1: TMemo
+    Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+    DataDetectorTypes = []
+    Align = Bottom
+    Position.Y = 380.000000000000000000
+    Size.Width = 408.000000000000000000
+    Size.Height = 92.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 2
+    Viewport.Width = 404.000000000000000000
+    Viewport.Height = 88.000000000000000000
+  end
+end
