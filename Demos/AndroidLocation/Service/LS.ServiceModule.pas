@@ -147,7 +147,8 @@ begin
   IntentFilter.addAction(TJIntent.JavaClass.ACTION_SCREEN_ON);
   IntentFilter.addAction(TJIntent.JavaClass.ACTION_SCREEN_OFF);
   IntentFilter.addAction(TJIntent.JavaClass.ACTION_USER_PRESENT);
-  IntentFilter.addAction(TJPowerManager.JavaClass.ACTION_DEVICE_IDLE_MODE_CHANGED);
+  if TOSVersion.Check(6) then
+    IntentFilter.addAction(TJPowerManager.JavaClass.ACTION_DEVICE_IDLE_MODE_CHANGED);
 end;
 
 procedure TServiceReceiver.Receive(context: JContext; intent: JIntent);
@@ -370,7 +371,7 @@ begin
     ScreenLockChange(FKeyguardManager.inKeyguardRestrictedInputMode);
   end
   // Otherwise, check for "doze" mode changes
-  else if intent.getAction.equals(TJPowerManager.JavaClass.ACTION_DEVICE_IDLE_MODE_CHANGED) then
+  else if TOSVersion.Check(6) and intent.getAction.equals(TJPowerManager.JavaClass.ACTION_DEVICE_IDLE_MODE_CHANGED) then
     DozeModeChange(FPowerManager.isDeviceIdleMode);
 end;
 
