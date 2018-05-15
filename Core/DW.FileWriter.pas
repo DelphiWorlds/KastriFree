@@ -38,12 +38,18 @@ uses
 { TFileWriter }
 
 constructor TFileWriter.Create(const Filename: string; Append: Boolean);
+var
+  LShareMode: Word;
 begin
+  if TOSVersion.Platform <> TOSVersion.TPlatform.pfiOS then
+    LShareMode := fmShareDenyWrite
+  else
+    LShareMode := 0;
   if (not TFile.Exists(Filename)) or (not Append) then
-    FStream := TFileStream.Create(Filename, fmCreate)
+    FStream := TFileStream.Create(Filename, fmCreate or LShareMode)
   else
   begin
-    FStream := TFileStream.Create(Filename, fmOpenWrite or fmShareDenyWrite);
+    FStream := TFileStream.Create(Filename, fmOpenWrite or LShareMode);
     FStream.Seek(0, soEnd);
   end;
   inherited Create(FStream);
