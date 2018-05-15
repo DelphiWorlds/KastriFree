@@ -22,7 +22,7 @@ type
   /// </remarks>
   TPlatformOSLog = record
   public
-    class procedure Log(const ALogType: TLogType; const AFmt: string; const AParams: array of const); static;
+    class procedure Log(const ALogType: TLogType; const AMsg: string); static;
   end;
 
 implementation
@@ -43,9 +43,9 @@ procedure NSLog(format: PNSString); cdecl; varargs; external libFoundation name 
 
 { TPlatformOSLog }
 
-class procedure TPlatformOSLog.Log(const ALogType: TLogType; const AFmt: string; const AParams: array of const);
+class procedure TPlatformOSLog.Log(const ALogType: TLogType; const AMsg: string);
 begin
-  NSLog(StringToID(cLogTypeCaptions[ALogType] + ': ' + Format(AFmt, AParams)));
+  NSLog(StringToID(cLogTypeCaptions[ALogType] + ': ' + AMsg));
 end;
 
 end.

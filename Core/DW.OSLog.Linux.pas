@@ -22,7 +22,7 @@ type
   /// </remarks>
   TPlatformOSLog = record
   public
-    class procedure Log(const ALogType: TLogType; const AFmt: string; const AParams: array of const); static;
+    class procedure Log(const ALogType: TLogType; const AMsg: string); static;
   end;
 
 implementation
@@ -33,9 +33,9 @@ uses
 
 { TPlatformOSLog }
 
-class procedure TPlatformOSLog.Log(const ALogType: TLogType; const AFmt: string; const AParams: array of const);
+class procedure TPlatformOSLog.Log(const ALogType: TLogType; const AMsg: string);
 begin
-  Writeln(cLogTypeCaptions[ALogType] + ': ' + Format(AFmt, AParams));
+  Writeln(cLogTypeCaptions[ALogType] + ': ' + AMsg);
 end;
 
 end.

@@ -28,6 +28,7 @@ type
     ///   Timestamps ASrc if prefixed with an '@'
     /// </summary>
     class function ts(const ASrc: string): string; static;
+    class function FormatMsg(const AFmt: string; const AParams: array of const): string; static;
   public
     /// <summary>
     ///   Replacement functions for IFMXLoggingService
@@ -68,6 +69,14 @@ uses
 
 { TOSLog }
 
+class function TOSLog.FormatMsg(const AFmt: string; const AParams: array of const): string;
+begin
+  if Length(AParams) > 0 then
+    Result := Format(AFmt, AParams)
+  else
+    Result := AFmt;
+end;
+
 class function TOSLog.ts(const ASrc: string): string;
 begin
   if ASrc.StartsWith('@') then
@@ -79,37 +88,37 @@ end;
 class procedure TOSLog.d(const AFmt: string);
 begin
   if FEnabled then
-    TPlatformOSLog.Log(TLogType.Debug, ts(AFmt), []);
+    TPlatformOSLog.Log(TLogType.Debug, FormatMsg(ts(AFmt), []));
 end;
 
 class procedure TOSLog.d(const AFmt: string; const AParams: array of const);
 begin
   if FEnabled then
-    TPlatformOSLog.Log(TLogType.Debug, ts(AFmt), AParams);
+    TPlatformOSLog.Log(TLogType.Debug, FormatMsg(ts(AFmt), AParams));
 end;
 
 class procedure TOSLog.e(const AFmt: string);
 begin
   if FEnabled then
-    TPlatformOSLog.Log(TLogType.Error, ts(AFmt), []);
+    TPlatformOSLog.Log(TLogType.Error, FormatMsg(ts(AFmt), []));
 end;
 
 class procedure TOSLog.e(const AFmt: string; const AParams: array of const);
 begin
   if FEnabled then
-    TPlatformOSLog.Log(TLogType.Error, ts(AFmt), AParams);
+    TPlatformOSLog.Log(TLogType.Error, FormatMsg(ts(AFmt), AParams));
 end;
 
 class procedure TOSLog.w(const AFmt: string);
 begin
   if FEnabled then
-    TPlatformOSLog.Log(TLogType.Warning, ts(AFmt), []);
+    TPlatformOSLog.Log(TLogType.Warning, FormatMsg(ts(AFmt), []));
 end;
 
 class procedure TOSLog.w(const AFmt: string; const AParams: array of const);
 begin
   if FEnabled then
-    TPlatformOSLog.Log(TLogType.Warning, ts(AFmt), AParams);
+    TPlatformOSLog.Log(TLogType.Warning, FormatMsg(ts(AFmt), AParams));
 end;
 
 class procedure TOSLog.Trace;

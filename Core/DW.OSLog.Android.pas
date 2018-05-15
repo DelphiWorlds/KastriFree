@@ -22,7 +22,7 @@ type
   /// </remarks>
   TPlatformOSLog = record
   public
-    class procedure Log(const ALogType: TLogType; const AFmt: string; const AParams: array of const); static;
+    class procedure Log(const ALogType: TLogType; const AMsg: string); static;
     class procedure Trace; static;
   end;
 
@@ -38,12 +38,12 @@ uses
 
 { TPlatformOSLog }
 
-class procedure TPlatformOSLog.Log(const ALogType: TLogType; const AFmt: string; const AParams: array of const);
+class procedure TPlatformOSLog.Log(const ALogType: TLogType; const AMsg: string);
 var
   LMarshaller: TMarshaller;
   LPointer: Pointer;
 begin
-  LPointer := LMarshaller.AsUtf8(Format(AFmt, AParams)).ToPointer;
+  LPointer := LMarshaller.AsUtf8(AMsg).ToPointer;
   case ALogType of
     TLogType.Debug:
       LOGI(LPointer);
@@ -59,7 +59,7 @@ var
   LTrace: JString;
 begin
   LTrace := TJutil_Log.JavaClass.getStackTraceString(TJException.JavaClass.init);
-  Log(TLogType.Debug, JStringToString(LTrace), []);
+  Log(TLogType.Debug, JStringToString(LTrace));
 end;
 
 end.
