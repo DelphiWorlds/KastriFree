@@ -20,13 +20,13 @@ function imp_implementationWithBlock(block: pointer): pointer; cdecl; external l
 function imp_removeBlock(anImp: pointer): Integer; cdecl; external libobjc name _PU + 'imp_removeBlock';
 
 // Convenience method for adding methods to objective-c delegates
-procedure AddClassMethod(const AClassName, AMethodName: MarshaledAString; const AAddress: Pointer; const ATypesFormat: MarshaledAString);
+function AddClassMethod(const AClassName, AMethodName: MarshaledAString; const AAddress: Pointer; const ATypesFormat: MarshaledAString): Boolean;
 
 implementation
 
-procedure AddClassMethod(const AClassName, AMethodName: MarshaledAString; const AAddress: Pointer; const ATypesFormat: MarshaledAString);
+function AddClassMethod(const AClassName, AMethodName: MarshaledAString; const AAddress: Pointer; const ATypesFormat: MarshaledAString): Boolean;
 begin
-  class_addMethod(objc_getClass(AClassName), sel_getUid(AMethodName), AAddress, ATypesFormat);
+  Result := class_addMethod(objc_getClass(AClassName), sel_getUid(AMethodName), AAddress, ATypesFormat) <> 0;
 end;
 
 end.
