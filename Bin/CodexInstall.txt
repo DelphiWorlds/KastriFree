@@ -1,6 +1,8 @@
 Codex IDE Expert
 ----------------
 
+**** NOTE: There's a known issue with the CodexD10T.dll which causes AV's on shutdown of the IDE - this is being looked into ****
+
 These are install instructions for the "official" release of Codex. The binary for the expert is named: CodexD10T.dll
 
 At present, I have built this expert for Delphi 10.2 Tokyo only, as it is undecided as to whether I may seek to have some or all of it integrated into GExperts, or have it as a completely standalone expert.
