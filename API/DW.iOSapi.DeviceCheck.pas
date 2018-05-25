@@ -18,7 +18,9 @@ unit DW.iOSapi.DeviceCheck;
 interface
 
 uses
-  Macapi.CoreFoundation, Macapi.CoreServices, Macapi.Dispatch, Macapi.Mach,  Macapi.ObjCRuntime, Macapi.ObjectiveC,
+  // Mac
+  Macapi.ObjectiveC,
+  // iOS
   iOSapi.CocoaTypes, iOSapi.Foundation;
 
 const
