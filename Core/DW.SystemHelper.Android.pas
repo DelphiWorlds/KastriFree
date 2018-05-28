@@ -28,6 +28,7 @@ type
     procedure RegisterDelphiNativeMethods;
   protected
     procedure RequestPermissions(const APermissions: array of string; const ARequestCode: Integer); override;
+    function GetStatusBarHeight: Integer; override;
   public
     constructor Create(const ASystemHelper: TSystemHelper); override;
   end;
@@ -39,7 +40,9 @@ uses
   System.SysUtils, System.Classes,
   // Android
   Androidapi.JNI.GraphicsContentViewText, Androidapi.Helpers, Androidapi.JNIBridge, Androidapi.JNI.JavaTypes, Androidapi.NativeActivity,
-  Androidapi.JNI.App;
+  Androidapi.JNI.App, Androidapi.JNI.Os,
+  // FMX
+  FMX.Platform;
 
 type
   TOpenSystemHelper = class(TSystemHelper);
@@ -52,6 +55,25 @@ begin
   if FInstance = nil then
     FInstance := Self;
   RegisterDelphiNativeMethods;
+end;
+
+function TPlatformSystemHelper.GetStatusBarHeight: Integer;
+var
+  LRect: JRect;
+  LScale: Single;
+  LScreenService: IFMXScreenService;
+begin
+  Result := 0;
+  if TJBuild_VERSION.JavaClass.SDK_INT >= 24 then
+  begin
+    if TPlatformServices.Current.SupportsPlatformService(IFMXScreenService, LScreenService) then
+      LScale := LScreenService.GetScreenScale
+    else
+      LScale := 1;
+    LRect := TJRect.Create;
+    TAndroidHelper.Activity.getWindow.getDecorView.getWindowVisibleDisplayFrame(LRect);
+    Result := Round(LRect.top / LScale);
+  end;
 end;
 
 class procedure TPlatformSystemHelper.OnRequestPermissionsResultNative(AEnv: PJNIEnv; AThis: JNIObject; requestCode: Integer;

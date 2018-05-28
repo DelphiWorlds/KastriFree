@@ -38,6 +38,7 @@ type
     FSystemHelper: TSystemHelper;
   protected
     procedure RequestPermissions(const APermissions: array of string; const ARequestCode: Integer); virtual; abstract;
+    function GetStatusBarHeight: Integer; virtual;
   public
     constructor Create(const ASystemHelper: TSystemHelper); virtual;
     property SystemHelper: TSystemHelper read FSystemHelper;
@@ -47,12 +48,14 @@ type
   private
     FPlatformSystemHelper: TCustomPlatformSystemHelper;
     FOnPermissionsResult: TPermissionsResultEvent;
+    function GetStatusBarHeight: Integer;
   protected
     procedure DoPermissionsResult(const RequestCode: Integer; const Results: TPermissionResults);
   public
     constructor Create;
     destructor Destroy; override;
     procedure RequestPermissions(const APermissions: array of string; const ARequestCode: Integer);
+    property StatusBarHeight: Integer read GetStatusBarHeight;
     property OnPermissionsResult: TPermissionsResultEvent read FOnPermissionsResult write FOnPermissionsResult;
   end;
 
@@ -118,6 +121,11 @@ begin
   FSystemHelper := ASystemHelper;
 end;
 
+function TCustomPlatformSystemHelper.GetStatusBarHeight: Integer;
+begin
+  Result := 0;
+end;
+
 { TSystemHelper }
 
 constructor TSystemHelper.Create;
@@ -141,6 +149,11 @@ end;
 procedure TSystemHelper.RequestPermissions(const APermissions: array of string; const ARequestCode: Integer);
 begin
   FPlatformSystemHelper.RequestPermissions(APermissions, ARequestCode);
+end;
+
+function TSystemHelper.GetStatusBarHeight: Integer;
+begin
+  Result := FPlatformSystemHelper.GetStatusBarHeight;
 end;
 
 end.

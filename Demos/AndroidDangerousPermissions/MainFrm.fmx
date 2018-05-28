@@ -15,7 +15,7 @@ object frmMain: TfrmMain
     Margins.Right = 4.000000000000000000
     Margins.Bottom = 4.000000000000000000
     Position.X = 4.000000000000000000
-    Position.Y = 4.000000000000000000
+    Position.Y = 17.000000000000000000
     Size.Width = 386.000000000000000000
     Size.Height = 41.000000000000000000
     Size.PlatformDefault = False
@@ -30,7 +30,7 @@ object frmMain: TfrmMain
     Margins.Right = 4.000000000000000000
     Margins.Bottom = 4.000000000000000000
     Position.X = 4.000000000000000000
-    Position.Y = 53.000000000000000000
+    Position.Y = 66.000000000000000000
     Size.Width = 386.000000000000000000
     Size.Height = 41.000000000000000000
     Size.PlatformDefault = False
@@ -45,12 +45,26 @@ object frmMain: TfrmMain
     Margins.Right = 4.000000000000000000
     Margins.Bottom = 4.000000000000000000
     Position.X = 4.000000000000000000
-    Position.Y = 102.000000000000000000
+    Position.Y = 115.000000000000000000
     Size.Width = 386.000000000000000000
     Size.Height = 41.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 0
     Text = 'Request SMS Permissions'
     OnClick = RequestSMSPermissionsButtonClick
+  end
+  object StatusBarRectangle: TRectangle
+    Align = Top
+    Fill.Color = claBlack
+    Sides = []
+    Size.Width = 394.000000000000000000
+    Size.Height = 13.000000000000000000
+    Size.PlatformDefault = False
+  end
+  object LocationSensor: TLocationSensor
+    Accuracy = 10.000000000000000000
+    Distance = 100.000000000000000000
+    Left = 168
+    Top = 228
   end
 end

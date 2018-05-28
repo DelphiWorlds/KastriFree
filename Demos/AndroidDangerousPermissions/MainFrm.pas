@@ -5,13 +5,15 @@ interface
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Controls.Presentation, FMX.StdCtrls,
-  DW.SystemHelper;
+  DW.SystemHelper, System.Sensors, System.Sensors.Components, FMX.Layouts, FMX.Objects;
 
 type
   TfrmMain = class(TForm)
     CameraPermissionButton: TButton;
     RequestLocationPermissionsButton: TButton;
     RequestSMSPermissionsButton: TButton;
+    LocationSensor: TLocationSensor;
+    StatusBarRectangle: TRectangle;
     procedure CameraPermissionButtonClick(Sender: TObject);
     procedure RequestLocationPermissionsButtonClick(Sender: TObject);
     procedure RequestSMSPermissionsButtonClick(Sender: TObject);
@@ -53,6 +55,7 @@ begin
   inherited;
   FSystemHelper := TSystemHelper.Create;
   FSystemHelper.OnPermissionsResult := PermissionsResultHandler;
+  StatusBarRectangle.Height := FSystemHelper.StatusBarHeight;
 end;
 
 procedure TfrmMain.PermissionsResultHandler(Sender: TObject; const ARequestCode: Integer; const AResults: TPermissionResults);
@@ -72,7 +75,10 @@ begin
     cRequestCodeLocation:
     begin
       if AResults.AreAllGranted then
-        ShowMessage('You granted access to location')
+      begin
+        ShowMessage('You granted access to location');
+        LocationSensor.Active := True;
+      end
       else if AResults.DeniedResults.Count = 1 then
         ShowMessage('Both types of location access are required!')
       else if not AResults.AreAllGranted then
