@@ -1,18 +1,17 @@
 Codex IDE Expert
 ----------------
 
-**** NOTE: There's a known issue with the CodexD10T.dll which causes AV's on shutdown of the IDE - this is being looked into ****
+**** NOTE: There's a known issue which occasionally causes AV's on shutdown of the IDE - this is being looked into ****
 
-These are install instructions for the "official" release of Codex. The binary for the expert is named: CodexD10T.dll
+Use CodexSetup.exe to install Codex, which includes support for Delphi 10.1 Berlin and Delphi 10.2 Tokyo.
 
-At present, I have built this expert for Delphi 10.2 Tokyo only, as it is undecided as to whether I may seek to have some or all of it integrated into GExperts, or have it as a completely standalone expert.
+Codex installs to a menu item in the Tools menu in Delphi. Better documentation is coming, meanwhile..
 
-To install, I suggest using either GExperts' Expert Manager, or create a registry entry with a string value in:
+Release 0.0.1:
 
-  HKEY_CURRENT_USER\SOFTWARE\Embarcadero\BDS\19.0\Experts
-
-With the value pointing to wherever you have copied the dll. Either way, you will need to restart Delphi.
-
-Codex installs to a menu item in the Tools menu in Delphi.
-
-Documentation is coming, though some of the functionality is self-explanatory
+* Adds an option for startup, loading the last project opened before the IDE was last shut down 
+* Adds an option for showing a Favorites menu under the file menu, which uses the GExperts Favorite Files data (requires GExperts)
+* Adds an option for deleting .stat files from projects (at present, not as reliable as it could be)
+* Adds an option for adjusting the Project Options dialog so that the height does not exceed the working height of the display
+* Adds 2 menu items to the Codex submenu, for showing specific parts of the IDE options, namely SDK Manager, and Environment Variables
+* Adds an Image Assets option for scanning image files that match the requirements for icons/splash images for mobile projects
