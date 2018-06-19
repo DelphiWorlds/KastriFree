@@ -28,9 +28,9 @@ type
     procedure RegisterDelphiNativeMethods;
   protected
     procedure RequestPermissions(const APermissions: array of string; const ARequestCode: Integer); override;
-    function GetStatusBarHeight: Integer; override;
   public
     constructor Create(const ASystemHelper: TSystemHelper); override;
+    class function CheckPermission(const APermission: string): Boolean;
   end;
 
 implementation
@@ -40,9 +40,7 @@ uses
   System.SysUtils, System.Classes,
   // Android
   Androidapi.JNI.GraphicsContentViewText, Androidapi.Helpers, Androidapi.JNIBridge, Androidapi.JNI.JavaTypes, Androidapi.NativeActivity,
-  Androidapi.JNI.App, Androidapi.JNI.Os,
-  // FMX
-  FMX.Platform;
+  Androidapi.JNI.App, Androidapi.JNI.Os;
 
 type
   TOpenSystemHelper = class(TSystemHelper);
@@ -57,23 +55,9 @@ begin
   RegisterDelphiNativeMethods;
 end;
 
-function TPlatformSystemHelper.GetStatusBarHeight: Integer;
-var
-  LRect: JRect;
-  LScale: Single;
-  LScreenService: IFMXScreenService;
+class function TPlatformSystemHelper.CheckPermission(const APermission: string): Boolean;
 begin
-  Result := 0;
-  if TJBuild_VERSION.JavaClass.SDK_INT >= 24 then
-  begin
-    if TPlatformServices.Current.SupportsPlatformService(IFMXScreenService, LScreenService) then
-      LScale := LScreenService.GetScreenScale
-    else
-      LScale := 1;
-    LRect := TJRect.Create;
-    TAndroidHelper.Activity.getWindow.getDecorView.getWindowVisibleDisplayFrame(LRect);
-    Result := Round(LRect.top / LScale);
-  end;
+  Result := TAndroidHelper.Context.checkSelfPermission(StringToJString(APermission)) = TJPackageManager.JavaClass.PERMISSION_GRANTED;
 end;
 
 class procedure TPlatformSystemHelper.OnRequestPermissionsResultNative(AEnv: PJNIEnv; AThis: JNIObject; requestCode: Integer;

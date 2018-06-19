@@ -38,7 +38,6 @@ type
     FSystemHelper: TSystemHelper;
   protected
     procedure RequestPermissions(const APermissions: array of string; const ARequestCode: Integer); virtual; abstract;
-    function GetStatusBarHeight: Integer; virtual;
   public
     constructor Create(const ASystemHelper: TSystemHelper); virtual;
     property SystemHelper: TSystemHelper read FSystemHelper;
@@ -48,20 +47,21 @@ type
   private
     FPlatformSystemHelper: TCustomPlatformSystemHelper;
     FOnPermissionsResult: TPermissionsResultEvent;
-    function GetStatusBarHeight: Integer;
   protected
     procedure DoPermissionsResult(const RequestCode: Integer; const Results: TPermissionResults);
   public
     constructor Create;
     destructor Destroy; override;
+    class function CheckPermissions(const APermissions: array of string): Boolean; overload;
+    class function CheckPermissions(const APermissions: array of string; var AResults: TPermissionResults): Boolean; overload;
     procedure RequestPermissions(const APermissions: array of string; const ARequestCode: Integer);
-    property StatusBarHeight: Integer read GetStatusBarHeight;
     property OnPermissionsResult: TPermissionsResultEvent read FOnPermissionsResult write FOnPermissionsResult;
   end;
 
 implementation
 
 uses
+  DW.OSLog,
 {$IF Defined(ANDROID)}
   DW.SystemHelper.Android;
 {$ELSE}
@@ -121,11 +121,6 @@ begin
   FSystemHelper := ASystemHelper;
 end;
 
-function TCustomPlatformSystemHelper.GetStatusBarHeight: Integer;
-begin
-  Result := 0;
-end;
-
 { TSystemHelper }
 
 constructor TSystemHelper.Create;
@@ -140,6 +135,30 @@ begin
   inherited;
 end;
 
+class function TSystemHelper.CheckPermissions(const APermissions: array of string; var AResults: TPermissionResults): Boolean;
+var
+  I: Integer;
+begin
+  SetLength(AResults, Length(APermissions));
+  for I := 0 to AResults.Count - 1 do
+  begin
+    AResults[I].Permission := APermissions[I];
+    AResults[I].Granted := TPlatformSystemHelper.CheckPermission(AResults[I].Permission);
+    if AResults[I].Granted then
+      TOSLog.d('%s granted', [AResults[I].Permission])
+    else
+      TOSLog.d('%s denied', [AResults[I].Permission]);
+  end;
+  Result := AResults.AreAllGranted;
+end;
+
+class function TSystemHelper.CheckPermissions(const APermissions: array of string): Boolean;
+var
+  LResults: TPermissionResults;
+begin
+  Result := TSystemHelper.CheckPermissions(APermissions, LResults);
+end;
+
 procedure TSystemHelper.DoPermissionsResult(const RequestCode: Integer; const Results: TPermissionResults);
 begin
   if Assigned(FOnPermissionsResult) then
@@ -149,11 +168,6 @@ end;
 procedure TSystemHelper.RequestPermissions(const APermissions: array of string; const ARequestCode: Integer);
 begin
   FPlatformSystemHelper.RequestPermissions(APermissions, ARequestCode);
-end;
-
-function TSystemHelper.GetStatusBarHeight: Integer;
-begin
-  Result := FPlatformSystemHelper.GetStatusBarHeight;
 end;
 
 end.
