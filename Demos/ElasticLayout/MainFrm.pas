@@ -37,7 +37,7 @@ end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  Layout1.Elastic := True;
+  Layout1.IsElastic := True;
 end;
 
 end.
