@@ -130,7 +130,6 @@ var
   LControlBottom: Single;
   LControlPosition: TPointF;
   LMemo: TCustomMemo;
-  LParent: TControl;
 begin
   FFocusedControl := nil;
   if (FControlsLayout = nil) or (Root = nil) or (Root.Focused = nil) or not (Root.Focused.GetObject is TControl) then
