@@ -8,7 +8,7 @@ unit DW.VKVertScrollbox;
 {                                                       }
 {*******************************************************}
 
-// ***** NOTE: This unit should be used only in conjunction with the workaround described here:
+// ***** NOTE: For Android, this unit should be used only in conjunction with the workaround described here:
 //   https://https://github.com/DelphiWorlds/KastriFree/blob/master/Workarounds/RSP-17917.txt
 // For an example of how to use this unit, please refer to the demo, here:
 //   https://github.com/DelphiWorlds/KastriFree/tree/master/Demos/VKVertScrollbox
@@ -37,6 +37,7 @@ type
     procedure VKStateChangeMessageHandler(const Sender: TObject; const M: TMessage);
   protected
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+    procedure Resize; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -127,7 +128,9 @@ procedure TVertScrollBox.MoveControls;
 var
   LOffset: Single;
   LControlBottom: Single;
+  LControlPosition: TPointF;
   LMemo: TCustomMemo;
+  LParent: TControl;
 begin
   FFocusedControl := nil;
   if (FControlsLayout = nil) or (Root = nil) or (Root.Focused = nil) or not (Root.Focused.GetObject is TControl) then
@@ -135,14 +138,18 @@ begin
   // + 64 = "fudge" factor for Android in landscape mode
   FControlsLayout.Height := Height + FVKRect.Height + 64;
   FFocusedControl := TControl(Root.Focused.GetObject);
+  // Find control position relative to the layout
+  LControlPosition := FFocusedControl.LocalToAbsolute(PointF(0,0));
+  // LControlPosition := FControlsLayout.AbsoluteToLocal(LControlPosition);
+  // Find the "bottom" of the control
   LControlBottom := 0;
-  // For TCustomMemo controls, perhaps get the caret position
+  // For TCustomMemo controls, get the caret position
   if FFocusedControl is TCustomEdit then
-    LControlBottom := FFocusedControl.Position.Y + FFocusedControl.AbsoluteHeight
+    LControlBottom := LControlPosition.Y + FFocusedControl.AbsoluteHeight
   else if FFocusedControl is TCustomMemo then
   begin
     LMemo := TCustomMemo(FFocusedControl);
-    LControlBottom := LMemo.Position.Y + (LMemo.Caret.Pos.Y - LMemo.ViewportPosition.Y) + LMemo.Caret.size.Height + 4;
+    LControlBottom := LControlPosition.Y + (LMemo.Caret.Pos.Y - LMemo.ViewportPosition.Y) + LMemo.Caret.size.Height + 4;
   end;
   // + 2 = to give a tiny bit of clearance between the control "bottom" and the VK
   LOffset := LControlBottom + 2 + GetStatusBarHeight - FVKRect.Top;
@@ -155,6 +162,13 @@ begin
   inherited;
   if (AComponent = FControlsLayout) and (Operation = TOperation.opRemove) then
     FControlsLayout := nil;
+end;
+
+procedure TVertScrollBox.Resize;
+begin
+  inherited;
+  if (FControlsLayout <> nil) and (FControlsLayout.Height < Height) then
+    FControlsLayout.Height := Height;
 end;
 
 procedure TVertScrollBox.RestoreControls;
