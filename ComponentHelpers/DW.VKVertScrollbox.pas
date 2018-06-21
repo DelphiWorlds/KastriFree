@@ -151,7 +151,7 @@ begin
     LControlBottom := LControlPosition.Y + (LMemo.Caret.Pos.Y - LMemo.ViewportPosition.Y) + LMemo.Caret.size.Height + 4;
   end;
   // + 2 = to give a tiny bit of clearance between the control "bottom" and the VK
-  LOffset := LControlBottom + 2 + GetStatusBarHeight - FVKRect.Top;
+  LOffset := (LControlBottom + 2 + GetStatusBarHeight - FVKRect.Top) / Scale.Y;
   if LOffset > 0 then
     ViewportPosition := PointF(0, LOffset);
 end;
