@@ -57,10 +57,6 @@ type
     /// </summary>
     class function GetOffsetRect: TRectF; static;
     /// <summary>
-    ///   Returns target Sdk version - only applies to Android, for now
-    /// </summary>
-    class function GetTargetSdkVersion: Integer; static;
-    /// <summary>
     ///   Returns the unique id for the device, if any exists
     /// </summary>
     class function GetUniqueDeviceID: string; static;
@@ -149,15 +145,6 @@ end;
 class function TOSDevice.GetPackageVersion: string;
 begin
   Result := TPlatformOSDevice.GetPackageVersion;
-end;
-
-class function TOSDevice.GetTargetSdkVersion: Integer;
-begin
-  {$IF Defined(ANDROID)}
-  Result := TPlatformOSDevice.GetTargetSdkVersion;
-  {$ELSE}
-  Result := 0;
-  {$ENDIF}
 end;
 
 class function TOSDevice.GetOffsetRect: TRectF;
