@@ -18,9 +18,11 @@ type
   /// </remarks>
   TPlatformOSDevice = record
   public
+    class function CheckPermission(const APermission: string): Boolean; static;
     class function GetDeviceName: string; static;
     class function GetPackageID: string; static;
     class function GetPackageVersion: string; static;
+    class function GetTargetSdkVersion: Integer; static;
     class function GetUniqueDeviceID: string; static;
     class function IsTouchDevice: Boolean; static;
   end;
@@ -34,6 +36,11 @@ uses
   Androidapi.Helpers, Androidapi.JNI.JavaTypes, Androidapi.JNI.Provider, Androidapi.JNI.Os,  Androidapi.JNI.GraphicsContentViewText;
 
 { TPlatformOSDevice }
+
+class function TPlatformOSDevice.CheckPermission(const APermission: string): Boolean;
+begin
+  Result := TAndroidHelper.Context.checkSelfPermission(StringToJString(APermission)) = TJPackageManager.JavaClass.PERMISSION_GRANTED;
+end;
 
 class function TPlatformOSDevice.GetDeviceName: string;
 begin
@@ -53,6 +60,14 @@ var
 begin
   LPackageInfo := TAndroidHelper.Context.getPackageManager.getPackageInfo(TAndroidHelper.Context.getPackageName, 0);
   Result := JStringToString(LPackageInfo.versionName);
+end;
+
+class function TPlatformOSDevice.GetTargetSdkVersion: Integer;
+var
+  LApplicationInfo: JApplicationInfo;
+begin
+  LApplicationInfo := TAndroidHelper.Context.getPackageManager.getApplicationInfo(TAndroidHelper.Context.getPackageName, 0);
+  Result := LApplicationInfo.targetSdkVersion;
 end;
 
 // **** NOTE: Use this value with care, as it is reset if the device is rooted, or wiped

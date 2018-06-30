@@ -14,7 +14,9 @@ interface
 
 uses
   // RTL
-  System.Types;
+  System.Types,
+  // DW
+  DW.PermissionsTypes;
 
 type
   /// <summary>
@@ -25,6 +27,15 @@ type
   /// </remarks>
   TOSDevice = record
   public
+    /// <summary>
+    ///   Checks whether or not a single permissions has been granted
+    /// </summary>
+    class function CheckPermission(const APermission: string): Boolean; static;
+    /// <summary>
+    ///   Checks whether or not a set of permissions have been granted
+    /// </summary>
+    class function CheckPermissions(const APermissions: array of string): Boolean; overload; static;
+    class function CheckPermissions(const APermissions: array of string; var AResults: TPermissionResults): Boolean; overload; static;
     /// <summary>
     ///   Returns the name of the device, whether it is mobile or desktop
     /// </summary>
@@ -46,6 +57,10 @@ type
     /// </summary>
     class function GetOffsetRect: TRectF; static;
     /// <summary>
+    ///   Returns target Sdk version - only applies to Android, for now
+    /// </summary>
+    class function GetTargetSdkVersion: Integer; static;
+    /// <summary>
     ///   Returns the unique id for the device, if any exists
     /// </summary>
     class function GetUniqueDeviceID: string; static;
@@ -64,6 +79,7 @@ implementation
 uses
   // RTL
   System.SysUtils,
+  DW.OSLog,
   {$IF Defined(ANDROID)}
   DW.OSDevice.Android;
   {$ELSEIF Defined(IOS)}
@@ -77,6 +93,39 @@ uses
   {$ENDIF}
 
 { TOSDevice }
+
+class function TOSDevice.CheckPermission(const APermission: string): Boolean;
+begin
+  {$IF Defined(ANDROID)}
+  Result := TPlatformOSDevice.CheckPermission(APermission);
+  {$ELSE}
+  Result := True;
+  {$ENDIF}
+end;
+
+class function TOSDevice.CheckPermissions(const APermissions: array of string; var AResults: TPermissionResults): Boolean;
+var
+  I: Integer;
+begin
+  SetLength(AResults, Length(APermissions));
+  for I := 0 to AResults.Count - 1 do
+  begin
+    AResults[I].Permission := APermissions[I];
+    AResults[I].Granted := TPlatformOSDevice.CheckPermission(AResults[I].Permission);
+    if AResults[I].Granted then
+      TOSLog.d('%s granted', [AResults[I].Permission])
+    else
+      TOSLog.d('%s denied', [AResults[I].Permission]);
+  end;
+  Result := AResults.AreAllGranted;
+end;
+
+class function TOSDevice.CheckPermissions(const APermissions: array of string): Boolean;
+var
+  LResults: TPermissionResults;
+begin
+  Result := CheckPermissions(APermissions, LResults);
+end;
 
 class function TOSDevice.GetDeviceName: string;
 begin
@@ -100,6 +149,15 @@ end;
 class function TOSDevice.GetPackageVersion: string;
 begin
   Result := TPlatformOSDevice.GetPackageVersion;
+end;
+
+class function TOSDevice.GetTargetSdkVersion: Integer;
+begin
+  {$IF Defined(ANDROID)}
+  Result := TPlatformOSDevice.GetTargetSdkVersion;
+  {$ELSE}
+  Result := 0;
+  {$ENDIF}
 end;
 
 class function TOSDevice.GetOffsetRect: TRectF;
