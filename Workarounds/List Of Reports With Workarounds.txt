@@ -1,5 +1,8 @@
 List of some reports that I have been tracking, that have workarounds in the reports themselves:
 
+https://quality.embarcadero.com/browse/RSP-15649
+[Android, iOS] FMX TRectangle sides messed up on mobiles
+
 https://quality.embarcadero.com/browse/RSP-15717
 Declaration for CLRegion.initCircularRegionWithCenter is incorrect
 
@@ -35,6 +38,9 @@ FMX with GlobalUseDX := False causes GDI Object Leak, causing crash.
 
 https://quality.embarcadero.com/browse/RSP-19655
 Implement FullScreen on iOS including visible status bar
+
+https://quality.embarcadero.com/browse/RSP-20676
+TTextSettings.SetFontColor must set IsAdjustChanged under iOS
 
 
 
