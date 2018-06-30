@@ -20,7 +20,7 @@ type
     /// <summary>
     ///   Returns the equivalent of "AndroidClass.class"
     /// </summary>
-    class function UriFromFile(const AImageFile: JFile): Jnet_Uri; static;
+    class function UriFromFile(const AFile: JFile): Jnet_Uri; static;
   end;
 
 implementation
@@ -29,7 +29,7 @@ uses
   // RTL
   System.SysUtils,
   // Android
-  Androidapi.Helpers, Androidapi.JNI.GraphicsContentViewText,
+  Androidapi.Helpers, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.App,
   // DW
   DW.OSDevice, DW.Androidapi.JNI.FileProvider;
 
@@ -40,17 +40,17 @@ begin
   Result := TJLang_Class.JavaClass.forName(StringToJString(APackageClassName), True, TAndroidHelper.Activity.getClassLoader);
 end;
 
-class function TAndroidHelperEx.UriFromFile(const AImageFile: JFile): Jnet_Uri;
+class function TAndroidHelperEx.UriFromFile(const AFile: JFile): Jnet_Uri;
 var
   LAuthority: JString;
 begin
   if GetTargetSdkVersion >= 24 then
   begin
     LAuthority := StringToJString(JStringToString(TAndroidHelper.Context.getApplicationContext.getPackageName) + '.fileprovider');
-    Result := TJFileProvider.JavaClass.getUriForFile(TAndroidHelper.Context, LAuthority, AImageFile);
+    Result := TJFileProvider.JavaClass.getUriForFile(TAndroidHelper.Context, LAuthority, AFile);
   end
   else
-    Result := TJnet_uri.JavaClass.fromFile(AImageFile);
+    Result := TJnet_uri.JavaClass.fromFile(AFile);
 end;
 
 class function TAndroidHelperEx.GetTargetSdkVersion: Integer;
