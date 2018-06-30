@@ -1,5 +1,15 @@
 unit DW.Android.Helpers;
 
+{*******************************************************}
+{                                                       }
+{                    Kastri Free                        }
+{                                                       }
+{          DelphiWorlds Cross-Platform Library          }
+{                                                       }
+{*******************************************************}
+
+{$I DW.GlobalDefines.inc}
+
 interface
 
 uses
@@ -18,8 +28,11 @@ type
     /// </summary>
     class function GetTargetSdkVersion: Integer; static;
     /// <summary>
-    ///   Returns the equivalent of "AndroidClass.class"
+    ///   Converts file to uri, using FileProvider if target API >= 24
     /// </summary>
+    /// <remarks>
+    ///   Use this only when accessing files with an "external" URI
+    /// </remarks>
     class function UriFromFile(const AFile: JFile): Jnet_Uri; static;
   end;
 
