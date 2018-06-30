@@ -33,6 +33,7 @@ type
   private
     FBroadcastReceiver: JFMXBroadcastReceiver;
     FIntentFilter: JIntentFilter;
+    FLocal: Boolean;
     FReceiverListener: TMultiReceiverListener;
   protected
     procedure Receive(context: JContext; intent: JIntent); virtual; abstract;
@@ -40,6 +41,7 @@ type
     property IntentFilter: JIntentFilter read FIntentFilter;
   public
     constructor Create(const ALocal: Boolean = False);
+    destructor Destroy; override;
   end;
 
 implementation
@@ -68,14 +70,23 @@ end;
 constructor TMultiReceiver.Create(const ALocal: Boolean = False);
 begin
   inherited Create;
+  FLocal := ALocal;
   FReceiverListener := TMultiReceiverListener.Create(Self);
   FBroadcastReceiver := TJFMXBroadcastReceiver.JavaClass.init(FReceiverListener);
   FIntentFilter := TJIntentFilter.JavaClass.init;
   ConfigureActions;
-  if not ALocal then
+  if not FLocal then
     TAndroidHelper.Context.registerReceiver(FBroadcastReceiver, FIntentFilter)
   else
     TJLocalBroadcastManager.JavaClass.getInstance(TAndroidHelper.Context).registerReceiver(FBroadcastReceiver, FIntentFilter);
+end;
+
+destructor TMultiReceiver.Destroy;
+begin
+  if not FLocal then
+    TAndroidHelper.Context.unregisterReceiver(FBroadcastReceiver)
+  else
+    TJLocalBroadcastManager.JavaClass.getInstance(TAndroidHelper.Context).unregisterReceiver(FBroadcastReceiver);
 end;
 
 end.
