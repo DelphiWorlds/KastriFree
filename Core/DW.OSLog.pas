@@ -40,6 +40,13 @@ type
     class procedure w(const AFmt: string); overload; static;
     class procedure w(const AFmt: string; const AParams: array of const); overload; static;
     /// <summary>
+    ///   Retrieves the OS stack trace. ANDROID ONLY at present
+    /// </summary>
+    /// <remarks>
+    ///   Can be useful for working out "how the OS arrived here" when implementing methods of Android interfaces
+    /// </remarks>
+    class function GetTrace: string; static;
+    /// <summary>
     ///   Dumps a stack trace to the OS log. ANDROID ONLY at present
     /// </summary>
     /// <remarks>
@@ -119,6 +126,15 @@ class procedure TOSLog.w(const AFmt: string; const AParams: array of const);
 begin
   if FEnabled then
     TPlatformOSLog.Log(TLogType.Warning, FormatMsg(ts(AFmt), AParams));
+end;
+
+class function TOSLog.GetTrace: string;
+begin
+  {$IF Defined(ANDROID)}
+  Result := TPlatformOSLog.GetTrace;
+  {$ELSE}
+  Result := '';
+  {$ENDIF}
 end;
 
 class procedure TOSLog.Trace;

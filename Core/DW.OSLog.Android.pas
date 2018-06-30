@@ -22,6 +22,7 @@ type
   /// </remarks>
   TPlatformOSLog = record
   public
+    class function GetTrace: string; static;
     class procedure Log(const ALogType: TLogType; const AMsg: string); static;
     class procedure Trace; static;
   end;
@@ -32,7 +33,7 @@ uses
   // RTL
   System.SysUtils,
   // Android
-  Androidapi.Log, Androidapi.JNI.JavaTypes, Androidapi.Helpers,
+  Androidapi.JNI.JavaTypes, Androidapi.Log, Androidapi.Helpers,
   // DW
   DW.Androidapi.JNI.Log;
 
@@ -54,12 +55,14 @@ begin
   end;
 end;
 
-class procedure TPlatformOSLog.Trace;
-var
-  LTrace: JString;
+class function TPlatformOSLog.GetTrace: string;
 begin
-  LTrace := TJutil_Log.JavaClass.getStackTraceString(TJException.JavaClass.init);
-  Log(TLogType.Debug, JStringToString(LTrace));
+  Result := JStringToString(TJutil_Log.JavaClass.getStackTraceString(TJException.JavaClass.init));
+end;
+
+class procedure TPlatformOSLog.Trace;
+begin
+  Log(TLogType.Debug, GetTrace);
 end;
 
 end.
