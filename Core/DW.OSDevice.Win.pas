@@ -20,9 +20,10 @@ type
   /// <remarks>
   ///   DO NOT ADD ANY FMX UNITS TO THESE FUNCTIONS
   /// </remarks>
-  TPlatformOSDevice = record
+  TPlatformOSDevice = class(TObject)
   private
     class var FFileVersionInfo: TFileVersionInfo;
+    class destructor DestroyClass;
     class function GetFileVersionInfo: TFileVersionInfo; static;
   public
     class function GetDeviceName: string; static;
@@ -46,6 +47,11 @@ const
   cMachineGuidValueName = 'MachineGuid';
 
 { TPlatformOSDevice }
+
+class destructor TPlatformOSDevice.DestroyClass;
+begin
+  FFileVersionInfo.Free;
+end;
 
 class function TPlatformOSDevice.GetDeviceName: string;
 var
