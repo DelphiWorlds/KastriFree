@@ -107,7 +107,7 @@ begin
   for I := 0 to AResults.Count - 1 do
   begin
     AResults[I].Permission := APermissions[I];
-    AResults[I].Granted := TPlatformOSDevice.CheckPermission(AResults[I].Permission);
+    AResults[I].Granted := CheckPermission(AResults[I].Permission);
     if AResults[I].Granted then
       TOSLog.d('%s granted', [AResults[I].Permission])
     else
