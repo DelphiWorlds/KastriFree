@@ -13,6 +13,7 @@ object Form1: TForm1
   object BackgroundRectangle: TRectangle
     Align = Contents
     Fill.Color = claWhitesmoke
+    Sides = []
     Size.Width = 459.000000000000000000
     Size.Height = 551.000000000000000000
     Size.PlatformDefault = False
@@ -32,7 +33,7 @@ object Form1: TForm1
     Size.Width = 459.000000000000000000
     Size.Height = 50.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 3
+    TabOrder = 2
     object TakePhotoButton: TButton
       Align = Center
       Size.Width = 117.000000000000000000

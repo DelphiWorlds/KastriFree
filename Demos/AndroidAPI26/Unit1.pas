@@ -50,6 +50,7 @@ end;
 destructor TForm1.Destroy;
 begin
   FRequester.Free;
+  FMediaLibrary.Free;
   inherited;
 end;
 
