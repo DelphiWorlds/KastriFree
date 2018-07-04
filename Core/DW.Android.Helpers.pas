@@ -44,7 +44,7 @@ uses
   // Android
   Androidapi.Helpers, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.App,
   // DW
-  DW.OSDevice, DW.Androidapi.JNI.FileProvider;
+  DW.Androidapi.JNI.FileProvider;
 
 { TAndroidHelperEx }
 
