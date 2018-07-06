@@ -26,18 +26,20 @@ uses
 type
   TVertScrollBox = class(FMX.Layouts.TVertScrollBox)
   private
+    FCaretPos: TPointF;
     FFocusChanged: Boolean;
     FFocusedControl: TControl;
-    FControlsLayout: TLayout;
+    FControlsLayout: TControl;
+    FStoredHeight: Single;
     FVKRect: TRect;
+    function HasCaretPosChanged: Boolean;
     procedure IdleMessageHandler(const Sender: TObject; const M: TMessage);
     procedure MoveControls;
     procedure RestoreControls;
-    procedure SetControlsLayout(const Value: TLayout);
+    procedure SetControlsLayout(const Value: TControl);
     procedure VKStateChangeMessageHandler(const Sender: TObject; const M: TMessage);
   protected
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
-    procedure Resize; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -48,7 +50,7 @@ type
     /// <summary>
     ///   The layout which will resize in order for the scrollbox to be scrolled
     /// </summary>
-    property ControlsLayout: TLayout read FControlsLayout write SetControlsLayout;
+    property ControlsLayout: TControl read FControlsLayout write SetControlsLayout;
   end;
 
 implementation
@@ -91,7 +93,7 @@ begin
     MoveControls;
 end;
 
-procedure TVertScrollBox.SetControlsLayout(const Value: TLayout);
+procedure TVertScrollBox.SetControlsLayout(const Value: TControl);
 begin
   if Value = FControlsLayout then
     Exit; // <======
@@ -112,10 +114,28 @@ begin
     RestoreControls;
 end;
 
+function TVertScrollBox.HasCaretPosChanged: Boolean;
+var
+  LMemo: TCustomMemo;
+begin
+  Result := False;
+  if FFocusedControl is TCustomMemo then
+  begin
+    LMemo := TCustomMemo(FFocusedControl);
+    if LMemo.Caret.Pos.Y <> FCaretPos.Y then
+    begin
+      Result := True;
+      FCaretPos.Y := LMemo.Caret.Pos.Y;
+    end;
+  end
+  else
+    FCaretPos := TPointF.Zero;
+end;
+
 procedure TVertScrollBox.IdleMessageHandler(const Sender: TObject; const M: TMessage);
 begin
-  // TIdleMessage is being used to check if the focused control has changed. This may happen without the VK hiding/showing
-  if not FVKRect.IsEmpty and (Root <> nil) and (Root.Focused <> nil) and (Root.Focused.GetObject <> FFocusedControl) then
+  // TIdleMessage is being used to check if the focused control has changed, or a caret position has changed. This may happen without the VK hiding/showing
+  if not FVKRect.IsEmpty and (HasCaretPosChanged or ((Root <> nil) and (Root.Focused <> nil) and (Root.Focused.GetObject <> FFocusedControl))) then
   begin
     MoveControls;
     FFocusChanged := True;
@@ -134,12 +154,13 @@ begin
   FFocusedControl := nil;
   if (FControlsLayout = nil) or (Root = nil) or (Root.Focused = nil) or not (Root.Focused.GetObject is TControl) then
     Exit; // <======
-  // + 64 = "fudge" factor for Android in landscape mode
-  FControlsLayout.Height := Height + FVKRect.Height + 64;
+  if FStoredHeight = 0 then
+    FStoredHeight := FControlsLayout.Height;
+  FControlsLayout.Height := Height + FVKRect.Height + ViewportPosition.Y; // 64;
   FFocusedControl := TControl(Root.Focused.GetObject);
   // Find control position relative to the layout
   LControlPosition := FFocusedControl.LocalToAbsolute(PointF(0,0));
-  // LControlPosition := FControlsLayout.AbsoluteToLocal(LControlPosition);
+  LControlPosition.Y := LControlPosition.Y + ViewportPosition.Y;
   // Find the "bottom" of the control
   LControlBottom := 0;
   // For TCustomMemo controls, get the caret position
@@ -163,20 +184,15 @@ begin
     FControlsLayout := nil;
 end;
 
-procedure TVertScrollBox.Resize;
-begin
-  inherited;
-  if (FControlsLayout <> nil) and (FControlsLayout.Height < Height) then
-    FControlsLayout.Height := Height;
-end;
-
 procedure TVertScrollBox.RestoreControls;
 begin
   FVKRect := TRect.Empty;
   if (FControlsLayout = nil) or FFocusChanged then
     Exit; // <======
+  if FStoredHeight > 0 then
+    FControlsLayout.Height := FStoredHeight;
+  FStoredHeight := 0;
   ViewportPosition := PointF(0, 0);
-  FControlsLayout.Height := Height;
 end;
 
 end.
