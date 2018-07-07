@@ -1,0 +1,369 @@
+object frmOldDemo: TfrmOldDemo
+  Left = 0
+  Top = 0
+  Caption = 'Form1'
+  ClientHeight = 530
+  ClientWidth = 320
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  DesignerMasterStyle = 2
+  object tabMain: TTabControl
+    Align = Client
+    FullSize = True
+    Size.Width = 320.000000000000000000
+    Size.Height = 486.000000000000000000
+    Size.PlatformDefault = False
+    TabHeight = 49.000000000000000000
+    TabIndex = 1
+    TabOrder = 1
+    TabPosition = Bottom
+    Sizes = (
+      320s
+      437s
+      320s
+      437s)
+    object tiMain: TTabItem
+      CustomIcon = <
+        item
+        end>
+      IsSelected = False
+      Size.Width = 160.000000000000000000
+      Size.Height = 49.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = ''
+      TabOrder = 0
+      Text = 'Main'
+      ExplicitSize.cx = 160.000000000000000000
+      ExplicitSize.cy = 49.000000000000000000
+      object MainVertScrollBox: TVertScrollBox
+        Align = Client
+        Size.Width = 320.000000000000000000
+        Size.Height = 437.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        Viewport.Width = 320.000000000000000000
+        Viewport.Height = 437.000000000000000000
+        object MainLayout: TLayout
+          Align = Top
+          Size.Width = 320.000000000000000000
+          Size.Height = 365.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 0
+          object lsbInfo: TListBox
+            Align = Client
+            Size.Width = 320.000000000000000000
+            Size.Height = 365.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 0
+            DisableFocusEffect = True
+            DefaultItemStyles.ItemStyle = 'listboxitemnodetail'
+            DefaultItemStyles.GroupHeaderStyle = ''
+            DefaultItemStyles.GroupFooterStyle = ''
+            GroupingKind = Grouped
+            Viewport.Width = 320.000000000000000000
+            Viewport.Height = 365.000000000000000000
+            object lbghInfo: TListBoxItem
+              StyledSettings = [Family, Size, Style, FontColor]
+              Size.Width = 320.000000000000000000
+              Size.Height = 44.000000000000000000
+              Size.PlatformDefault = False
+              StyleLookup = 'listboxitemlabel'
+              TabOrder = 0
+              Text = '  Info'
+            end
+            object lbiInfoCode: TListBoxItem
+              Selectable = False
+              Position.Y = 44.000000000000000000
+              Size.Width = 320.000000000000000000
+              Size.Height = 44.000000000000000000
+              Size.PlatformDefault = False
+              TabOrder = 1
+              Text = 'Code'
+              object edtInfoCode: TEdit
+                Touch.InteractiveGestures = [LongTap, DoubleTap]
+                TabOrder = 0
+                Position.X = 124.000000000000000000
+                Position.Y = 8.000000000000000000
+                Size.Width = 189.000000000000000000
+                Size.Height = 30.000000000000000000
+                Size.PlatformDefault = False
+              end
+            end
+            object lbiProjectDescription: TListBoxItem
+              Selectable = False
+              Position.Y = 88.000000000000000000
+              Size.Width = 320.000000000000000000
+              Size.Height = 277.000000000000000000
+              Size.PlatformDefault = False
+              TabOrder = 2
+              object mmoInfoDescription: TMemo
+                Tag = 2
+                Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+                DataDetectorTypes = []
+                OnChangeTracking = mmoInfoDescriptionChangeTracking
+                Position.Y = 38.000000000000000000
+                Size.Width = 320.000000000000000000
+                Size.Height = 239.000000000000000000
+                Size.PlatformDefault = False
+                TabOrder = 0
+                Viewport.Width = 312.000000000000000000
+                Viewport.Height = 231.000000000000000000
+              end
+              object lblInfoDescription: TLabel
+                StyledSettings = [Family, Size, FontColor]
+                Position.X = 8.000000000000000000
+                Position.Y = 8.000000000000000000
+                Size.Width = 261.000000000000000000
+                Size.Height = 21.000000000000000000
+                Size.PlatformDefault = False
+                TextSettings.Font.StyleExt = {00070000000000000004000000}
+                TextSettings.WordWrap = False
+                Text = 'Description'
+              end
+            end
+          end
+        end
+      end
+    end
+    object tiConfig: TTabItem
+      CustomIcon = <
+        item
+        end>
+      IsSelected = True
+      Size.Width = 160.000000000000000000
+      Size.Height = 49.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = ''
+      TabOrder = 0
+      Text = 'Config'
+      ExplicitSize.cx = 160.000000000000000000
+      ExplicitSize.cy = 49.000000000000000000
+      object vsbConfig: TVertScrollBox
+        Align = Contents
+        Size.Width = 320.000000000000000000
+        Size.Height = 437.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        Viewport.Width = 320.000000000000000000
+        Viewport.Height = 437.000000000000000000
+        object layConfig: TLayout
+          Align = Top
+          Size.Width = 320.000000000000000000
+          Size.Height = 433.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 0
+          object lsbConfig: TListBox
+            Align = Client
+            Size.Width = 320.000000000000000000
+            Size.Height = 433.000000000000000000
+            Size.PlatformDefault = False
+            StyleLookup = 'transparentlistboxstyle'
+            TabOrder = 0
+            DisableFocusEffect = True
+            ItemHeight = 38.000000000000000000
+            DefaultItemStyles.ItemStyle = 'listboxitemnodetail'
+            DefaultItemStyles.GroupHeaderStyle = ''
+            DefaultItemStyles.GroupFooterStyle = ''
+            GroupingKind = Grouped
+            Viewport.Width = 315.000000000000000000
+            Viewport.Height = 433.000000000000000000
+            object ListBoxItem1: TListBoxItem
+              Selectable = False
+              Size.Width = 315.000000000000000000
+              Size.Height = 38.000000000000000000
+              Size.PlatformDefault = False
+              TabOrder = 9
+              Text = 'ListBoxItem1'
+            end
+            object ListBoxItem2: TListBoxItem
+              Position.Y = 38.000000000000000000
+              Size.Width = 315.000000000000000000
+              Size.Height = 38.000000000000000000
+              Size.PlatformDefault = False
+              TabOrder = 10
+              Text = 'ListBoxItem2'
+            end
+            object ListBoxItem3: TListBoxItem
+              Position.Y = 76.000000000000000000
+              Size.Width = 315.000000000000000000
+              Size.Height = 38.000000000000000000
+              Size.PlatformDefault = False
+              TabOrder = 11
+              Text = 'ListBoxItem3'
+            end
+            object ListBoxItem4: TListBoxItem
+              Position.Y = 114.000000000000000000
+              Size.Width = 315.000000000000000000
+              Size.Height = 38.000000000000000000
+              Size.PlatformDefault = False
+              TabOrder = 12
+              Text = 'ListBoxItem4'
+            end
+            object lbghSomeCombos: TListBoxItem
+              Selectable = False
+              StyledSettings = [Family, Size, Style, FontColor]
+              Position.Y = 152.000000000000000000
+              Size.Width = 315.000000000000000000
+              Size.Height = 38.000000000000000000
+              Size.PlatformDefault = False
+              StyleLookup = 'listboxitemlabel'
+              TabOrder = 0
+              Text = '  Some Combos'
+            end
+            object lbiCombo1: TListBoxItem
+              Selectable = False
+              Position.Y = 190.000000000000000000
+              Size.Width = 315.000000000000000000
+              Size.Height = 38.000000000000000000
+              Size.PlatformDefault = False
+              TabOrder = 1
+              Text = 'Combo 1'
+              object ComboBox1: TComboBox
+                Anchors = [akTop, akRight]
+                Position.X = 210.000000000000000000
+                Position.Y = 4.000000000000000000
+                Size.Width = 97.000000000000000000
+                Size.Height = 30.000000000000000000
+                Size.PlatformDefault = False
+                TabOrder = 0
+              end
+            end
+            object lbiCombo2: TListBoxItem
+              Selectable = False
+              Position.Y = 228.000000000000000000
+              Size.Width = 315.000000000000000000
+              Size.Height = 38.000000000000000000
+              Size.PlatformDefault = False
+              TabOrder = 2
+              Text = 'Combo 2'
+              object ComboBox2: TComboBox
+                Anchors = [akTop, akRight]
+                Position.X = 210.000000000000000000
+                Position.Y = 4.000000000000000000
+                Size.Width = 97.000000000000000000
+                Size.Height = 30.000000000000000000
+                Size.PlatformDefault = False
+                TabOrder = 0
+              end
+            end
+            object lbiCombo3: TListBoxItem
+              Selectable = False
+              Position.Y = 266.000000000000000000
+              Size.Width = 315.000000000000000000
+              Size.Height = 38.000000000000000000
+              Size.PlatformDefault = False
+              TabOrder = 3
+              Text = 'Combo 3'
+              object ComboBox3: TComboBox
+                Anchors = [akTop, akRight]
+                Position.X = 210.000000000000000000
+                Position.Y = 4.000000000000000000
+                Size.Width = 97.000000000000000000
+                Size.Height = 30.000000000000000000
+                Size.PlatformDefault = False
+                TabOrder = 0
+              end
+            end
+            object lbghSwitch: TListBoxItem
+              Selectable = False
+              StyledSettings = [Family, Size, Style, FontColor]
+              Position.Y = 304.000000000000000000
+              Size.Width = 315.000000000000000000
+              Size.Height = 38.000000000000000000
+              Size.PlatformDefault = False
+              StyleLookup = 'listboxitemlabel'
+              TabOrder = 4
+              Text = '  Switch'
+            end
+            object lbiSwitch1: TListBoxItem
+              Selectable = False
+              Position.Y = 342.000000000000000000
+              Size.Width = 315.000000000000000000
+              Size.Height = 38.000000000000000000
+              Size.PlatformDefault = False
+              TabOrder = 5
+              Text = 'Switch 1'
+              object Switch1: TSwitch
+                Anchors = [akTop, akRight]
+                IsChecked = False
+                Position.X = 234.000000000000000000
+                Position.Y = 4.000000000000000000
+                Size.Width = 55.000000000000000000
+                Size.Height = 35.000000000000000000
+                Size.PlatformDefault = False
+                TabOrder = 0
+              end
+            end
+            object lbghEditAndSwitch: TListBoxItem
+              StyledSettings = [Family, Size, Style, FontColor]
+              Position.Y = 380.000000000000000000
+              Size.Width = 315.000000000000000000
+              Size.Height = 38.000000000000000000
+              Size.PlatformDefault = False
+              StyleLookup = 'listboxitemlabel'
+              TabOrder = 6
+              Text = '  Edit And Switch'
+            end
+            object lbiEdit1: TListBoxItem
+              Selectable = False
+              Position.Y = 418.000000000000000000
+              Size.Width = 315.000000000000000000
+              Size.Height = 38.000000000000000000
+              Size.PlatformDefault = False
+              TabOrder = 7
+              Text = 'Edit 1'
+              object Edit1: TEdit
+                Tag = 1
+                Touch.InteractiveGestures = [LongTap, DoubleTap]
+                Anchors = [akTop, akRight]
+                TabOrder = 0
+                Position.X = 218.000000000000000000
+                Position.Y = 4.000000000000000000
+                Size.Width = 93.000000000000000000
+                Size.Height = 30.000000000000000000
+                Size.PlatformDefault = False
+              end
+            end
+            object lbiSwitch2: TListBoxItem
+              Selectable = False
+              Position.Y = 456.000000000000000000
+              Size.Width = 315.000000000000000000
+              Size.Height = 38.000000000000000000
+              Size.PlatformDefault = False
+              TabOrder = 8
+              Text = 'Switch 2'
+              object Switch2: TSwitch
+                Anchors = [akTop, akRight]
+                Enabled = False
+                IsChecked = False
+                Position.X = 230.000000000000000000
+                Position.Y = 4.000000000000000000
+                Size.Width = 55.000000000000000000
+                Size.Height = 35.000000000000000000
+                Size.PlatformDefault = False
+                TabOrder = 0
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+  object tbaMain: TToolBar
+    Size.Width = 320.000000000000000000
+    Size.Height = 44.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object lblTitle: TLabel
+      Align = Center
+      Anchors = [akTop, akBottom]
+      Size.Width = 120.000000000000000000
+      Size.Height = 27.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'toollabel'
+      TextSettings.HorzAlign = Center
+      Text = 'Title'
+    end
+  end
+end

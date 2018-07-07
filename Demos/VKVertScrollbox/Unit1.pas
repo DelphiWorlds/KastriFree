@@ -9,20 +9,19 @@ uses
   DW.VKVertScrollbox;
 
 type
-  TForm1 = class(TForm)
+  TfrmMain = class(TForm)
     VertScrollBox: TVertScrollBox;
     Memo1: TMemo;
     VertScrollboxLayout: TLayout;
     Edit1: TEdit;
     Edit2: TEdit;
     Image1: TImage;
-    procedure Memo1ChangeTracking(Sender: TObject);
   public
     constructor Create(AOwner: TComponent); override;
   end;
 
 var
-  Form1: TForm1;
+  frmMain: TfrmMain;
 
 implementation
 
@@ -30,15 +29,10 @@ implementation
 
 { TForm1 }
 
-constructor TForm1.Create(AOwner: TComponent);
+constructor TfrmMain.Create(AOwner: TComponent);
 begin
   inherited;
   VertScrollBox.ControlsLayout := VertScrollboxLayout;
-end;
-
-procedure TForm1.Memo1ChangeTracking(Sender: TObject);
-begin
-  VertScrollBox.ControlsChanged;
 end;
 
 end.
