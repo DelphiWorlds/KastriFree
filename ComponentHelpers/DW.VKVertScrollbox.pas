@@ -30,11 +30,15 @@ type
     FFocusChanged: Boolean;
     FFocusedControl: TControl;
     FControlsLayout: TControl;
+    FRestoreViewport: Boolean;
     FStoredHeight: Single;
     FVKRect: TRect;
+    function IsFocusedObject: Boolean;
     function HasCaretPosChanged: Boolean;
     procedure IdleMessageHandler(const Sender: TObject; const M: TMessage);
     procedure MoveControls;
+    procedure OrientationChangedMessageHandler(const Sender: TObject; const M: TMessage);
+    procedure Restore(const AIgnoreRestoreViewport: Boolean);
     procedure RestoreControls;
     procedure SetControlsLayout(const Value: TControl);
     procedure VKStateChangeMessageHandler(const Sender: TObject; const M: TMessage);
@@ -51,16 +55,30 @@ type
     ///   The layout which will resize in order for the scrollbox to be scrolled
     /// </summary>
     property ControlsLayout: TControl read FControlsLayout write SetControlsLayout;
+    /// <summary>
+    ///   Determines whether the viewport is restored when the VK disappears
+    /// </summary>
+    /// <remarks>
+    ///   If the user has "scrolled" the view to a certain position before setting focus on a control,
+    ///   When the VK is dismissed, the viewport will be set back to its topmost position.
+    ///   You will likely never need to set this to True
+    /// </remarks>
+    property RestoreViewport: Boolean read FRestoreViewport write FRestoreViewport;
   end;
 
 implementation
 
 uses
+  // RTL
+  System.SysUtils,
 {$IF Defined(IOS)}
+  // iOS
   iOSapi.Helpers,
 {$ENDIF}
   // FMX
-  FMX.Forms, FMX.Types, FMX.Edit, FMX.Memo;
+  FMX.Forms, FMX.Types, FMX.Edit, FMX.Memo,
+  // DW
+  DW.VirtualKeyboard.Helpers;
 
 function GetStatusBarHeight: Single;
 begin
@@ -76,12 +94,14 @@ end;
 constructor TVertScrollBox.Create(AOwner: TComponent);
 begin
   inherited;
+  TMessageManager.DefaultManager.SubscribeToMessage(TOrientationChangedMessage, OrientationChangedMessageHandler);
   TMessageManager.DefaultManager.SubscribeToMessage(TVKStateChangeMessage, VKStateChangeMessageHandler);
   TMessageManager.DefaultManager.SubscribeToMessage(TIdleMessage, IdleMessageHandler);
 end;
 
 destructor TVertScrollBox.Destroy;
 begin
+  TMessageManager.DefaultManager.Unsubscribe(TOrientationChangedMessage, OrientationChangedMessageHandler);
   TMessageManager.DefaultManager.Unsubscribe(TVKStateChangeMessage, VKStateChangeMessageHandler);
   TMessageManager.DefaultManager.Unsubscribe(TIdleMessage, IdleMessageHandler);
   inherited;
@@ -135,13 +155,18 @@ end;
 procedure TVertScrollBox.IdleMessageHandler(const Sender: TObject; const M: TMessage);
 begin
   // TIdleMessage is being used to check if the focused control has changed, or a caret position has changed. This may happen without the VK hiding/showing
-  if not FVKRect.IsEmpty and (HasCaretPosChanged or ((Root <> nil) and (Root.Focused <> nil) and (Root.Focused.GetObject <> FFocusedControl))) then
+  if not FVKRect.IsEmpty and (HasCaretPosChanged or not IsFocusedObject) then
   begin
     MoveControls;
     FFocusChanged := True;
   end
   else
     FFocusChanged := False;
+end;
+
+function TVertScrollBox.IsFocusedObject: Boolean;
+begin
+  Result := (Root <> nil) and (Root.Focused <> nil) and (Root.Focused.GetObject = FFocusedControl);
 end;
 
 procedure TVertScrollBox.MoveControls;
@@ -156,7 +181,7 @@ begin
     Exit; // <======
   if FStoredHeight = 0 then
     FStoredHeight := FControlsLayout.Height;
-  FControlsLayout.Height := Height + FVKRect.Height + ViewportPosition.Y; // 64;
+  FControlsLayout.Height := Height + FVKRect.Height + ViewportPosition.Y;
   FFocusedControl := TControl(Root.Focused.GetObject);
   // Find control position relative to the layout
   LControlPosition := FFocusedControl.LocalToAbsolute(PointF(0,0));
@@ -184,15 +209,31 @@ begin
     FControlsLayout := nil;
 end;
 
+procedure TVertScrollBox.OrientationChangedMessageHandler(const Sender: TObject; const M: TMessage);
+begin
+  Restore(True);
+  if not TVirtualKeyboard.GetBounds.IsEmpty then
+  begin
+    FVKRect := TVirtualKeyboard.GetBounds;
+    MoveControls;
+  end;
+end;
+
 procedure TVertScrollBox.RestoreControls;
 begin
   FVKRect := TRect.Empty;
   if (FControlsLayout = nil) or FFocusChanged then
     Exit; // <======
+  Restore(False);
+end;
+
+procedure TVertScrollBox.Restore(const AIgnoreRestoreViewport: Boolean);
+begin
   if FStoredHeight > 0 then
     FControlsLayout.Height := FStoredHeight;
   FStoredHeight := 0;
-  ViewportPosition := PointF(0, 0);
+  if FRestoreViewport or AIgnoreRestoreViewport then
+    ViewportPosition := PointF(0, 0);
 end;
 
 end.
