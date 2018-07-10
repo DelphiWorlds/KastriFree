@@ -19,6 +19,7 @@ type
     procedure RequestSMSPermissionsButtonClick(Sender: TObject);
   private
     FSystemHelper: TSystemHelper;
+    function GetStatusBarHeight: Integer;
     procedure PermissionsResultHandler(Sender: TObject; const ARequestCode: Integer; const AResults: TPermissionResults);
   public
     constructor Create(AOwner: TComponent); override;
@@ -30,6 +31,12 @@ var
 implementation
 
 {$R *.fmx}
+
+uses
+{$IF Defined(Android)}
+  Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.Os, Androidapi.Helpers,
+{$ENDIF}
+  FMX.Platform;
 
 const
   cRequestCodeCamera = 1;
@@ -55,8 +62,33 @@ begin
   inherited;
   FSystemHelper := TSystemHelper.Create;
   FSystemHelper.OnPermissionsResult := PermissionsResultHandler;
-  StatusBarRectangle.Height := FSystemHelper.StatusBarHeight;
+  StatusBarRectangle.Height := GetStatusBarHeight;
 end;
+
+function TfrmMain.GetStatusBarHeight: Integer;
+{$IF Defined(Android)}
+var
+  LRect: JRect;
+  LScale: Single;
+  LScreenService: IFMXScreenService;
+begin
+  Result := 0;
+  if TJBuild_VERSION.JavaClass.SDK_INT >= 24 then
+  begin
+    if TPlatformServices.Current.SupportsPlatformService(IFMXScreenService, LScreenService) then
+      LScale := LScreenService.GetScreenScale
+    else
+      LScale := 1;
+    LRect := TJRect.Create;
+    TAndroidHelper.Activity.getWindow.getDecorView.getWindowVisibleDisplayFrame(LRect);
+    Result := Round(LRect.top / LScale);
+  end;
+end;
+{$ELSE}
+begin
+  Result := 0;
+end;
+{$ENDIF}
 
 procedure TfrmMain.PermissionsResultHandler(Sender: TObject; const ARequestCode: Integer; const AResults: TPermissionResults);
 var
