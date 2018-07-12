@@ -13,12 +13,14 @@ unit DW.ElasticLayout;
 interface
 
 uses
+  // RTL
+  System.Types,
   // FMX
   FMX.Types, FMX.Controls, FMX.Layouts;
 
 type
   /// <summary>
-  ///   Layout that adjusts its size to accomodate the *commonly aligned* controls within it
+  ///   Layout that adjusts its size to accomodate the controls within it
   /// </summary>
   /// <remarks>
   ///   Place the unit name *after* FMX.Layouts in the uses clause of the unit where you have layouts that you want to be elastic
@@ -26,9 +28,7 @@ type
   TLayout = class(FMX.Layouts.TLayout)
   private
     FIsElastic: Boolean;
-    procedure AdjustSize(const AAdjustWidth: Boolean);
-    function GetCommonAlign: TAlignLayout;
-    function GetControlSize(const AControl: TControl; const AGetWidth: Boolean): Single;
+    function GetChildrenOnlyRect: TRectF;
     procedure SetIsElastic(const Value: Boolean);
   protected
     procedure DoRealign; override;
@@ -43,55 +43,35 @@ implementation
 
 { TLayout }
 
-procedure TLayout.AdjustSize(const AAdjustWidth: Boolean);
+function TLayout.GetChildrenOnlyRect: TRectF;
 var
-  LSize: Single;
   I: Integer;
+  Control: TControl;
 begin
-  LSize := 0;
-  for I := 0 to ControlsCount - 1 do
-    LSize := LSize + GetControlSize(Controls[I], AAdjustWidth);
-  if AAdjustWidth then
-    Width := LSize
-  else
-    Height := LSize;
+  Result := GetAbsoluteRect;
+  Result.Height := 0;
+  if not (ClipChildren or SmallSizeControl) and (Controls <> nil) then
+  begin
+    for I := GetFirstVisibleObjectIndex to GetLastVisibleObjectIndex - 1 do
+    begin
+      Control := Controls[I];
+      if Control.Visible then
+        Result := UnionRect(Result, Control.ChildrenRect);
+    end
+  end;
 end;
 
 procedure TLayout.DoRealign;
-begin
-  case GetCommonAlign of
-    TAlignLayout.Left, TAlignLayout.Right:
-      AdjustSize(True);
-    TAlignLayout.Top, TAlignLayout.Bottom:
-      AdjustSize(False);
-  end;
-  inherited;
-end;
-
-function TLayout.GetCommonAlign: TAlignLayout;
 var
-  I: Integer;
+  LRect: TRectF;
 begin
-  Result := TAlignLayout.None;
-  for I := 0 to ControlsCount - 1 do
+  inherited;
+  if FIsElastic then
   begin
-    if not Controls[I].Visible or (Controls[I].Align = TAlignLayout.Contents) then
-      Continue;
-    if (Result = TAlignLayout.None) and (Controls[I].Align <> TAlignLayout.None) then
-      Result := Controls[I].Align;
-    if (Result <> TAlignLayout.None) and (Controls[I].Align <> Result)  then
-      Exit(TAlignLayout.None);
+    LRect := GetChildrenOnlyRect;
+    Width := LRect.Width;
+    Height := LRect.Height;
   end;
-end;
-
-function TLayout.GetControlSize(const AControl: TControl; const AGetWidth: Boolean): Single;
-begin
-  if not AControl.Visible or (AControl.Align = TAlignLayout.Contents) then
-    Exit(0); // <======
-  if AGetWidth then
-    Result := AControl.Width + AControl.Margins.Left + AControl.Margins.Right
-  else
-    Result := AControl.Height + AControl.Margins.Top + AControl.Margins.Bottom;
 end;
 
 procedure TLayout.SetIsElastic(const Value: Boolean);
