@@ -4,14 +4,18 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Android.Service,
-  AndroidApi.JNI.GraphicsContentViewText, Androidapi.JNI.Os;
+  Androidapi.JNI.App, AndroidApi.JNI.GraphicsContentViewText, Androidapi.JNI.Os;
 
 type
   TServiceModule = class(TAndroidService)
     function AndroidServiceStartCommand(const Sender: TObject; const Intent: JIntent; Flags, StartId: Integer): Integer;
   private
-    function SetAlarm(const AAction: string; const AStartAt, AInterval: Int64): Boolean;
-    function SetDailyAlarm(const AAction: string; const AStartAt: Int64): Boolean;
+    FAlarmIntent: JPendingIntent;
+    FInterval: Int64;
+    procedure CreateAlarmIntent(const AAction: string);
+    procedure SetAlarm(const AAction: string; AStartAt: Int64 = 0; AInterval: Int64 = 0);
+    procedure SetDailyAlarm(const AAction: string; const AStartAt: Int64);
+    procedure StopAlarm;
   public
     { Public declarations }
   end;
@@ -27,7 +31,7 @@ implementation
 
 uses
   System.DateUtils,
-  Androidapi.JNI.App, Androidapi.Helpers, Androidapi.JNI.JavaTypes,
+  Androidapi.Helpers, Androidapi.JNI.JavaTypes,
   DW.OSLog;
 
 const
@@ -46,7 +50,8 @@ var
   LCalendar: JCalendar;
 begin
   LCalendar := TJCalendar.JavaClass.getInstance;
-  LCalendar.add(TJCalendar.JavaClass.SECOND, ASeconds);
+  if ASeconds > 0 then
+    LCalendar.add(TJCalendar.JavaClass.SECOND, ASeconds);
   Result := LCalendar.getTimeInMillis;
 end;
 
@@ -55,33 +60,47 @@ begin
   Result := GetTimeFromNowInMillis(SecondsUntilMidnight);
 end;
 
-function TServiceModule.SetAlarm(const AAction: string; const AStartAt, AInterval: Int64): Boolean;
+procedure TServiceModule.CreateAlarmIntent(const AAction: string);
 var
-  LIntent: JIntent;
-  LPendingIntent: JPendingIntent;
+  LActionIntent: JIntent;
 begin
-  Result := False;
-  LIntent := TJIntent.JavaClass.init(StringToJString(AAction));
-  LIntent.setClassName(TAndroidHelper.Context.getPackageName, StringToJString(cReceiverName));
-  LIntent.putExtra(StringToJString('ServiceName'), StringToJString(cServiceName));
-  // Using FLAG_NO_CREATE means that the return result is nil if NONE ALREADY EXISTS - weird
-  LPendingIntent := TJPendingIntent.JavaClass.getBroadcast(TAndroidHelper.Context, 0, LIntent, TJPendingIntent.JavaClass.FLAG_NO_CREATE);
-  if LPendingIntent = nil then
-  begin
-    LPendingIntent := TJPendingIntent.JavaClass.getBroadcast(TAndroidHelper.Context, 0, LIntent, TJPendingIntent.JavaClass.FLAG_CANCEL_CURRENT);
-    if AInterval = 0 then
-      TAndroidHelper.AlarmManager.&set(TJAlarmManager.JavaClass.RTC_WAKEUP, AStartAt, LPendingIntent)
-    else
-      TAndroidHelper.AlarmManager.setRepeating(TJAlarmManager.JavaClass.RTC_WAKEUP, AStartAt, AInterval, LPendingIntent);
-    Result := True;
-  end
-  else
-    TOSLog.d('Pending intent with action %s already exists, apparently', [AAction]);
+  LActionIntent := TJIntent.JavaClass.init(StringToJString(AAction));
+  LActionIntent.setClassName(TAndroidHelper.Context.getPackageName, StringToJString(cReceiverName));
+  LActionIntent.putExtra(StringToJString('ServiceName'), StringToJString(cServiceName));
+  FAlarmIntent := TJPendingIntent.JavaClass.getBroadcast(TAndroidHelper.Context, 0, LActionIntent, TJPendingIntent.JavaClass.FLAG_CANCEL_CURRENT);
 end;
 
-function TServiceModule.SetDailyAlarm(const AAction: string; const AStartAt: Int64): Boolean;
+procedure TServiceModule.SetAlarm(const AAction: string; AStartAt: Int64 = 0; AInterval: Int64 = 0);
+var
+  LIntent: JIntent;
 begin
-  Result := SetAlarm(AAction, AStartAt, TJAlarmManager.JavaClass.INTERVAL_DAY);
+  if AStartAt = 0 then
+    AStartAt := GetTimeFromNowInMillis(0);
+  StopAlarm;
+  FInterval := AInterval;
+  CreateAlarmIntent(AAction);
+  if FInterval > 0 then
+  begin
+    // Allow for alarms while in "doze" mode
+    if TOSVersion.Check(6) then
+      TAndroidHelper.AlarmManager.setExactAndAllowWhileIdle(TJAlarmManager.JavaClass.RTC_WAKEUP, GetTimeFromNowInMillis(AInterval), FAlarmIntent)
+    else
+      TAndroidHelper.AlarmManager.setRepeating(TJAlarmManager.JavaClass.RTC_WAKEUP, AStartAt, AInterval, FAlarmIntent);
+  end
+  else
+    TAndroidHelper.AlarmManager.&set(TJAlarmManager.JavaClass.RTC_WAKEUP, AStartAt, FAlarmIntent);
+end;
+
+procedure TServiceModule.SetDailyAlarm(const AAction: string; const AStartAt: Int64);
+begin
+  SetAlarm(AAction, AStartAt, TJAlarmManager.JavaClass.INTERVAL_DAY);
+end;
+
+procedure TServiceModule.StopAlarm;
+begin
+  if FAlarmIntent <> nil then
+    TAndroidHelper.AlarmManager.cancel(FAlarmIntent);
+  FAlarmIntent := nil;
 end;
 
 function TServiceModule.AndroidServiceStartCommand(const Sender: TObject; const Intent: JIntent; Flags, StartId: Integer): Integer;
@@ -91,14 +110,14 @@ begin
   begin
     TOSLog.d('Alarm was triggered');
     // Do whatever should happen as a result of the alarm
+    // Reset the alarm if on Android 6 or greater, to allow for alarms while in "doze" mode
+    if TOSVersion.Check(6) and (FInterval > 0) then
+      SetAlarm(cActionServiceAlarm, 0, FInterval);
   end
   // Set an alarm - a result of True means one was set (i.e. one had not been set before), so you might want to take some action in that case
   // if SetDailyAlarm(cActionServiceAlarm, MillisecondsUntilMidnight) then  // <----- Daily at midnight example
-  else if SetAlarm(cActionServiceAlarm, GetTimeFromNowInMillis(60), 0) then // <----- One off, in 1 minutes time
-  begin
-    TOSLog.d('Alarm has been set');
-    // Maybe do something here if alarm was not already set
-  end;
+  else
+    SetAlarm(cActionServiceAlarm, GetTimeFromNowInMillis(60)); // <----- One off, in 1 minutes time
   Result := TJService.JavaClass.START_STICKY;
 end;
 
