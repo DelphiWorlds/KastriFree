@@ -1,0 +1,86 @@
+39c39,42
+<   Androidapi.Helpers;
+---
+>   Androidapi.Helpers,
+>   // DW - https://quality.embarcadero.com/browse/RSP-20565
+>   Androidapi.JNI.Os,
+>   DW.Androidapi.JNI.App, DW.Androidapi.JNI.Support, DW.Android.Helpers, DW.NotificationReceiver;
+69a73,76
+>     // DW - https://quality.embarcadero.com/browse/RSP-20565 - BEGIN
+>     FNotificationChannel: JNotificationChannel;
+>     FNotificationReceiver: TNotificationReceiver;
+>     // DW - https://quality.embarcadero.com/browse/RSP-20565 - BEGIN
+177a185,187
+>   // DW - https://quality.embarcadero.com/browse/RSP-20565
+>   if FNotificationChannel <> nil then
+>     NotificationBuilder := NotificationBuilder.setChannelId(FNotificationChannel.getId);
+291a302,313
+>   // DW - https://quality.embarcadero.com/browse/RSP-20565 - BEGIN
+>   if TAndroidHelperEx.CheckBuildAndTarget(TAndroidHelperEx.OREO) then
+>   begin
+>     FNotificationReceiver := TNotificationReceiver.Create;
+>     FNotificationChannel := TJNotificationChannel.JavaClass.init(TAndroidHelper.Context.getPackageName, StrToJCharSequence('default'), 4);
+>     FNotificationChannel.enableLights(True);
+>     FNotificationChannel.enableVibration(True);
+>     FNotificationChannel.setLightColor(TJColor.JavaClass.GREEN);
+>     FNotificationChannel.setLockscreenVisibility(TJNotification.JavaClass.VISIBILITY_PRIVATE);
+>     FNotificationManager.createNotificationChannel(FNotificationChannel);
+>   end;
+>   // DW - https://quality.embarcadero.com/browse/RSP-20565 - END
+297a320,323
+>   // DW - https://quality.embarcadero.com/browse/RSP-20565 - BEGIN
+>   FNotificationReceiver.Free;
+>   FNotificationChannel := nil;
+>   // DW - https://quality.embarcadero.com/browse/RSP-20565 - END
+332a359,373
+>   // DW - https://quality.embarcadero.com/browse/RSP-20565 - BEGIN
+>   function CreateNotificationPendingIntent(const ANotification: TNotification; const AID: Integer): JPendingIntent;
+>   var
+>     LIntent: JIntent;
+>     LNotification: JNotification;
+>   begin
+>     LNotification := CreateNativeNotification(ANotification);
+>     LIntent := TJIntent.Create;
+>     LIntent.setAction(TNotificationReceiver.ACTION_NOTIFICATION);
+>     LIntent.putExtra(TNotificationReceiver.EXTRA_NOTIFICATION_ID, AID);
+>     LIntent.putExtra(TNotificationReceiver.EXTRA_NOTIFICATION, TJParcelable.Wrap((LNotification as ILocalObject).GetObjectID));
+>     Result := TJPendingIntent.JavaClass.getBroadcast(TAndroidHelper.Context, AID, LIntent, TJPendingIntent.JavaClass.FLAG_UPDATE_CURRENT);
+>   end;
+>   // DW - https://quality.embarcadero.com/browse/RSP-20565 - END
+> 
+335a377,378
+>   // DW - https://quality.embarcadero.com/browse/RSP-20565
+>   LTime: Int64;
+341c384,389
+<   PendingIntent := CreateNotificationAlarmIntent(ID);
+---
+>   // DW - https://quality.embarcadero.com/browse/RSP-20565 - BEGIN
+>   if FNotificationChannel = nil then
+>     PendingIntent := CreateNotificationAlarmIntent(ID)
+>   else
+>     PendingIntent := CreateNotificationPendingIntent(ANotification, ID);
+>   // DW - https://quality.embarcadero.com/browse/RSP-20565 - END
+344,345c392,398
+<   TAndroidHelper.AlarmManager.&set(TJAlarmManager.JavaClass.RTC_WAKEUP, DateTimeLocalToUnixMSecGMT(ANotification.FireDate),
+<     PendingIntent);
+---
+>   // DW - https://quality.embarcadero.com/browse/RSP-20565 - BEGIN
+>   LTime := DateTimeLocalToUnixMSecGMT(ANotification.FireDate);
+>   if TOSVersion.Check(6) then
+>     TAndroidHelper.AlarmManager.setExactAndAllowWhileIdle(TJAlarmManager.JavaClass.RTC_WAKEUP, LTime, PendingIntent)
+>   else
+>     TAndroidHelper.AlarmManager.&set(TJAlarmManager.JavaClass.RTC_WAKEUP, LTime, PendingIntent);
+>   // DW - https://quality.embarcadero.com/browse/RSP-20565 - END
+387,388c440,448
+<       Intent.setClass(TAndroidHelper.Context, Alarm.getClass);
+<       Intent.setAction(TJNotificationInfo.JavaClass.ACTION_NOTIFICATION);
+---
+>       // DW - https://quality.embarcadero.com/browse/RSP-20565 - BEGIN
+>       if FNotificationChannel = nil then
+>       begin
+>         Intent.setClass(TAndroidHelper.Context, Alarm.getClass);
+>         Intent.setAction(TJNotificationInfo.JavaClass.ACTION_NOTIFICATION);
+>       end
+>       else
+>         Intent.setAction(TNotificationReceiver.ACTION_NOTIFICATION);
+>       // DW - https://quality.embarcadero.com/browse/RSP-20565 - END
