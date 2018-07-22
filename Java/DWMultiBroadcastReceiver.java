@@ -42,13 +42,19 @@ package com.delphiworlds.kastri;
   </application>
 */
 
+import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.v4.content.LocalBroadcastManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import java.util.Calendar;
 
 public class DWMultiBroadcastReceiver extends BroadcastReceiver {
 
@@ -59,6 +65,11 @@ public class DWMultiBroadcastReceiver extends BroadcastReceiver {
   private static final String KEY_START_SERVICE_ON_BOOT = "DWMultiBroadcastReceiver.KEY_START_SERVICE_ON_BOOT"; // string = service name
 
   public static final String ACTION_SERVICE_ALARM = "com.delphiworlds.kastri.DWMultiBroadcastReceiver.ACTION_SERVICE_ALARM";
+  public static final String ACTION_NOTIFICATION = "DWMultiBroadcastReceiver.ACTION_NOTIFICATION";
+  public static final String EXTRA_NOTIFICATION = "DWMultiBroadcastReceiver.EXTRA_NOTIFICATION";
+  public static final String EXTRA_NOTIFICATION_ID = "DWMultiBroadcastReceiver.EXTRA_NOTIFICATION_ID";
+  public static final String EXTRA_NOTIFICATION_NAME = "DWMultiBroadcastReceiver.EXTRA_NOTIFICATION_NAME";
+  public static final String EXTRA_NOTIFICATION_REPEATINTERVAL = "DWMultiBroadcastReceiver.EXTRA_NOTIFICATION_REPEATINTERVAL";
 
   private boolean startApp(Context context) {
     context.startActivity(context.getPackageManager().getLaunchIntentForPackage(context.getPackageName()));
@@ -113,9 +124,77 @@ public class DWMultiBroadcastReceiver extends BroadcastReceiver {
     return false;
   }
 
+  private static long getAlarmTime(int repeatInterval) {
+    Calendar calendar = Calendar.getInstance();
+    switch (repeatInterval) {
+      case 1: { 
+        calendar.add(Calendar.SECOND, 1);
+        return calendar.getTimeInMillis();
+      }
+      case 2: { 
+        calendar.add(Calendar.MINUTE, 1);
+        return calendar.getTimeInMillis();
+      }
+      case 3: {
+        calendar.add(Calendar.HOUR, 1);
+        return calendar.getTimeInMillis();
+      }
+      case 4: {
+        calendar.add(Calendar.DATE, 1);
+        return calendar.getTimeInMillis();
+      }
+      case 5: {		
+        calendar.add(Calendar.DATE, 7);
+        return calendar.getTimeInMillis();
+      }
+      case 6: {
+        return 0;
+      }
+      case 7: {
+        calendar.add(Calendar.MONTH, 1);
+        return calendar.getTimeInMillis();
+      }
+      case 8: {
+        calendar.add(Calendar.MONTH, 3);
+        return calendar.getTimeInMillis();
+      }
+      case 9: {
+        calendar.add(Calendar.YEAR, 1);
+        return calendar.getTimeInMillis();
+      }
+      case 10: {
+        calendar.add(Calendar.ERA, 1);
+        return calendar.getTimeInMillis();
+      }
+    default:
+      return 0;
+    }		
+  }
+
+  private void setRepeatAlarm(Context context, Intent intent, long alarmTime) {
+    PendingIntent pendingIntent = PendingIntent.getBroadcast(context, intent.getIntExtra(EXTRA_NOTIFICATION_ID, 0), intent, PendingIntent.FLAG_UPDATE_CURRENT);
+		AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+    if (Build.VERSION.SDK_INT >= 21)
+      alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, alarmTime, pendingIntent);
+    else
+		  alarmManager.set(AlarmManager.RTC_WAKEUP, alarmTime, pendingIntent);
+  }
+
   public void onReceive(Context context, Intent intent) {
     Log.v(TAG, "Received intent with action: " + intent.getAction());
-    if (!checkStartupIntent(context, intent))
+    if (ACTION_NOTIFICATION.equals(intent.getAction())) {
+      // Broadcast to the app to handle the notification if the app is running
+      LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+      Notification notification = intent.getParcelableExtra(EXTRA_NOTIFICATION);
+      NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+      // Dispatch the notification to the OS
+      manager.notify(notification.extras.getInt(EXTRA_NOTIFICATION_ID, 0), notification);
+      // Set alarm if repeating
+      long alarmTime = getAlarmTime(notification.extras.getInt(EXTRA_NOTIFICATION_REPEATINTERVAL, 0));
+      if (alarmTime != 0)
+        setRepeatAlarm(context, intent, alarmTime);
+		}
+    else if (!checkStartupIntent(context, intent))
       // Simply forward on the intent in a local broadcast
       LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
   }
