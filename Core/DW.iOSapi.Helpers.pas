@@ -13,27 +13,99 @@ unit DW.iOSapi.Helpers;
 interface
 
 uses
+  // RTL
+  System.Sensors,
+  // Mac
+  Macapi.ObjectiveC,
   // iOS
-  iOSapi.Foundation;
+  iOSapi.Foundation, iOSapi.UIKit;
 
-/// <summary>
-///   Converts values in an NSDictionary to JSON
-/// </summary>
-function NSDictionaryToJSON(const ADictionary: NSDictionary): string;
-/// <summary>
-///   Temporary helper function to support iPhone X quirks
-/// </summary>
-function IsIPhoneX: Boolean;
+type
+  UIApplication = interface(iOSapi.UIKit.UIApplication)
+    ['{7228BEAE-1B3A-4EBC-A87C-03982C8EC742}']
+    function isRegisteredForRemoteNotifications: Boolean; cdecl;
+  end;
+  TUIApplication = class(TOCGenericImport<UIApplicationClass, UIApplication>) end;
+
+  TiOSHelperEx = record
+  public
+    class function IsIPhoneX: Boolean; static;
+    class function GetLocationManagerAuthorization: TAuthorizationType; static;
+    class function HasBackgroundMode(const AMode: string): Boolean; static;
+    class function NSDictionaryToJSON(const ADictionary: NSDictionary): string; static;
+    class function SharedApplication: UIApplication; static;
+    class function StandardUserDefaults: NSUserDefaults; static;
+  end;
 
 implementation
 
 uses
+  // RTL
+  System.SysUtils,
   // iOS
-  iOSapi.UIKit, iOSapi.Helpers,
+  iOSapi.CoreLocation, iOSapi.Helpers,
   // Mac
-  Macapi.ObjectiveC, Macapi.ObjCRuntime, Macapi.Helpers;
+  Macapi.ObjCRuntime, Macapi.Helpers;
 
-function NSDictionaryToJSON(const ADictionary: NSDictionary): string;
+class function TiOSHelperEx.GetLocationManagerAuthorization: TAuthorizationType;
+begin
+  case TCLLocationManager.OCClass.authorizationStatus of
+    kCLAuthorizationStatusNotDetermined:
+      Result := TAuthorizationType.atNotSpecified;
+    kCLAuthorizationStatusDenied,
+    kCLAuthorizationStatusRestricted:
+      Result := TAuthorizationType.atUnauthorized;
+    kCLAuthorizationStatusAuthorizedWhenInUse,
+    kCLAuthorizationStatusAuthorized:
+      Result := TAuthorizationType.atAuthorized;
+  else
+    Result := TAuthorizationType.atNotSpecified;
+  end;
+end;
+
+class function TiOSHelperEx.HasBackgroundMode(const AMode: string): Boolean;
+var
+  LBundle: NSBundle;
+  LPointer: Pointer;
+  LModesArray: NSArray;
+  LModeString: string;
+  I: Integer;
+begin
+  Result := False;
+  LBundle := TiOSHelper.MainBundle;
+  LPointer := LBundle.infoDictionary.valueForKey(StrToNSStr('UIBackgroundModes')); // Do not localise
+  if LPointer = nil then
+    Exit; // <======
+  LModesArray := TNSArray.Wrap(LPointer);
+  for I := 0 to LModesArray.count - 1 do
+  begin
+    LModeString := NSStrToStr(TNSString.Wrap(LModesArray.objectAtIndex(I)));
+    if AMode.Equals(LModeString) then
+      Exit(True); // <======
+  end;
+end;
+
+class function TiOSHelperEx.IsIPhoneX: Boolean;
+const
+  cIPhoneXHeight = 812;
+var
+  LOrientation: UIInterfaceOrientation;
+begin
+  Result := False;
+  // Might be safe enough to just use statusBarOrientation
+  if SharedApplication.keyWindow = nil then
+    LOrientation := SharedApplication.statusBarOrientation
+  else
+    LOrientation := SharedApplication.keyWindow.rootViewController.interfaceOrientation;
+  case LOrientation of
+    UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown:
+      Result := TiOSHelper.MainScreen.bounds.size.height = cIPhoneXHeight;
+    UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight:
+      Result := TiOSHelper.MainScreen.bounds.size.width = cIPhoneXHeight;
+  end;
+end;
+
+class function TiOSHelperEx.NSDictionaryToJSON(const ADictionary: NSDictionary): string;
 var
   LData: NSData;
   LString: NSString;
@@ -49,24 +121,14 @@ begin
     Result := '';
 end;
 
-function IsIPhoneX: Boolean;
-const
-  cIPhoneXHeight = 812;
-var
-  LOrientation: UIInterfaceOrientation;
+class function TiOSHelperEx.SharedApplication: UIApplication;
 begin
-  Result := False;
-  // Might be safe enough to just use statusBarOrientation
-  if TiOSHelper.SharedApplication.keyWindow = nil then
-    LOrientation := TiOSHelper.SharedApplication.statusBarOrientation
-  else
-    LOrientation := TiOSHelper.SharedApplication.keyWindow.rootViewController.interfaceOrientation;
-  case LOrientation of
-    UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown:
-      Result := TiOSHelper.MainScreen.bounds.size.height = cIPhoneXHeight;
-    UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight:
-      Result := TiOSHelper.MainScreen.bounds.size.width = cIPhoneXHeight;
-  end;
+  Result := TUIApplication.Wrap(TUIApplication.OCClass.sharedApplication);
+end;
+
+class function TiOSHelperEx.StandardUserDefaults: NSUserDefaults;
+begin
+  Result := TNSUserDefaults.Wrap(TNSUserDefaults.OCClass.StandardUserDefaults);
 end;
 
 end.
