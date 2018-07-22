@@ -83,10 +83,10 @@ type
   UNNotificationSetting = NSInteger;
   UNAlertStyle = NSInteger;
   UNAuthorizationOptions = NSUInteger;
-  TUserNotificationsCompletionHandler = procedure(param1: Boolean; param2: NSError) of object;
+  TUserNotificationsCompletionHandler = procedure(granted: Boolean; error: NSError) of object;
   TUserNotificationsCompletionHandler1 = procedure(param1: NSSet) of object;
   TUserNotificationsCompletionHandler2 = procedure(param1: UNNotificationSettings) of object;
-  TUserNotificationsWithCompletionHandler = procedure(param1: NSError) of object;
+  TUserNotificationsWithCompletionHandler = procedure(error: NSError) of object;
   TUserNotificationsCompletionHandler3 = procedure(param1: NSArray) of object;
   UNNotificationPresentationOptions = NSUInteger;
   TUserNotificationsWithCompletionHandler1 = procedure(param1: UNNotificationPresentationOptions) of object;
@@ -112,8 +112,6 @@ type
   TUNNotificationRequest = class(TOCGenericImport<UNNotificationRequestClass, UNNotificationRequest>)
   end;
 
-  PUNNotificationRequest = Pointer;
-
   UNNotificationClass = interface(NSObjectClass)
     ['{4A126250-84C2-4B9A-B3F3-BE5EA13BE722}']
   end;
@@ -125,8 +123,6 @@ type
   end;
   TUNNotification = class(TOCGenericImport<UNNotificationClass, UNNotification>)
   end;
-
-  PUNNotification = Pointer;
 
   UNNotificationActionClass = interface(NSObjectClass)
     ['{AAD80C86-7813-45E2-9E04-5A351819A2C4}']
@@ -143,8 +139,6 @@ type
   TUNNotificationAction = class(TOCGenericImport<UNNotificationActionClass, UNNotificationAction>)
   end;
 
-  PUNNotificationAction = Pointer;
-
   UNTextInputNotificationActionClass = interface(UNNotificationActionClass)
     ['{0A7AB4DD-B2D0-4639-9343-FB32BBB7B928}']
     { class } function actionWithIdentifier(identifier: NSString; title: NSString; options: UNNotificationActionOptions;
@@ -158,8 +152,6 @@ type
   end;
   TUNTextInputNotificationAction = class(TOCGenericImport<UNTextInputNotificationActionClass, UNTextInputNotificationAction>)
   end;
-
-  PUNTextInputNotificationAction = Pointer;
 
   UNNotificationAttachmentClass = interface(NSObjectClass)
     ['{140486D0-F352-4687-8BF4-272014BDD8AF}']
@@ -175,8 +167,6 @@ type
   end;
   TUNNotificationAttachment = class(TOCGenericImport<UNNotificationAttachmentClass, UNNotificationAttachment>)
   end;
-
-  PUNNotificationAttachment = Pointer;
 
   UNNotificationCategoryClass = interface(NSObjectClass)
     ['{EB8B0B0A-65EC-403A-9372-DAD56B2CEA1A}']
@@ -194,8 +184,6 @@ type
   TUNNotificationCategory = class(TOCGenericImport<UNNotificationCategoryClass, UNNotificationCategory>)
   end;
 
-  PUNNotificationCategory = Pointer;
-
   UNNotificationSoundClass = interface(NSObjectClass)
     ['{FCE6B805-3175-4248-BB72-1FE34575B153}']
     { class } function defaultSound: Pointer { instancetype }; cdecl;
@@ -207,8 +195,6 @@ type
   end;
   TUNNotificationSound = class(TOCGenericImport<UNNotificationSoundClass, UNNotificationSound>)
   end;
-
-  PUNNotificationSound = Pointer;
 
   UNNotificationContentClass = interface(NSObjectClass)
     ['{5905664A-B654-4AAE-9CD1-B133744C5CC7}']
@@ -229,8 +215,6 @@ type
   end;
   TUNNotificationContent = class(TOCGenericImport<UNNotificationContentClass, UNNotificationContent>)
   end;
-
-  PUNNotificationContent = Pointer;
 
   UNMutableNotificationContentClass = interface(UNNotificationContentClass)
     ['{23144A48-3417-4DDC-9880-6EA2FA41FB94}']
@@ -262,8 +246,6 @@ type
   TUNMutableNotificationContent = class(TOCGenericImport<UNMutableNotificationContentClass, UNMutableNotificationContent>)
   end;
 
-  PUNMutableNotificationContent = Pointer;
-
   UNNotificationTriggerClass = interface(NSObjectClass)
     ['{DF3BF20A-1545-47BB-971B-93CEA63AFF19}']
   end;
@@ -274,8 +256,6 @@ type
   end;
   TUNNotificationTrigger = class(TOCGenericImport<UNNotificationTriggerClass, UNNotificationTrigger>)
   end;
-
-  PUNNotificationTrigger = Pointer;
 
   UNNotificationResponseClass = interface(NSObjectClass)
     ['{F42D92EC-5C1E-4EB9-879F-1ADD4C18D908}']
@@ -289,8 +269,6 @@ type
   TUNNotificationResponse = class(TOCGenericImport<UNNotificationResponseClass, UNNotificationResponse>)
   end;
 
-  PUNNotificationResponse = Pointer;
-
   UNTextInputNotificationResponseClass = interface(UNNotificationResponseClass)
     ['{9A3AE889-4DCE-445C-8B9B-CCE340AB904F}']
   end;
@@ -301,8 +279,6 @@ type
   end;
   TUNTextInputNotificationResponse = class(TOCGenericImport<UNTextInputNotificationResponseClass, UNTextInputNotificationResponse>)
   end;
-
-  PUNTextInputNotificationResponse = Pointer;
 
   UNNotificationServiceExtensionClass = interface(NSObjectClass)
     ['{0C1B0248-5108-4276-A55C-E05B2D937BF3}']
@@ -315,8 +291,6 @@ type
   end;
   TUNNotificationServiceExtension = class(TOCGenericImport<UNNotificationServiceExtensionClass, UNNotificationServiceExtension>)
   end;
-
-  PUNNotificationServiceExtension = Pointer;
 
   UNNotificationSettingsClass = interface(NSObjectClass)
     ['{83B7F625-FBAE-4EE3-8AC8-BD557B6124D3}']
@@ -336,8 +310,6 @@ type
   TUNNotificationSettings = class(TOCGenericImport<UNNotificationSettingsClass, UNNotificationSettings>)
   end;
 
-  PUNNotificationSettings = Pointer;
-
   UNPushNotificationTriggerClass = interface(UNNotificationTriggerClass)
     ['{54519FC8-B579-41E0-94F0-C21602C55941}']
   end;
@@ -347,8 +319,6 @@ type
   end;
   TUNPushNotificationTrigger = class(TOCGenericImport<UNPushNotificationTriggerClass, UNPushNotificationTrigger>)
   end;
-
-  PUNPushNotificationTrigger = Pointer;
 
   UNTimeIntervalNotificationTriggerClass = interface(UNNotificationTriggerClass)
     ['{E297E94F-B29B-40E9-A1F1-8B8897B87714}']
@@ -360,16 +330,12 @@ type
     function timeInterval: NSTimeInterval; cdecl;
     function nextTriggerDate: NSDate; cdecl;
   end;
-  TUNTimeIntervalNotificationTrigger = class
-    (TOCGenericImport<UNTimeIntervalNotificationTriggerClass,
-    UNTimeIntervalNotificationTrigger>)
+  TUNTimeIntervalNotificationTrigger = class(TOCGenericImport<UNTimeIntervalNotificationTriggerClass, UNTimeIntervalNotificationTrigger>)
   end;
-
-  PUNTimeIntervalNotificationTrigger = Pointer;
 
   UNCalendarNotificationTriggerClass = interface(UNNotificationTriggerClass)
     ['{FA2817E5-7BC5-444E-9940-CAC2ED682160}']
-    { class } function triggerWithDateMatchingComponents(dateComponents: NSDateComponents; repeats: Boolean): Pointer { instancetype }; cdecl;
+    { class } function triggerWithDateMatchingComponents(dateComponents: NSDateComponents; repeats: Boolean): Pointer; cdecl;
   end;
 
   UNCalendarNotificationTrigger = interface(UNNotificationTrigger)
@@ -380,20 +346,16 @@ type
   TUNCalendarNotificationTrigger = class(TOCGenericImport<UNCalendarNotificationTriggerClass, UNCalendarNotificationTrigger>)
   end;
 
-  PUNCalendarNotificationTrigger = Pointer;
-
   UNLocationNotificationTriggerClass = interface(UNNotificationTriggerClass)
     ['{8C7EF509-C0A0-4DB8-9ED1-3EE2CF08FC71}']
-    { class } function triggerWithRegion(region: CLRegion; repeats: Boolean): Pointer { instancetype }; cdecl;
+    { class } function triggerWithRegion(region: CLRegion; repeats: Boolean): Pointer; cdecl;
   end;
 
   UNLocationNotificationTrigger = interface(UNNotificationTrigger)
     ['{58F20440-A87C-4CC4-8A74-DE6C4BCB7823}']
     function region: CLRegion; cdecl;
   end;
-  TUNLocationNotificationTrigger = class
-    (TOCGenericImport<UNLocationNotificationTriggerClass,
-    UNLocationNotificationTrigger>)
+  TUNLocationNotificationTrigger = class(TOCGenericImport<UNLocationNotificationTriggerClass, UNLocationNotificationTrigger>)
   end;
 
   PUNLocationNotificationTrigger = Pointer;
@@ -449,7 +411,7 @@ const
 
 implementation
 
-{$IF defined(IOS) and NOT defined(CPUARM)}
+{$IF Defined(IOS) and not Defined(CPUARM)}
 uses
   Posix.Dlfcn;
 
@@ -497,7 +459,7 @@ begin
   Result := CocoaNSStringConst(libUserNotifications, 'UNNotificationDismissActionIdentifier');
 end;
 
-{$IF defined(IOS) and NOT defined(CPUARM)}
+{$IF Defined(IOS) and not Defined(CPUARM)}
 initialization
   UserNotificationsModule := dlopen(MarshaledAString(libUserNotifications), RTLD_LAZY);
 
