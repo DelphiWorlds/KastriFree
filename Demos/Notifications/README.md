@@ -11,7 +11,9 @@ It is also designed to be able to cater for targeting Android API 26 or higher, 
 The Android implementation requires the following files, relative to the root of the Kastri Free library
 
 \Lib\dw-multireceiver.jar
+
 \ThirdParty\Android\support-compat-26.1.0.jar
+
 \ThirdParty\Android\support-core-utils.26.1.0.jar
 
 Even though this code is experimental, if you feel so inclined, please report any issues to:
