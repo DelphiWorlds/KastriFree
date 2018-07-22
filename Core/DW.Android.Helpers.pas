@@ -44,6 +44,14 @@ type
     /// </summary>
     class function GetClass(const APackageClassName: string): Jlang_Class; static;
     /// <summary>
+    ///   Returns the application default icon ID
+    /// </summary>
+    class function GetDefaultIconID: Integer; static;
+    /// <summary>
+    ///   Returns a URI to the notification sound
+    /// </summary>
+    class function GetDefaultNotificationSound: Jnet_Uri; static;
+    /// <summary>
     ///   Returns target Sdk version
     /// </summary>
     class function GetTargetSdkVersion: Integer; static;
@@ -66,7 +74,7 @@ uses
   // RTL
   System.SysUtils,
   // Android
-  Androidapi.Helpers, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.App, Androidapi.JNI.Os,
+  Androidapi.Helpers, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.App, Androidapi.JNI.Os, Androidapi.JNI.Media,
   // DW
   DW.Androidapi.JNI.FileProvider;
 
@@ -85,6 +93,16 @@ end;
 class function TAndroidHelperEx.GetClass(const APackageClassName: string): Jlang_Class;
 begin
   Result := TJLang_Class.JavaClass.forName(StringToJString(APackageClassName), True, TAndroidHelper.Activity.getClassLoader);
+end;
+
+class function TAndroidHelperEx.GetDefaultIconID: Integer;
+begin
+  Result := TAndroidHelper.Context.getApplicationInfo.icon;
+end;
+
+class function TAndroidHelperEx.GetDefaultNotificationSound: Jnet_Uri;
+begin
+  Result := TJRingtoneManager.JavaClass.getDefaultUri(TJRingtoneManager.JavaClass.TYPE_NOTIFICATION);
 end;
 
 class function TAndroidHelperEx.UriFromFile(const AFile: JFile): Jnet_Uri;
