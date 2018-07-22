@@ -24,18 +24,32 @@ uses
   iOSapi.Foundation;
   {$ENDIF}
 
+type
+  TNSDictionaryHelper = record
+  private
+    FDictionary: NSDictionary;
+    function GetValuePtr(const AKey: string): Pointer;
+  public
+    constructor Create(const ADictionary: NSDictionary);
+    function GetValue(const AKey: string; const ADefault: Double = 0): Double; overload;
+    function GetValue(const AKey: string; const ADefault: Integer = 0): Integer; overload;
+    function GetValue(const AKey: string; const ADefault: string = ''): string; overload;
+  end;
+
+  TNSMutableDictionaryHelper = record
+  private
+    FDictionary: NSMutableDictionary;
+  public
+    constructor Create(const ADictionary: NSMutableDictionary);
+    function Dictionary: NSDictionary;
+    procedure SetValue(const AValue: Integer; const AKey: string); overload;
+    procedure SetValue(const AValue, AKey: string); overload;
+  end;
+
 /// <summary>
 ///   Retrieves cocoa double constant
 /// </summary>
 function CocoaDoubleConst(const AFwk: string; const AConstStr: string): Double;
-/// <summary>
-///   Retrieves a number value from an NSDictionary, with optional default (otherwise zero)
-/// </summary>
-function GetDictionaryNumberValue(const ADictionary: NSDictionary; const AKey: NSString; const ADefault: Double = 0): Double;
-/// <summary>
-///   Retrieves a string value from an NSDictionary, with optional default (otherwise blank)
-/// </summary>
-function GetDictionaryStringValue(const ADictionary: NSDictionary; const AKey: NSString; const ADefault: string = ''): string;
 /// <summary>
 ///   Puts string values from an array into an NSArray
 /// </summary>
@@ -62,6 +76,70 @@ uses
   System.DateUtils,
   // Mac
   Macapi.ObjectiveC, Macapi.Helpers;
+
+{ TNSDictionaryHelper }
+
+constructor TNSDictionaryHelper.Create(const ADictionary: NSDictionary);
+begin
+  FDictionary := ADictionary;
+end;
+
+function TNSDictionaryHelper.GetValuePtr(const AKey: string): Pointer;
+begin
+  Result := FDictionary.valueForKey(StrToNSStr(AKey));
+end;
+
+function TNSDictionaryHelper.GetValue(const AKey: string; const ADefault: Double = 0): Double;
+var
+  LValuePtr: Pointer;
+begin
+  Result := ADefault;
+  LValuePtr := GetValuePtr(AKey);
+  if LValuePtr <> nil then
+    Result := TNSNumber.Wrap(LValuePtr).doubleValue;
+end;
+
+function TNSDictionaryHelper.GetValue(const AKey: string; const ADefault: Integer = 0): Integer;
+var
+  LValuePtr: Pointer;
+begin
+  Result := ADefault;
+  LValuePtr := GetValuePtr(AKey);
+  if LValuePtr <> nil then
+    Result := TNSNumber.Wrap(LValuePtr).integerValue;
+end;
+
+function TNSDictionaryHelper.GetValue(const AKey: string; const ADefault: string = ''): string;
+var
+  LValuePtr: Pointer;
+begin
+  Result := ADefault;
+  LValuePtr := GetValuePtr(AKey);
+  if LValuePtr <> nil then
+    Result := NSStrToStr(TNSString.Wrap(LValuePtr));
+end;
+
+{ TNSMutableDictionaryHelper }
+
+constructor TNSMutableDictionaryHelper.Create(const ADictionary: NSMutableDictionary);
+begin
+  FDictionary := ADictionary;
+end;
+
+function TNSMutableDictionaryHelper.Dictionary: NSDictionary;
+begin
+  Result := TNSDictionary.Wrap(NSObjectToID(FDictionary));
+end;
+
+procedure TNSMutableDictionaryHelper.SetValue(const AValue: Integer; const AKey: string);
+begin
+  FDictionary.setObject(TNSNumber.OCClass.numberWithInt(AValue), NSObjectToID(StrToNSStr(AKey)));
+end;
+
+procedure TNSMutableDictionaryHelper.SetValue(const AValue, AKey: string);
+begin
+  FDictionary.setObject(NSObjectToID(StrToNSStr(AValue)), NSObjectToID(StrToNSStr(AKey)));
+end;
 
 function CocoaDoubleConst(const AFwk: string; const AConstStr: string): Double;
 var
@@ -136,3 +214,4 @@ begin
 end;
 
 end.
+
