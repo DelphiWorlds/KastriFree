@@ -25,6 +25,7 @@ type
     class procedure OnRequestPermissionsResultNative(AEnv: PJNIEnv; AThis: JNIObject; requestCode: Integer;
       permissions: JNIObjectArray; granted: JNIIntArray); cdecl; static;
   private
+    FIsRegistered: Boolean;
     procedure RegisterDelphiNativeMethods;
   protected
     procedure RequestPermissions(const APermissions: array of string; const ARequestCode: Integer); override;
@@ -40,7 +41,9 @@ uses
   System.SysUtils, System.Classes,
   // Android
   Androidapi.JNI.GraphicsContentViewText, Androidapi.Helpers, Androidapi.JNIBridge, Androidapi.JNI.JavaTypes, Androidapi.NativeActivity,
-  Androidapi.JNI.App, Androidapi.JNI.Os;
+  Androidapi.JNI.App, Androidapi.JNI.Os,
+  // DW
+  DW.Android.Helpers;
 
 type
   TOpenSystemHelper = class(TSystemHelper);
@@ -52,7 +55,6 @@ begin
   inherited;
   if FInstance = nil then
     FInstance := Self;
-  RegisterDelphiNativeMethods;
 end;
 
 class function TPlatformSystemHelper.CheckPermission(const APermission: string): Boolean;
@@ -95,6 +97,8 @@ var
   ActivityClass: JNIClass;
   NativeMethod: JNINativeMethod;
 begin
+  if FIsRegistered then
+    Exit; // <======
   PEnv := TJNIResolver.GetJNIEnv;
   NativeMethod.Name := 'onRequestPermissionsResultNative';
   NativeMethod.Signature := '(I[Ljava/lang/String;[I)V'; // Integer, String [], Integer[] (VOID)
@@ -102,6 +106,7 @@ begin
   ActivityClass := PEnv^.GetObjectClass(PEnv, PANativeActivity(System.DelphiActivity).clazz);
   PEnv^.RegisterNatives(PEnv, ActivityClass, @NativeMethod, 1);
   PEnv^.DeleteLocalRef(PEnv, ActivityClass);
+  FIsRegistered := True;
 end;
 
 procedure TPlatformSystemHelper.RequestPermissions(const APermissions: array of string; const ARequestCode: Integer);
@@ -109,6 +114,9 @@ var
   LPermissions: TJavaObjectArray<JString>;
   I: Integer;
 begin
+  if not TAndroidHelperEx.CheckBuildAndTarget(TAndroidHelperEx.MARSHMALLOW)  then
+    Exit; //
+  RegisterDelphiNativeMethods;
   LPermissions := TJavaObjectArray<JString>.Create(Length(APermissions));
   for I := Low(APermissions) to High(APermissions) do
     LPermissions.Items[I] := StringToJString(APermissions[I]);
