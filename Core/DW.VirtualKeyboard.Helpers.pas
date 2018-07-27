@@ -13,6 +13,8 @@ unit DW.VirtualKeyboard.Helpers;
 interface
 
 uses
+  // RTL
+  System.Types,
   // FMX
   FMX.Types;
 
@@ -20,6 +22,7 @@ type
   TVirtualKeyboard = record
   public
     class procedure EnableToolbar(const AEnable: Boolean); static;
+    class function GetBounds: TRect; static;
     class procedure Hide; static;
     class procedure Show(const AObject: TFmxObject); static;
   end;
@@ -28,11 +31,22 @@ implementation
 
 uses
   {$IF Defined(ANDROID)}
-  DW.VirtualKeyboardRect.Android,
+  // DW
+  DW.VirtualKeyboard.Android,
   {$ENDIF}
+  // FMX
   FMX.Platform, FMX.VirtualKeyboard;
 
 { TVirtualKeyboard }
+
+class function TVirtualKeyboard.GetBounds: TRect;
+begin
+  {$IF Defined(ANDROID)}
+  Result := TPlatformVirtualKeyboard.GetBounds;
+  {$ELSE}
+  Result := TRect.Empty;
+  {$ENDIF}
+end;
 
 class procedure TVirtualKeyboard.Hide;
 var
