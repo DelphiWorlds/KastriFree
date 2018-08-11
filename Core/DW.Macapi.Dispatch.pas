@@ -16,7 +16,23 @@ unit DW.Macapi.Dispatch;
 interface
 
 uses
+  System.SysUtils,
   Macapi.Dispatch;
+
+type
+  dispatch_work_t = reference to procedure;
+  dispatch_block_t = Pointer; // dispatch_work_t;
+  dispatch_function_t = procedure(context: Pointer); cdecl;
+
+  TGrandCentral = record
+  private
+    class var FMainQueue: dispatch_queue_t;
+    class function GetMainQueue: dispatch_queue_t; static;
+  public
+    class procedure DispatchAsync(const AProc: dispatch_work_t; const AQueue: dispatch_queue_t = 0); static;
+  end;
+
+implementation
 
 const
 {$IF Defined(IOS)}
@@ -25,21 +41,17 @@ const
   libdispatch = '/usr/lib/system/libdispatch.dylib';
 {$ENDIF}
 
-type
-  dispatch_work_t = reference to procedure;
-  dispatch_function_t = procedure(context: Pointer); cdecl;
-
 procedure dispatch_sync_f(queue: dispatch_queue_t; context: Pointer; work: dispatch_function_t); cdecl;
   external libdispatch name _PU + 'dispatch_sync_f';
 
-procedure dispatch_async(queue: dispatch_queue_t; work: dispatch_work_t);
-procedure dispatch_sync(queue: dispatch_queue_t; work: dispatch_work_t);
-function dispatch_get_main_queue: dispatch_queue_t;
+//procedure dispatch_async(queue: dispatch_queue_t; work: dispatch_work_t);
+//procedure dispatch_sync(queue: dispatch_queue_t; work: dispatch_work_t);
+//function dispatch_get_main_queue: dispatch_queue_t;
 
-implementation
+//implementation
 
-uses
-  System.SysUtils;
+//uses
+//  System.SysUtils;
 
 { Grand Central Dispatch implementation }
 
@@ -83,4 +95,21 @@ begin
   dispatch_sync_f(queue, callback, DispatchCallback);
 end;
 
-end.
+{ TDispatch }
+
+class procedure TGrandCentral.DispatchAsync(const AProc: dispatch_work_t; const AQueue: dispatch_queue_t = 0);
+begin
+  if AQueue = 0 then
+    dispatch_async(GetMainQueue, AProc)
+  else
+    dispatch_async(AQueue, AProc)
+end;
+
+class function TGrandCentral.GetMainQueue: dispatch_queue_t;
+begin
+  if FMainQueue = 0 then
+    FMainQueue := dispatch_get_main_queue;
+  Result := FMainQueue;
+end;
+
+end.
