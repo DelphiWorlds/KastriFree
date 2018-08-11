@@ -34,6 +34,10 @@ type
     /// </summary>
     class procedure Sync(const AProc: TThreadProcedure; const ADelay: Integer = 0); static;
     /// <summary>
+    ///   Runs a method in a thread
+    /// </summary>
+    class procedure Run(const ARunProc: TThreadProcedure); static;
+    /// <summary>
     ///   Runs a method in a thread and queues/syncs a callback if supplied
     /// </summary>
     class procedure RunQueue(const ARunProc: TThreadProcedure; const ACallbackProc: TThreadProcedure = nil); static;
@@ -76,6 +80,11 @@ begin
       TThread.Synchronize(nil, AProc);
     end
   ).Start;
+end;
+
+class procedure TDo.Run(const ARunProc: TThreadProcedure);
+begin
+  RunQueue(ARunProc);
 end;
 
 class procedure TDo.RunQueue(const ARunProc: TThreadProcedure; const ACallbackProc: TThreadProcedure = nil);
