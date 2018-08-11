@@ -17,26 +17,15 @@ uses
   Androidapi.JNIBridge, Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText;
 
 type
-  JDWFirebaseInstanceIdService = interface;
-
-  JDWFirebaseInstanceIdServiceClass = interface(JObjectClass)
-    ['{A86BD0B7-320D-4773-B0CF-EBB7FF8F1328}']
-    {class} function _GetACTION_TOKEN_REFRESHED: JString; cdecl;
-    {class} property ACTION_TOKEN_REFRESHED: JString read _GetACTION_TOKEN_REFRESHED;
-  end;
-
-  [JavaSignature('com/delphiworlds/kastri/DWFirebaseInstanceIdService')]
-  JDWFirebaseInstanceIdService = interface(JObject)
-    ['{96CE8E1D-2697-4290-A16C-EF39F4827D92}']
-  end;
-  TJDWFirebaseInstanceIdService = class(TJavaGenericImport<JDWFirebaseInstanceIdServiceClass, JDWFirebaseInstanceIdService>) end;
-
   JDWFirebaseMessagingService = interface;
 
   JDWFirebaseMessagingServiceClass = interface(JObjectClass)
     ['{3111661E-03CE-45AB-9F60-90A0813EF914}']
     {class} function _GetACTION_MESSAGE_RECEIVED: JString; cdecl;
+    {class} function _GetACTION_NEW_TOKEN: JString; cdecl;
+    {class} procedure queryToken(context: JContext); cdecl;
     {class} property ACTION_MESSAGE_RECEIVED: JString read _GetACTION_MESSAGE_RECEIVED;
+    {class} property ACTION_NEW_TOKEN: JString read _GetACTION_NEW_TOKEN;
   end;
 
   [JavaSignature('com/delphiworlds/kastri/DWFirebaseMessagingService')]
