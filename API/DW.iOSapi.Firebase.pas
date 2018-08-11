@@ -115,9 +115,17 @@ type
   end;
   TFIRMessagingRemoteMessage = class(TOCGenericImport<FIRMessagingRemoteMessageClass, FIRMessagingRemoteMessage>) end;
 
+  FIRMessaging = interface;
+
   FIRMessagingDelegate = interface(IObjectiveC)
     ['{264C1F0E-3EA9-42AC-9802-EF1BC9A7E321}']
-    procedure applicationReceivedRemoteMessage(remoteMessage: FIRMessagingRemoteMessage); cdecl;
+    procedure applicationReceivedRemoteMessage(remoteMessage: FIRMessagingRemoteMessage); cdecl; // Deprecated?
+    [MethodName('messaging:didReceiveMessage:')]
+    procedure didReceiveMessage(messaging: FIRMessaging; remoteMessage: FIRMessagingRemoteMessage); cdecl;
+    [MethodName('messaging:didRefreshRegistrationToken:')]
+    procedure didRefreshRegistrationToken(messaging: FIRMessaging; fcmToken: NSString); cdecl;
+    [MethodName('messaging:didReceiveRegistrationToken:')]
+    procedure didReceiveRegistrationToken(messaging: FIRMessaging; fcmToken: NSString); cdecl;
   end;
 
   FIRMessagingClass = interface(NSObjectClass)
@@ -129,10 +137,13 @@ type
     ['{A721C3D4-82EB-4A7B-A5E5-42EF9E8F618E}']
     function APNSToken: NSData; cdecl;
     procedure connectWithCompletion(handler: TFIRMessagingConnectCompletion); cdecl;
+    function delegate: Pointer; cdecl;
     procedure disconnect; cdecl;
-    function remoteMessageDelegate: Pointer; cdecl;
+    procedure sendMessage(msg: NSDictionary; receiver: NSString; messageID: NSString; ttl: Int64); cdecl;
     procedure setAPNSToken(apnsToken: NSData; tokenType: FIRMessagingAPNSTokenType); cdecl;
-    procedure setRemoteMessageDelegate(delegate: Pointer); cdecl;
+    procedure setDelegate(delegate: Pointer); cdecl;
+    function shouldEstablishDirectChannel: Boolean; cdecl;
+    procedure setShouldEstablishDirectChannel(value: Boolean); cdecl;
     procedure subscribeToTopic(topic: NSString); cdecl;
     procedure unsubscribeFromTopic(topic: NSString); cdecl;
   end;
@@ -146,7 +157,12 @@ uses
   // RTL
   System.Sqlite, System.ZLib,
   // Mac
-  Macapi.Helpers;
+  Macapi.Helpers,
+  // iOS
+  iOSapi.StoreKit;
+
+const
+  libSystemConfiguration = '/System/Library/Frameworks/SystemConfiguration.framework/SystemConfiguration';
 
 function kFIRInstanceIDTokenRefreshNotification: NSString;
 begin
@@ -154,13 +170,20 @@ begin
   Result := StrToNSStr('com.firebase.iid.notif.refresh-token');
 end;
 
-procedure FirebaseCoreLoader; cdecl; external 'FirebaseCore';
 procedure FirebaseAnalyticsLoader; cdecl; external 'FirebaseAnalytics';
+procedure FirebaseCoreLoader; cdecl; external 'FirebaseCore';
+procedure FirebaseCoreDiagnosticsLoader; cdecl; external 'FirebaseCoreDiagnostics';
 procedure FirebaseInstanceIDLoader; cdecl; external 'FirebaseInstanceID';
-procedure GoogleToolboxForMacLoader; cdecl; external 'GoogleToolboxForMac';
 procedure FirebaseMessagingLoader; cdecl; external 'FirebaseMessaging';
-procedure FirebaseNanoPBLoader; cdecl; external 'FirebaseNanoPB';
+//procedure FirebaseNanoPBLoader; cdecl; external 'FirebaseNanoPB'; // 5.4.1 and below
+procedure MeasurementNanoPBLoader; cdecl; external 'MeasurementNanoPB'; // 5.5.0
+procedure FoundationLoader; cdecl; external libFoundation;
+procedure GoogleAppMeasurementLoader; cdecl; external 'GoogleAppMeasurement'; // 5.5.0
+//procedure GoogleToolboxForMacLoader; cdecl; external 'GoogleToolboxForMac'; // 5.4.1 and below
+procedure GoogleUtilitiesLoader; cdecl; external 'GoogleUtilities'; // 5.5.0
 procedure nanoPBLoader; cdecl; external 'nanoPB';
 procedure ProtobufLoader; cdecl; external 'Protobuf';
+procedure SystemConfigurationLoader; cdecl; external libSystemConfiguration;
+procedure StoreKitLoader; cdecl; external libStoreKit;
 
 end.
