@@ -35,10 +35,12 @@ type
     procedure Disconnect; virtual; abstract;
     procedure DoApplicationBecameActive; virtual;
     procedure DoApplicationEnteredBackground; virtual;
-    procedure DoAuthorizationRefused;
+    procedure DoAuthorizationResult(const AGranted: Boolean);
     procedure DoException(const AException: Exception);
     procedure DoMessageReceived(const APayload: TStrings);
     procedure DoTokenReceived(const AToken: string);
+    function GetDeviceToken: string; virtual;
+    procedure RequestAuthorization; virtual; abstract;
     procedure SubscribeToTopic(const ATopicName: string); virtual; abstract;
     function Start: Boolean; virtual;
     procedure UnsubscribeFromTopic(const ATopicName: string); virtual; abstract;
@@ -49,20 +51,23 @@ type
     destructor Destroy; override;
   end;
 
+  TAuthorizationResultEvent = procedure(Sender: TObject; const Granted: Boolean) of object;
+
   TFirebaseMessaging = class(TObject)
   private
     FIsActive: Boolean;
     FPlatformFirebaseMessaging: TCustomPlatformFirebaseMessaging;
     FToken: string;
-    FOnAuthorizationRefused: TNotifyEvent;
+    FOnAuthorizationResult: TAuthorizationResultEvent;
     FOnMessageReceived: TFirebaseMessageReceivedEvent;
     FOnTokenReceived: TFirebaseTokenReceivedEvent;
     procedure ApplicationEventMessageHandler(const Sender: TObject; const M: TMessage);
+    function GetDeviceToken: string;
     function GetIsConnected: Boolean;
     procedure PushFailToRegisterMessageHandler(const Sender: TObject; const M: TMessage);
     procedure PushRemoteNotificationMessageHandler(const Sender: TObject; const M: TMessage);
   protected
-    procedure DoAuthorizationRefused;
+    procedure DoAuthorizationResult(const AGranted: Boolean);
     procedure DoMessageReceived(const APayload: TStrings);
     procedure DoTokenReceived(const AToken: string);
   public
@@ -70,13 +75,15 @@ type
     destructor Destroy; override;
     procedure Connect;
     procedure Disconnect;
+    procedure RequestAuthorization;
     procedure SubscribeToTopic(const ATopicName: string);
     function Start: Boolean;
     procedure UnsubscribeFromTopic(const ATopicName: string);
+    property DeviceToken: string read GetDeviceToken;
     property IsActive: Boolean read FIsActive;
     property IsConnected: Boolean read GetIsConnected;
     property Token: string read FToken;
-    property OnAuthorizationRefused: TNotifyEvent read FOnAuthorizationRefused write FOnAuthorizationRefused;
+    property OnAuthorizationResult: TAuthorizationResultEvent read FOnAuthorizationResult write FOnAuthorizationResult;
     property OnMessageReceived: TFirebaseMessageReceivedEvent read FOnMessageReceived write FOnMessageReceived;
     property OnTokenReceived: TFirebaseTokenReceivedEvent read FOnTokenReceived write FOnTokenReceived;
   end;
@@ -139,9 +146,9 @@ begin
   //
 end;
 
-procedure TCustomPlatformFirebaseMessaging.DoAuthorizationRefused;
+procedure TCustomPlatformFirebaseMessaging.DoAuthorizationResult(const AGranted: Boolean);
 begin
-  FFirebaseMessaging.DoAuthorizationRefused;
+  FFirebaseMessaging.DoAuthorizationResult(AGranted);
 end;
 
 procedure TCustomPlatformFirebaseMessaging.DoMessageReceived(const APayload: TStrings);
@@ -152,6 +159,11 @@ end;
 procedure TCustomPlatformFirebaseMessaging.DoTokenReceived(const AToken: string);
 begin
   FFirebaseMessaging.DoTokenReceived(AToken);
+end;
+
+function TCustomPlatformFirebaseMessaging.GetDeviceToken: string;
+begin
+  Result := '';
 end;
 
 function TCustomPlatformFirebaseMessaging.Start: Boolean;
@@ -189,10 +201,10 @@ begin
   FPlatformFirebaseMessaging.Disconnect;
 end;
 
-procedure TFirebaseMessaging.DoAuthorizationRefused;
+procedure TFirebaseMessaging.DoAuthorizationResult(const AGranted: Boolean);
 begin
-  if Assigned(FOnAuthorizationRefused) then
-    FOnAuthorizationRefused(Self);
+  if Assigned(FOnAuthorizationResult) then
+    FOnAuthorizationResult(Self, AGranted);
 end;
 
 procedure TFirebaseMessaging.DoMessageReceived(const APayload: TStrings);
@@ -203,10 +215,18 @@ end;
 
 procedure TFirebaseMessaging.DoTokenReceived(const AToken: string);
 begin
-  FToken := AToken;
-  TOSLog.d('FCM Token: %s', [FToken]);
-  if Assigned(FOnTokenReceived) then
-    FOnTokenReceived(Self, AToken);
+  if not AToken.Equals(FToken) then
+  begin
+    FToken := AToken;
+    TOSLog.d('FCM Token: %s', [FToken]);
+    if Assigned(FOnTokenReceived) then
+      FOnTokenReceived(Self, AToken);
+  end;
+end;
+
+function TFirebaseMessaging.GetDeviceToken: string;
+begin
+  Result := FPlatformFirebaseMessaging.GetDeviceToken;
 end;
 
 function TFirebaseMessaging.GetIsConnected: Boolean;
@@ -250,6 +270,11 @@ begin
   finally
     LPayload.Free;
   end;
+end;
+
+procedure TFirebaseMessaging.RequestAuthorization;
+begin
+  FPlatformFirebaseMessaging.RequestAuthorization;
 end;
 
 function TFirebaseMessaging.Start: Boolean;
