@@ -108,10 +108,12 @@ begin
   begin
     AResults[I].Permission := APermissions[I];
     AResults[I].Granted := CheckPermission(AResults[I].Permission);
+    {$IF Defined(ANDROID)}
     if AResults[I].Granted then
       TOSLog.d('%s granted', [AResults[I].Permission])
     else
       TOSLog.d('%s denied', [AResults[I].Permission]);
+    {$ENDIF}
   end;
   Result := AResults.AreAllGranted;
 end;
