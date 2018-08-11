@@ -14,7 +14,7 @@ interface
 
 uses
   // Android
-  Androidapi.JNI.JavaTypes, Androidapi.JNI.Net;
+  Androidapi.JNI.JavaTypes, Androidapi.JNI.Net, Androidapi.JNI.GraphicsContentViewText;
 
 type
   TAndroidHelperEx = record
@@ -68,15 +68,56 @@ type
     class function UriFromFile(const AFile: JFile): Jnet_Uri; static;
   end;
 
+  TPreferences = class(TObject)
+  private
+    FPreferences: JSharedPreferences;
+  public
+    constructor Create(const AID: string);
+    destructor Destroy; override;
+    function GetValue(const AKey: string; const ADefaultValue: string = ''): string;
+    procedure SetValue(const AKey: string; const AValue: string);
+  end;
+
 implementation
 
 uses
   // RTL
   System.SysUtils,
   // Android
-  Androidapi.Helpers, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.App, Androidapi.JNI.Os, Androidapi.JNI.Media,
+  Androidapi.Helpers, Androidapi.JNI.App, Androidapi.JNI.Os, Androidapi.JNI.Media,
   // DW
   DW.Androidapi.JNI.FileProvider;
+
+{ TPreferences }
+
+constructor TPreferences.Create(const AID: string);
+begin
+  inherited Create;
+  FPreferences := TAndroidHelper.Context.getSharedPreferences(StringToJString(AID), TJContext.JavaClass.MODE_PRIVATE);
+end;
+
+destructor TPreferences.Destroy;
+begin
+  FPreferences := nil;
+  inherited;
+end;
+
+function TPreferences.GetValue(const AKey: string; const ADefaultValue: string = ''): string;
+begin
+  Result := JStringToString(FPreferences.getString(StringToJString(AKey), StringToJString(ADefaultValue)));
+end;
+
+procedure TPreferences.SetValue(const AKey, AValue: string);
+var
+  LEditor: JSharedPreferences_Editor;
+begin
+  LEditor := FPreferences.edit;
+  try
+    LEditor.putString(StringToJString(AKey), StringToJString(AValue));
+  finally
+    LEditor.commit;
+  end;
+end;
 
 { TAndroidHelperEx }
 
