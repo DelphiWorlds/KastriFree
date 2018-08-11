@@ -46,24 +46,6 @@ public class DWFirebaseMessagingService extends FirebaseMessagingService {
   }
 
   public static void queryToken(final Context context) {
-/*
-    FirebaseInstanceId instanceId = FirebaseInstanceId.getInstance();
-    if (instanceId == null) {
-      Log.v(TAG, "*** FirebaseInstanceId.getInstance() IS NULL ***"); 
-      return;     
-    }
-    Task<InstanceIdResult> task = instanceId.getInstanceId();
-    if (task == null) {
-      Log.v(TAG, "*** FirebaseInstanceId.getInstance().getInstanceId() IS NULL ***"); 
-      return;     
-    }
-    task.addOnSuccessListener(new OnSuccessListener<InstanceIdResult>() {
-      @Override
-      public void onSuccess(InstanceIdResult instanceIdResult) {
-        sendTokenBroadcast(context, instanceIdResult.getToken());
-      }
-    });
-*/
     FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener(new OnSuccessListener<InstanceIdResult>() {
       @Override
       public void onSuccess(InstanceIdResult instanceIdResult) {
@@ -110,7 +92,7 @@ public class DWFirebaseMessagingService extends FirebaseMessagingService {
     intent.putExtra("gcm.to", remoteMessage.getTo()); /* String */
     intent.putExtra("gcm.ttl", remoteMessage.getTtl()); /* int */
     boolean hasReceiver = false;
-    try{
+    try {
       hasReceiver = LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     } catch (Throwable e){
       //no exception handling
