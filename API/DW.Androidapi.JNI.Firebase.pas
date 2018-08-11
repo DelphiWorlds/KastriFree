@@ -39,7 +39,9 @@ type
     function getApiKey: JString; cdecl;
     function getApplicationId: JString; cdecl;
     function getDatabaseUrl: JString; cdecl;
+    function getGaTrackingId: JString; cdecl;
     function getGcmSenderId: JString; cdecl;
+    function getProjectId: JString; cdecl;
     function getStorageBucket: JString; cdecl;
     function hashCode: Integer; cdecl;
     function toString: JString; cdecl;
@@ -56,34 +58,48 @@ type
   JFirebaseOptions_Builder = interface(JObject)
     ['{71400595-7BCC-4AA2-BCDC-BA3F5FF3CD8F}']
     function build: JFirebaseOptions; cdecl;
-    function setApiKey(apiKey: JString): JFirebaseOptions_Builder; cdecl;
-    function setApplicationId(applicationId: JString): JFirebaseOptions_Builder; cdecl;
-    function setDatabaseUrl(databaseUrl: JString): JFirebaseOptions_Builder; cdecl;
-    function setGcmSenderId(gcmSenderId: JString): JFirebaseOptions_Builder; cdecl;
-    function setStorageBucket(storageBucket: JString): JFirebaseOptions_Builder; cdecl;
+    function setApiKey(P1: JString): JFirebaseOptions_Builder; cdecl;
+    function setApplicationId(P1: JString): JFirebaseOptions_Builder; cdecl;
+    function setDatabaseUrl(P1: JString): JFirebaseOptions_Builder; cdecl;
+    function setGaTrackingId(P1: JString): JFirebaseOptions_Builder; cdecl;
+    function setGcmSenderId(P1: JString): JFirebaseOptions_Builder; cdecl;
+    function setProjectId(P1: JString): JFirebaseOptions_Builder; cdecl;
+    function setStorageBucket(P1: JString): JFirebaseOptions_Builder; cdecl;
   end;
   TJFirebaseOptions_Builder = class(TJavaGenericImport<JFirebaseOptions_BuilderClass, JFirebaseOptions_Builder>) end;
 
   JFirebaseAppClass = interface(JObjectClass)
     ['{DE33391C-BCF4-4718-A557-7703B772E23F}']
     {class} function _GetDEFAULT_APP_NAME: JString; cdecl;
+    {class} procedure clearInstancesForTest; cdecl;
     {class} function getApps(context: JContext): JList; cdecl;
     {class} function getInstance: JFirebaseApp; cdecl; overload;
     {class} function getInstance(name: JString): JFirebaseApp; cdecl; overload;
+    {class} function getPersistenceKey(P1: JString; P2: JFirebaseOptions): JString; cdecl; overload;
     {class} function initializeApp(context: JContext): JFirebaseApp; cdecl; overload;
     {class} function initializeApp(context: JContext; options: JFirebaseOptions): JFirebaseApp; cdecl; overload;
     {class} function initializeApp(context: JContext; options: JFirebaseOptions; name: JString): JFirebaseApp; cdecl; overload;
+    {class} procedure onBackgroundStateChanged(P1: Boolean); cdecl;
     {class} property DEFAULT_APP_NAME: JString read _GetDEFAULT_APP_NAME;
   end;
 
   [JavaSignature('com/google/firebase/FirebaseApp')]
   JFirebaseApp = interface(JObject)
     ['{3612CB9C-FD82-4362-A93E-7D59FC068B9A}']
+    procedure delete; cdecl;
     function equals(o: JObject): Boolean; cdecl;
+    function &get(P1: Jlang_Class): JObject; cdecl;
     function getApplicationContext: JContext; cdecl;
+    function getListeners: JList; cdecl;
     function getName: JString; cdecl;
     function getOptions: JFirebaseOptions; cdecl;
+    function getPersistenceKey: JString; cdecl; overload;
+    // function getToken(P1: Boolean): JTask; cdecl;
+    function getUid: JString; cdecl;
     function hashCode: Integer; cdecl;
+    function isAutomaticDataCollectionEnabled: Boolean; cdecl;
+    function isDefaultApp: Boolean; cdecl;
+    procedure setAutomaticDataCollectionEnabled(P1: Boolean); cdecl;
     procedure setAutomaticResourceManagementEnabled(enabled: Boolean); cdecl;
     function toString: JString; cdecl;
   end;
@@ -102,6 +118,7 @@ type
     procedure deleteToken(authorizedEntity: JString; scope: JString); cdecl;
     function getCreationTime: Int64; cdecl;
     function getId: JString; cdecl;
+    function getInstanceId: JObject; cdecl; // JTask
     function getToken: JString; cdecl; overload;
     function getToken(authorizedEntity: JString; scope: JString): JString; cdecl; overload;
   end;
@@ -109,13 +126,17 @@ type
 
   JFirebaseMessagingClass = interface(JObjectClass)
     ['{CAB4B525-5E1E-40E8-9A7C-CA3608FE26C6}']
+    {class} function _GetINSTANCE_ID_SCOPE: JString; cdecl;
     {class} function getInstance: JFirebaseMessaging; cdecl; overload;
+    {class} property INSTANCE_ID_SCOPE: JString read _GetINSTANCE_ID_SCOPE;
   end;
 
   [JavaSignature('com/google/firebase/messaging/FirebaseMessaging')]
   JFirebaseMessaging = interface(JObject)
     ['{F33877E5-DAA2-4097-9527-CE1CDBD66A67}']
+    function isAutoInitEnabled: Boolean; cdecl;
     procedure send(msg: JRemoteMessage); cdecl;
+    procedure setAutoInitEnabled(enable: Boolean); cdecl;
     procedure subscribeToTopic(topic: JString); cdecl;
     procedure unsubscribeFromTopic(topic: JString); cdecl;
   end;
@@ -161,8 +182,18 @@ type
   end;
   TJRemoteMessage_Builder = class(TJavaGenericImport<JRemoteMessage_BuilderClass, JRemoteMessage_Builder>) end;
 
+  JRemoteMessage_MessagePriorityClass = interface(JAnnotationClass)
+    ['{93677AA8-BF5A-4DF1-A952-12D72D47F89B}']
+  end;
+
+  [JavaSignature('com/google/firebase/messaging/RemoteMessage$MessagePriority')]
+  JRemoteMessage_MessagePriority = interface(JAnnotation)
+    ['{1CCA28CD-67A7-4C7E-BD5C-F80DA0754803}']
+  end;
+  TJRemoteMessage_MessagePriority = class(TJavaGenericImport<JRemoteMessage_MessagePriorityClass, JRemoteMessage_MessagePriority>) end;
+
   JRemoteMessage_NotificationClass = interface(JObjectClass)
-    ['{F1A80B5D-CD0D-45A1-91D2-8A2114D83C4A}']
+    ['{A640E4D3-825E-46CA-A401-A15CD3B40341}']
   end;
 
   [JavaSignature('com/google/firebase/messaging/RemoteMessage$Notification')]
