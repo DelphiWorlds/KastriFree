@@ -16,7 +16,7 @@ uses
   // Android
   Androidapi.JNIBridge, Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.Embarcadero,
   // DW
-  DW.Firebase.Messaging;
+  DW.Firebase.Messaging, DW.Android.Helpers;
 
 type
   TPlatformFirebaseMessaging = class;
@@ -41,6 +41,8 @@ type
     procedure Disconnect; override;
     procedure DoApplicationBecameActive; override;
     procedure HandleMessageReceived(const data: JIntent);
+    procedure HandleNewToken(const data: JIntent);
+    procedure RequestAuthorization; override;
     procedure SubscribeToTopic(const ATopicName: string); override;
     procedure UnsubscribeFromTopic(const ATopicName: string); override;
   public
@@ -52,13 +54,15 @@ implementation
 
 uses
   // RTL
-  System.SysUtils, System.Classes, System.Threading,
+  System.SysUtils, System.Classes,
   // Android
   Androidapi.JNI.Os, Androidapi.Helpers,
   // FMX
   FMX.Platform.Android,
   // DW
-  DW.FirebaseApp.Android, DW.Androidapi.JNI.FirebaseServiceHelpers, DW.Androidapi.JNI.LocalBroadcastManager, DW.Androidapi.JNI.Firebase;
+  DW.OSLog,
+  DW.Classes.Helpers, DW.Androidapi.JNI.FirebaseServiceHelpers,
+  DW.Androidapi.JNI.LocalBroadcastManager, DW.Androidapi.JNI.Firebase, DW.Androidapi.JNI.ContextWrapper;
 
 { TFirebaseMessagingReceiverListener }
 
@@ -70,8 +74,13 @@ end;
 
 procedure TFirebaseMessagingReceiverListener.onReceive(context: JContext; intent: JIntent);
 begin
-  if (intent <> nil) and (intent.getAction.compareTo(TJDWFirebaseMessagingService.JavaClass.ACTION_MESSAGE_RECEIVED) = 0) then
-    FFirebaseMessaging.HandleMessageReceived(intent);
+  if intent <> nil then
+  begin
+    if intent.getAction.compareTo(TJDWFirebaseMessagingService.JavaClass.ACTION_NEW_TOKEN) = 0 then
+      FFirebaseMessaging.HandleNewToken(intent)
+    else if intent.getAction.compareTo(TJDWFirebaseMessagingService.JavaClass.ACTION_MESSAGE_RECEIVED) = 0 then
+      FFirebaseMessaging.HandleMessageReceived(intent);
+  end;
 end;
 
 { TPlatformFirebaseMessaging }
@@ -81,10 +90,11 @@ var
   LIntentFilter: JIntentFilter;
 begin
   inherited;
-  TPlatformFirebaseApp.Start;
   FFirebaseMessagingReceiverListener := TFirebaseMessagingReceiverListener.Create(Self);
   FFirebaseMessagingBroadcastReceiver := TJFMXBroadcastReceiver.JavaClass.init(FFirebaseMessagingReceiverListener);
-  LIntentFilter := TJIntentFilter.JavaClass.init(TJDWFirebaseMessagingService.JavaClass.ACTION_MESSAGE_RECEIVED);
+  LIntentFilter := TJIntentFilter.JavaClass.init;
+  LIntentFilter.addAction(TJDWFirebaseMessagingService.JavaClass.ACTION_NEW_TOKEN);
+  LIntentFilter.addAction(TJDWFirebaseMessagingService.JavaClass.ACTION_MESSAGE_RECEIVED);
   TJLocalBroadcastManager.JavaClass.getInstance(TAndroidHelper.Context).registerReceiver(FFirebaseMessagingBroadcastReceiver, LIntentFilter);
 end;
 
@@ -98,6 +108,7 @@ end;
 procedure TPlatformFirebaseMessaging.Connect;
 begin
   IsConnected := True;
+  TJDWFirebaseMessagingService.JavaClass.queryToken(TAndroidHelper.Context);
 end;
 
 procedure TPlatformFirebaseMessaging.Disconnect;
@@ -123,9 +134,10 @@ var
   LValueObject: JObject;
   LValue: string;
 begin
+  TOSLog.d('+TPlatformFirebaseMessaging.HandleMessageReceived');
   if not IsForeground then
   begin
-    TTask.Run(
+    TDo.Run(
       procedure
       begin
         TJDWNotificationPublisher.JavaClass.sendNotification(TAndroidHelper.Context, data, True);
@@ -163,6 +175,25 @@ begin
   finally
     LPayload.Free;
   end;
+  TOSLog.d('-TPlatformFirebaseMessaging.HandleMessageReceived');
+end;
+
+procedure TPlatformFirebaseMessaging.HandleNewToken(const data: JIntent);
+var
+  LToken: string;
+begin
+  LToken := JStringToString(data.getStringExtra(StringToJString('token')));
+  TThread.Queue(nil,
+    procedure
+    begin
+      DoTokenReceived(LToken);
+    end
+  );
+end;
+
+procedure TPlatformFirebaseMessaging.RequestAuthorization;
+begin
+  DoAuthorizationResult(True); // i.e. a NOP on Android
 end;
 
 procedure TPlatformFirebaseMessaging.SubscribeToTopic(const ATopicName: string);
