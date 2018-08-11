@@ -224,7 +224,7 @@
         <iPad_SpotLight100>$(BDS)\bin\Artwork\iOS\iPad\FM_SpotlightSearchIcon_100x100.png</iPad_SpotLight100>
         <iPad_Setting29>$(BDS)\bin\Artwork\iOS\iPad\FM_SettingIcon_29x29.png</iPad_Setting29>
         <iPad_Setting58>$(BDS)\bin\Artwork\iOS\iPad\FM_SettingIcon_58x58.png</iPad_Setting58>
-        <DCC_UnitSearchPath>$(Firebase)\Analytics\FirebaseAnalytics.framework;$(Firebase)\Analytics\FirebaseCore.framework;$(Firebase)\Analytics\FirebaseCoreDiagnostics.framework;$(Firebase)\Analytics\FirebaseInstanceID.framework;$(Firebase)\Analytics\FirebaseNanoPB.framework;$(Firebase)\Analytics\GoogleAppMeasurement.framework;$(Firebase)\Analytics\GoogleToolboxForMac.framework;$(Firebase)\Analytics\GoogleUtilities.framework;$(Firebase)\Analytics\MeasurementNanoPB.framework;$(Firebase)\Analytics\nanoPB.framework;$(Firebase)\Messaging\FirebaseMessaging.framework;$(Firebase)\Messaging\Protobuf.framework;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\..\ThirdParty\Firebase\iOS\Firebase.5.5.0\Analytics\FirebaseAnalytics.framework;..\..\ThirdParty\Firebase\iOS\Firebase.5.5.0\Analytics\FirebaseCore.framework;..\..\ThirdParty\Firebase\iOS\Firebase.5.5.0\Analytics\FirebaseCoreDiagnostics.framework;..\..\ThirdParty\Firebase\iOS\Firebase.5.5.0\Analytics\FirebaseInstanceID.framework;..\..\ThirdParty\Firebase\iOS\Firebase.5.5.0\Analytics\GoogleAppMeasurement.framework;..\..\ThirdParty\Firebase\iOS\Firebase.5.5.0\Analytics\GoogleUtilities.framework;..\..\ThirdParty\Firebase\iOS\Firebase.5.5.0\Analytics\MeasurementNanoPB.framework;..\..\ThirdParty\Firebase\iOS\Firebase.5.5.0\Analytics\nanoPB.framework;..\..\ThirdParty\Firebase\iOS\Firebase.5.5.0\Messaging\FirebaseMessaging.framework;..\..\ThirdParty\Firebase\iOS\Firebase.5.5.0\Messaging\Protobuf.framework;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_LinkerOptions>-ObjC</DCC_LinkerOptions>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_iOSSimulator)'!=''">
@@ -470,10 +470,9 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\ThirdParty\PlayServices\Android\res\values-fi\values.xml" Configuration="Debug" Class="File">
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_SplashImage_426x320.png" Configuration="Debug" Class="Android_SplashImage426">
                     <Platform Name="Android">
-                        <RemoteDir>.\res\values-fi</RemoteDir>
-                        <RemoteName>values.xml</RemoteName>
+                        <RemoteName>splash_image.png</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -491,9 +490,8 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Resources\GoogleService-Info.plist" Configuration="Debug" Class="File">
+                <DeployFile LocalName="$(BDS)\bin\Artwork\iOS\iPad\FM_ApplicationIcon_144x144.png" Configuration="Debug" Class="iPad_AppIcon144">
                     <Platform Name="iOSDevice64">
-                        <RemoteName>GoogleService-Info.plist</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
