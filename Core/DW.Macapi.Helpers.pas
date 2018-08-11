@@ -47,6 +47,14 @@ type
   end;
 
 /// <summary>
+///   Retrieves a number value from an NSDictionary, with optional default (otherwise zero)
+/// </summary>
+function GetDictionaryNumberValue(const ADictionary: NSDictionary; const AKey: NSString; const ADefault: Double = 0): Double;
+/// <summary>
+///   Retrieves a string value from an NSDictionary, with optional default (otherwise blank)
+/// </summary>
+function GetDictionaryStringValue(const ADictionary: NSDictionary; const AKey: NSString; const ADefault: string = ''): string;
+/// <summary>
 ///   Retrieves cocoa double constant
 /// </summary>
 function CocoaDoubleConst(const AFwk: string; const AConstStr: string): Double;
@@ -141,17 +149,6 @@ begin
   FDictionary.setObject(NSObjectToID(StrToNSStr(AValue)), NSObjectToID(StrToNSStr(AKey)));
 end;
 
-function CocoaDoubleConst(const AFwk: string; const AConstStr: string): Double;
-var
-  LObj: Pointer;
-begin
-  LObj := CocoaPointerConst(AFwk, AConstStr);
-  if LObj <> nil then
-    Result := Double(LObj^)
-  else
-    Result := 0;
-end;
-
 function GetDictionaryNumberValue(const ADictionary: NSDictionary; const AKey: NSString; const ADefault: Double = 0): Double;
 var
   LValuePtr: Pointer;
@@ -170,6 +167,17 @@ begin
   LValuePtr := ADictionary.valueForKey(AKey);
   if LValuePtr <> nil then
     Result := NSStrToStr(TNSString.Wrap(LValuePtr));
+end;
+
+function CocoaDoubleConst(const AFwk: string; const AConstStr: string): Double;
+var
+  LObj: Pointer;
+begin
+  LObj := CocoaPointerConst(AFwk, AConstStr);
+  if LObj <> nil then
+    Result := Double(LObj^)
+  else
+    Result := 0;
 end;
 
 function StringArrayToNSArray(const AArray: array of string): NSArray;
