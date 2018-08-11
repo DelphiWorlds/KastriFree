@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Insert values from google-services.json for each of the following entries. The location for each entry from google-services.json appears as a comment following the entry -->
+  <string name="default_web_client_id" translatable="false"></string> <!-- client\oauth_client\client_id -->
+  <string name="firebase_database_url" translatable="false"></string> <!-- project_info\firebase_url -->
+  <string name="gcm_defaultSenderId" translatable="false"></string> <!-- project_info\project_number -->
+  <string name="google_api_key" translatable="false"></string> <!-- client\api_key\current_key -->
+  <string name="google_app_id" translatable="false"></string> <!-- client\client_info\mobilesdk_app_id -->
+  <string name="google_crash_reporting_api_key" translatable="false"></string> <!-- client\api_key\current_key -->
+  <string name="google_storage_bucket" translatable="false"></string> <!-- project_info\storage_bucket -->
+</resources>
