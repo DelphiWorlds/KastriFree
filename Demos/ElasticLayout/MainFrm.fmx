@@ -2,7 +2,7 @@ object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'Form1'
-  ClientHeight = 564
+  ClientHeight = 546
   ClientWidth = 376
   FormFactor.Width = 320
   FormFactor.Height = 480
@@ -56,8 +56,9 @@ object Form1: TForm1
     end
   end
   object Button4: TButton
+    Anchors = [akLeft, akBottom]
     Position.X = 144.000000000000000000
-    Position.Y = 164.000000000000000000
+    Position.Y = 502.000000000000000000
     Size.Width = 89.000000000000000000
     Size.Height = 29.000000000000000000
     Size.PlatformDefault = False
@@ -72,12 +73,17 @@ object Form1: TForm1
       
         'The layout in this form has Align set to TAlignLayout.Center, an' +
         'd all the buttons within it have their Align property set to TAl' +
-        'ignLayout.Top. Normally, the buttons will appear out of position' +
-        ' (as they do at design time), however with the Elastic property,' +
-        ' the layout automatically resizes to accomodate the controls wit' +
-        'hin it, if they are *commonly aligned*, thus making them appear ' +
-        'in the center. Clicking Button4 will toggle the visbility of But' +
-        'ton1, demonstrating the elasticity of the layout ')
+        'ignLayout.Top. '
+      ''
+      
+        'Normally, the buttons will appear out of position (as they do at' +
+        ' design time), however with the Elastic property, the layout aut' +
+        'omatically resizes to accomodate the controls within it, thus ma' +
+        'king them appear in the center. '
+      ''
+      
+        'Clicking Button4 will toggle the visbility of Button1, demonstra' +
+        'ting the elasticity of the layout ')
     StyledSettings = [Size, Style, FontColor]
     TextSettings.Font.Family = 'Consolas'
     TextSettings.WordWrap = True
@@ -85,10 +91,10 @@ object Form1: TForm1
     Position.X = 4.000000000000000000
     Position.Y = 4.000000000000000000
     Size.Width = 365.000000000000000000
-    Size.Height = 153.000000000000000000
+    Size.Height = 177.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 3
     Viewport.Width = 361.000000000000000000
-    Viewport.Height = 149.000000000000000000
+    Viewport.Height = 173.000000000000000000
   end
 end
