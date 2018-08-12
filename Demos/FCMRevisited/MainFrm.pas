@@ -25,6 +25,8 @@ type
     procedure FCMTokenReceivedHandler(Sender: TObject; const AToken: string);
     procedure FCMMessageReceivedHandler(Sender: TObject; const APayload: TStrings);
     procedure RequesterPermissionsResultHandler(Sender: TObject; const ARequestCode: Integer; const AResults: TPermissionResults);
+  protected
+    procedure Resize; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -38,7 +40,7 @@ implementation
 {$R *.fmx}
 
 uses
-  DW.Classes.Helpers, DW.OSLog;
+  DW.Classes.Helpers, DW.OSLog, DW.OSDevice;
 
 const
   cDangerousPermissions: array[0..4] of string = (
@@ -79,6 +81,13 @@ procedure TfrmMain.RequesterPermissionsResultHandler(Sender: TObject; const AReq
 begin
   if (ARequestCode = 1) and AResults.AreAllGranted then
     FFCM.RequestAuthorization;
+end;
+
+procedure TfrmMain.Resize;
+begin
+  inherited;
+  // Spacing for iPhoneX display
+  ContentLayout.Margins.Rect := TOSDevice.GetOffsetRect;
 end;
 
 procedure TfrmMain.FCMAuthorizationResultHandler(Sender: TObject; const AGranted: Boolean);
