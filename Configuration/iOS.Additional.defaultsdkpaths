@@ -1,0 +1,72 @@
+	<ProfileFramework Include="$(SDKROOT)/System/Library/Frameworks">
+      <Name>AdSupport</Name>
+      <AllFiles>False</AllFiles>
+  </ProfileFramework>	
+	<ProfileFramework Include="$(SDKROOT)/System/Library/Frameworks">
+      <Name>AudioToolbox</Name>
+      <AllFiles>False</AllFiles>
+  </ProfileFramework>	
+	<ProfileFramework Include="$(SDKROOT)/System/Library/Frameworks">
+      <Name>AVKit</Name>
+      <AllFiles>False</AllFiles>
+  </ProfileFramework>	
+	<ProfileFramework Include="$(SDKROOT)/System/Library/Frameworks">
+      <Name>CoreAudio</Name>
+      <AllFiles>False</AllFiles>
+  </ProfileFramework>	
+	<ProfileFramework Include="$(SDKROOT)/System/Library/Frameworks">
+      <Name>CoreMIDI</Name>
+      <AllFiles>False</AllFiles>
+  </ProfileFramework>
+	<ProfileFramework Include="$(SDKROOT)/System/Library/Frameworks">
+      <Name>CoreNFC</Name>
+      <AllFiles>False</AllFiles>
+  </ProfileFramework>		
+	<ProfileFramework Include="$(SDKROOT)/System/Library/Frameworks">
+      <Name>DeviceCheck</Name>
+      <AllFiles>False</AllFiles>
+  </ProfileFramework>	
+	<ProfileFramework Include="$(SDKROOT)/System/Library/Frameworks">
+      <Name>EventKit</Name>
+      <AllFiles>False</AllFiles>
+  </ProfileFramework>	
+	<ProfileFramework Include="$(SDKROOT)/System/Library/Frameworks">
+      <Name>ImageIO</Name>
+      <AllFiles>False</AllFiles>
+  </ProfileFramework>	
+	<ProfileFramework Include="$(SDKROOT)/System/Library/Frameworks">
+      <Name>Intents</Name>
+      <AllFiles>False</AllFiles>
+  </ProfileFramework>	
+	<ProfileFramework Include="$(SDKROOT)/System/Library/Frameworks">
+      <Name>IOSurface</Name>
+      <AllFiles>False</AllFiles>
+  </ProfileFramework>	
+	<ProfileFramework Include="$(SDKROOT)/System/Library/Frameworks">
+      <Name>LocalAuthentication</Name>
+      <AllFiles>False</AllFiles>
+  </ProfileFramework>	
+	<ProfileFramework Include="$(SDKROOT)/System/Library/Frameworks">
+      <Name>MediaToolbox</Name>
+      <AllFiles>False</AllFiles>
+  </ProfileFramework>	
+	<ProfileFramework Include="$(SDKROOT)/System/Library/Frameworks">
+      <Name>Metal</Name>
+      <AllFiles>False</AllFiles>
+  </ProfileFramework>	
+	<ProfileFramework Include="$(SDKROOT)/System/Library/Frameworks">
+      <Name>Photos</Name>
+      <AllFiles>False</AllFiles>
+  </ProfileFramework>	
+	<ProfileFramework Include="$(SDKROOT)/System/Library/Frameworks">
+      <Name>Speech</Name>
+      <AllFiles>False</AllFiles>
+  </ProfileFramework>	
+	<ProfileFramework Include="$(SDKROOT)/System/Library/Frameworks">
+      <Name>UserNotifications</Name>
+      <AllFiles>False</AllFiles>
+  </ProfileFramework>	
+	<ProfileFramework Include="$(SDKROOT)/System/Library/Frameworks">
+      <Name>SystemConfiguration</Name>
+      <AllFiles>False</AllFiles>
+  </ProfileFramework>	
