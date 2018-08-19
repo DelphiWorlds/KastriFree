@@ -13,8 +13,11 @@ unit DW.Connectivity.iOS;
 interface
 
 uses
+  // RTL
   System.Net.Socket,
+  // Mac
   Macapi.CoreFoundation,
+  // DW
   DW.iOSapi.SystemConfiguration, DW.Connectivity;
 
 type
@@ -31,6 +34,7 @@ type
 implementation
 
 uses
+  // Posix
   Posix.SysSocket, Posix.NetinetIn, Posix.ArpaInet;
 
 type
@@ -121,7 +125,7 @@ end;
 procedure TReachability.UpdateReachability(const AFlags: SCNetworkReachabilityFlags);
 begin
   FIsConnectedToInternet := (AFlags and kSCNetworkReachabilityFlagsReachable) > 0;
-  FIsWifiInternetConnection := (AFlags and kSCNetworkReachabilityFlagsIsWWAN) = 0;
+  FIsWifiInternetConnection := FIsConnectedToInternet and ((AFlags and kSCNetworkReachabilityFlagsIsWWAN) = 0);
 end;
 
 procedure TReachability.ReachabilityChanged(const AFlags: SCNetworkReachabilityFlags);
@@ -135,7 +139,7 @@ function TReachability.Start: Boolean;
 var
   LContext: SCNetworkReachabilityContext;
 begin
-  FillChar(LContext, SizeOf(SCNetworkReachabilityContext), 0);
+  LContext := Default(SCNetworkReachabilityContext);
   LContext.info := Self;
   Result := SCNetworkReachabilitySetCallback(FReachabilityRef, @ReachabilityCallback, @LContext);
   Result := Result and SCNetworkReachabilityScheduleWithRunLoop(FReachabilityRef, CFRunLoopGetCurrent, kCFRunLoopDefaultMode);

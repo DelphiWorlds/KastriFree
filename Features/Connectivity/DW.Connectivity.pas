@@ -35,10 +35,12 @@ implementation
 {$IF Defined(ANDROID)}
 uses
   DW.Connectivity.Android;
-{$ENDIF}
-{$IF Defined(IOS)}
+{$ELSEIF Defined(IOS)}
 uses
   DW.Connectivity.iOS;
+{$ELSE}
+uses
+  DW.Connectivity.Default;
 {$ENDIF}
 
 { TConnectivity }

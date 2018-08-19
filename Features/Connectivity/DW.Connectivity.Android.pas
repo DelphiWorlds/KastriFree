@@ -40,6 +40,7 @@ type
   protected
     procedure ConnectivityChange;
   public
+    class function GetConnectedNetworkInfo: JNetworkInfo; static;
     class function IsConnectedToInternet: Boolean; static;
     class function IsWifiInternetConnection: Boolean; static;
   public
@@ -51,7 +52,7 @@ implementation
 
 uses
   // Android
-  Androidapi.JNI.JavaTypes, Androidapi.Helpers;
+  Androidapi.JNI.JavaTypes, Androidapi.Helpers, Androidapi.JNI.Os, Androidapi.JNIBridge, Androidapi.JNI;
 
 type
   TOpenConnectivity = class(TConnectivity);
@@ -97,20 +98,66 @@ begin
   Result := TJConnectivityManager.Wrap(LService);
 end;
 
-class function TPlatformConnectivity.IsConnectedToInternet: Boolean;
+// Based on: https://github.com/jamesmontemagno/ConnectivityPlugin/issues/56
+class function TPlatformConnectivity.GetConnectedNetworkInfo: JNetworkInfo;
 var
+  LManager: JConnectivityManager;
+  LAllNetworks: TJavaObjectArray<JNetwork>;
+  LAllNetworkInfo: TJavaObjectArray<JNetworkInfo>;
   LInfo: JNetworkInfo;
+  LCapabilities: JNetworkCapabilities;
+  I: Integer;
 begin
-  LInfo := ConnectivityManager.getActiveNetworkInfo;
-  Result := (LInfo <> nil) and LInfo.isConnectedOrConnecting;
+  Result := nil;
+  LManager := ConnectivityManager;
+  if TJBuild_VERSION.JavaClass.SDK_INT >= 21 then
+  begin
+    LAllNetworks := LManager.getAllNetworks;
+    for I := 0 to LAllNetworks.Length - 1 do
+    begin
+      LCapabilities := LManager.getNetworkCapabilities(LAllNetworks[I]);
+      // Check if the network has internet capability
+      if (LCapabilities <> nil) and LCapabilities.hasCapability(TJNetworkCapabilities.JavaClass.NET_CAPABILITY_INTERNET) then
+      begin
+        // ..and is Validated or SDK < 23
+        if (TJBuild_VERSION.JavaClass.SDK_INT < 23) or LCapabilities.hasCapability(TJNetworkCapabilities.JavaClass.NET_CAPABILITY_VALIDATED) then
+        begin
+          LInfo := LManager.getNetworkInfo(LAllNetworks[I]);
+          if (LInfo <> nil) and LInfo.isAvailable and LInfo.isConnected then
+          begin
+            Result := LInfo;
+            Break;
+          end;
+        end;
+      end;
+    end;
+  end
+  else
+  begin
+    LAllNetworkInfo := LManager.getAllNetworkInfo;
+    for I := 0 to LAllNetworkInfo.Length - 1 do
+    begin
+      LInfo := LAllNetworkInfo[I];
+      if (LInfo <> nil) and LInfo.isAvailable and LInfo.isConnected then
+      begin
+        Result := LInfo;
+        Break;
+      end;
+    end;
+  end;
+end;
+
+class function TPlatformConnectivity.IsConnectedToInternet: Boolean;
+begin
+  Result := GetConnectedNetworkInfo <> nil;
 end;
 
 class function TPlatformConnectivity.IsWifiInternetConnection: Boolean;
 var
   LInfo: JNetworkInfo;
 begin
-  LInfo := ConnectivityManager.getActiveNetworkInfo;
-  Result := (LInfo <> nil) and (LInfo.getType = TJConnectivityManager.JavaClass.TYPE_WIFI) and LInfo.isConnectedOrConnecting;
+  LInfo := GetConnectedNetworkInfo;
+  Result := (LInfo <> nil) and (LInfo.getType = TJConnectivityManager.JavaClass.TYPE_WIFI);
 end;
 
 procedure TPlatformConnectivity.ConnectivityChange;
