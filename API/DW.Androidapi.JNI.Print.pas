@@ -13,7 +13,7 @@ unit DW.Androidapi.JNI.Print;
 interface
 
 uses
-  Androidapi.JNIBridge, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.JavaTypes, Androidapi.JNI.JavaUtil, Androidapi.JNI.Os,
+  Androidapi.JNIBridge, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.JavaTypes, Androidapi.JNI.Os,
   Androidapi.JNI.Print;
 
 type

@@ -13,7 +13,7 @@ unit DW.Androidapi.JNI.Debug;
 interface
 
 uses
-  Androidapi.JNIBridge, Androidapi.JNI.JavaTypes, Androidapi.JNI.JavaUtil, Androidapi.JNI.Os;
+  Androidapi.JNIBridge, Androidapi.JNI.JavaTypes, Androidapi.JNI.Os;
 
 type
   JDebug = interface;

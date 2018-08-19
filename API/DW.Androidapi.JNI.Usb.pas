@@ -13,8 +13,7 @@ unit DW.Androidapi.JNI.Usb;
 interface
 
 uses
-  Androidapi.JNIBridge, Androidapi.JNI.App, Androidapi.JNI.JavaTypes, Androidapi.JNI.JavaUtil,
-  Androidapi.JNI.Os;
+  Androidapi.JNIBridge, Androidapi.JNI.App, Androidapi.JNI.JavaTypes, Androidapi.JNI.Os;
 
 type
   JUsbAccessory = interface;
