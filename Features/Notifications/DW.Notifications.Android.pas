@@ -60,7 +60,7 @@ implementation
 
 uses
   // RTL
-  System.SysUtils, System.DateUtils,
+  System.SysUtils, System.DateUtils, System.TimeSpan,
   // Android
   Androidapi.Helpers, Androidapi.JNI.JavaTypes, Androidapi.JNIBridge, Androidapi.JNI.Net, Androidapi.JNI.Os, Androidapi.JNI.Embarcadero,
   // DW
@@ -260,7 +260,6 @@ procedure TPlatformNotifications.StoreNotification(const ANotification: TNotific
 var
   LEditor: JSharedPreferences_Editor;
   LName: string;
-  LID: Integer;
 begin
   if ANotification.Name.IsEmpty then
     LName := AID.ToString
