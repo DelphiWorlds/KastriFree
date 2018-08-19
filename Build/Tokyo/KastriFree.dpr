@@ -16,8 +16,17 @@ uses
   DW.Classes.Helpers in '..\..\Core\DW.Classes.Helpers.pas',
   DW.FileWriter in '..\..\Core\DW.FileWriter.pas',
   DW.Messaging in '..\..\Core\DW.Messaging.pas',
-  DW.Platform.Helper in '..\..\Core\DW.Platform.Helper.pas',
-  DW.SystemHelper in '..\..\Core\DW.SystemHelper.pas';
+  DW.FaderRectangle in '..\..\ComponentHelpers\DW.FaderRectangle.pas',
+  DW.VKVertScrollbox in '..\..\ComponentHelpers\DW.VKVertScrollbox.pas',
+  DW.RichEdit in '..\..\Controls\DW.RichEdit.pas',
+  DW.MediaLibrary in '..\..\Core\DW.MediaLibrary.pas',
+  DW.OSDevice in '..\..\Core\DW.OSDevice.pas',
+  DW.PermissionsRequester in '..\..\Core\DW.PermissionsRequester.pas',
+  DW.PermissionsTypes in '..\..\Core\DW.PermissionsTypes.pas',
+  DW.ThreadedTimer in '..\..\Core\DW.ThreadedTimer.pas',
+  DW.Connectivity in '..\..\Features\Connectivity\DW.Connectivity.pas',
+  DW.NFC in '..\..\Features\NFC\DW.NFC.pas',
+  DW.Notifications in '..\..\Features\Notifications\DW.Notifications.pas';
 
 {$R *.res}
 

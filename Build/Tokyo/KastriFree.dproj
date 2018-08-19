@@ -117,7 +117,7 @@
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
         <Icns_MainIcns>$(BDS)\bin\delphi_PROJECTICNS.icns</Icns_MainIcns>
         <SanitizedProjectName>KastriFree</SanitizedProjectName>
-        <DCC_UnitSearchPath>..\..\Core;..\..\API;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\..\Core;..\..\API;..\..\Features\Connectivity;..\..\Features\Firebase;..\..\Features\NFC;..\..\Features\Notifications;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android)'!=''">
         <DCC_UsePackage>DBXSqliteDriver;DBXInterBaseDriver;tethering;bindcompfmx;FmxTeeUI;fmx;FireDACDBXDriver;dbexpress;IndyCore;dsnap;DataSnapCommon;bindengine;DataSnapClient;bindcompdbx;IndyIPCommon;IndyIPServer;IndySystem;fmxFireDAC;FMXTee;DbxCommonDriver;xmlrtl;DataSnapNativeClient;FireDACDSDriver;rtl;DbxClientDriver;CustomIPTransport;bindcomp;IndyIPClient;dbxcds;dsnapxml;DataSnapProviderClient;dbrtl;IndyProtocols;$(DCC_UsePackage)</DCC_UsePackage>
@@ -349,8 +349,17 @@
         <DCCReference Include="..\..\Core\DW.Classes.Helpers.pas"/>
         <DCCReference Include="..\..\Core\DW.FileWriter.pas"/>
         <DCCReference Include="..\..\Core\DW.Messaging.pas"/>
-        <DCCReference Include="..\..\Core\DW.Platform.Helper.pas"/>
-        <DCCReference Include="..\..\Core\DW.SystemHelper.pas"/>
+        <DCCReference Include="..\..\ComponentHelpers\DW.FaderRectangle.pas"/>
+        <DCCReference Include="..\..\ComponentHelpers\DW.VKVertScrollbox.pas"/>
+        <DCCReference Include="..\..\Controls\DW.RichEdit.pas"/>
+        <DCCReference Include="..\..\Core\DW.MediaLibrary.pas"/>
+        <DCCReference Include="..\..\Core\DW.OSDevice.pas"/>
+        <DCCReference Include="..\..\Core\DW.PermissionsRequester.pas"/>
+        <DCCReference Include="..\..\Core\DW.PermissionsTypes.pas"/>
+        <DCCReference Include="..\..\Core\DW.ThreadedTimer.pas"/>
+        <DCCReference Include="..\..\Features\Connectivity\DW.Connectivity.pas"/>
+        <DCCReference Include="..\..\Features\NFC\DW.NFC.pas"/>
+        <DCCReference Include="..\..\Features\Notifications\DW.Notifications.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -427,9 +436,9 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="S:\Binaries\Delphi\BlackHole\ResourceRules.plist" Configuration="Debug" Class="ProjectiOSDeviceResourceRules">
-                    <Platform Name="iOSDevice64">
-                        <RemoteName>ResourceRules.plist</RemoteName>
+                <DeployFile LocalName="$(BDS)\lib\android\debug\mips\libnative-activity.so" Configuration="Debug" Class="AndroidLibnativeMipsFile">
+                    <Platform Name="Android">
+                        <RemoteName>libKastriFree.so</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -438,9 +447,9 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="$(BDS)\lib\android\debug\mips\libnative-activity.so" Configuration="Debug" Class="AndroidLibnativeMipsFile">
-                    <Platform Name="Android">
-                        <RemoteName>libKastriFree.so</RemoteName>
+                <DeployFile LocalName="S:\Binaries\Delphi\BlackHole\ResourceRules.plist" Configuration="Debug" Class="ProjectiOSDeviceResourceRules">
+                    <Platform Name="iOSDevice64">
+                        <RemoteName>ResourceRules.plist</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

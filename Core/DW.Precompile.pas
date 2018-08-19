@@ -17,21 +17,27 @@ implementation
 // A cross-platform way of including units in a project for pre-compiling, specifically for the Kastri project source
 // This unit should not be included in a regular application
 
-// DW
-{$IF Defined(ANDROID) and (CompilerVersion < 32)}
+{$IF Defined(ANDROID)}
 uses
-  DW.Compat.Android;
+  DW.Androidapi.JNI.App, DW.Androidapi.JNI.ContextWrapper, DW.Androidapi.JNI.DWMultiBroadcastReceiver, DW.Androidapi.JNI.Debug,
+  DW.Androidapi.JNI.FileProvider, DW.Androidapi.JNI.KeyguardManager, DW.Androidapi.JNI.LocalBroadcastManager, DW.Androidapi.JNI.Log,
+  DW.Androidapi.JNI.Nfc, DW.Androidapi.JNI.Os, DW.Androidapi.JNI.Print, DW.Androidapi.JNI.Runtime, DW.Androidapi.JNI.Support,
+  DW.Androidapi.JNI.SystemClock, DW.Androidapi.JNI.Toast, DW.Androidapi.JNI.Usb, DW.Androidapi.JNI.VisionBarcode,
+  {$IF CompilerVersion < 32}
+  DW.Compat.Android,
+  {$ENDIF}
+  DW.Toast.Android;
 {$ENDIF}
 
 {$IF Defined(MACOS)}
 uses
-{$IF Defined(IOS)}
-  DW.iOSapi.Helpers,
-{$ENDIF}
+  DW.Macapi.ObjCRuntime, DW.Macapi.Helpers, DW.Macapi.Dispatch,
 {$IF Defined(MACDEV)}
-
+  DW.Macapi.IOKit;
 {$ENDIF}
-  DW.Macapi.Helpers, DW.Macapi.Dispatch, DW.Macapi.ObjCRuntime;
+{$IF Defined(IOS)}
+  DW.iOSapi.CoreNFC, DW.iOSapi.DeviceCheck, DW.iOSapi.SystemConfiguration, DW.iOSapi.UserNotifications, DW.iOSapi.Helpers;
+{$ENDIF}
 {$ENDIF}
 
 end.
