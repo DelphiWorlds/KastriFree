@@ -38,7 +38,10 @@ uses
 
 class function TPlatformOSDevice.CheckPermission(const APermission: string): Boolean;
 begin
-  Result := TAndroidHelper.Context.checkSelfPermission(StringToJString(APermission)) = TJPackageManager.JavaClass.PERMISSION_GRANTED;
+  if TJBuild_VERSION.JavaClass.SDK_INT >= 23 then
+    Result := TAndroidHelper.Context.checkSelfPermission(StringToJString(APermission)) = TJPackageManager.JavaClass.PERMISSION_GRANTED
+  else
+    Result := True;
 end;
 
 class function TPlatformOSDevice.GetDeviceName: string;
