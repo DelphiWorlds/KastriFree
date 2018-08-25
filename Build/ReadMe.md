@@ -9,7 +9,7 @@ You may note that:
 
 The output directory for the project is configured as:
 
-`$(BlackHole)`
+>`$(BlackHole)`
 
 This is a user-defined variable that you can add via the IDE options in the Environment Variables section, under User Overrides. Add a variable called BlackHole, and assign it a path which is not normally part of a backup, since the files can be discarded.
 
