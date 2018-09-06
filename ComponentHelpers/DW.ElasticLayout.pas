@@ -47,16 +47,26 @@ function TLayout.GetChildrenOnlyRect: TRectF;
 var
   I: Integer;
   Control: TControl;
+  LChildrenRect: TRectF;
 begin
-  Result := GetAbsoluteRect;
-  Result.Height := 0;
+  Result := TRectF.Empty;
   if not (ClipChildren or SmallSizeControl) and (Controls <> nil) then
   begin
     for I := GetFirstVisibleObjectIndex to GetLastVisibleObjectIndex - 1 do
     begin
       Control := Controls[I];
-      if Control.Visible then
-        Result := UnionRect(Result, Control.ChildrenRect);
+      if Control.Visible and not (Control.Align in [TAlignLayout.Contents, TAlignLayout.Client]) then
+      begin
+        LChildrenRect := Control.ChildrenRect;
+        LChildrenRect.Top := LChildrenRect.Top - Control.Margins.Top;
+        LChildrenRect.Left := LChildrenRect.Left - Control.Margins.Left;
+        LChildrenRect.Bottom := LChildrenRect.Bottom + Control.Margins.Bottom;
+        LChildrenRect.Right := LChildrenRect.Right + Control.Margins.Right;
+        if Result.IsEmpty then
+          Result := LChildrenRect
+        else
+          UnionRectF(Result, Result, LChildrenRect);
+      end;
     end
   end;
 end;
@@ -65,13 +75,18 @@ procedure TLayout.DoRealign;
 var
   LRect: TRectF;
 begin
-  inherited;
   if FIsElastic then
   begin
     LRect := GetChildrenOnlyRect;
-    Width := LRect.Width;
-    Height := LRect.Height;
+    FDisableAlign := True;
+    try
+      Width := LRect.Width;
+      Height := LRect.Height;
+    finally
+      FDisableAlign := False;
+    end;
   end;
+  inherited;
 end;
 
 procedure TLayout.SetIsElastic(const Value: Boolean);
