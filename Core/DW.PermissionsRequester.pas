@@ -32,6 +32,7 @@ type
 
   TPermissionsRequester = class(TObject)
   private
+    FIsRequesting: Boolean;
     FPlatformPermissionsRequester: TCustomPlatformPermissionsRequester;
     FOnPermissionsResult: TPermissionsResultEvent;
   protected
@@ -40,6 +41,7 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure RequestPermissions(const APermissions: array of string; const ARequestCode: Integer);
+    property IsRequesting: Boolean read FIsRequesting;
     property OnPermissionsResult: TPermissionsResultEvent read FOnPermissionsResult write FOnPermissionsResult;
   end;
 
@@ -80,6 +82,7 @@ procedure TPermissionsRequester.DoPermissionsResult(const RequestCode: Integer; 
 begin
   if Assigned(FOnPermissionsResult) then
     FOnPermissionsResult(Self, RequestCode, Results);
+  FIsRequesting := False;
 end;
 
 procedure TPermissionsRequester.RequestPermissions(const APermissions: array of string; const ARequestCode: Integer);
@@ -89,7 +92,10 @@ begin
   if TOSDevice.CheckPermissions(APermissions, LResults) then
     DoPermissionsResult(ARequestCode, LResults)
   else
+  begin
+    FIsRequesting := True;
     FPlatformPermissionsRequester.RequestPermissions(APermissions, ARequestCode);
+  end;
 end;
 
 end.
