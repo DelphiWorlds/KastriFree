@@ -7,8 +7,8 @@ uses
   Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.App, Androidapi.JNI.Location,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Controls.Presentation, FMX.StdCtrls, FMX.ScrollBox, FMX.Memo,
   FMX.Layouts, FMX.TabControl, FMX.ActnList,
-  DW.MultiReceiver.Android,
-  LS.ServiceModule;
+  DW.MultiReceiver.Android, DW.PermissionsRequester, DW.PermissionsTypes,
+  LS.ServiceModule, FMX.Objects;
 
 type
   TMessageReceivedEvent = procedure(Sender: TObject; const Msg: string) of object;
@@ -40,16 +40,19 @@ type
     ActionList: TActionList;
     PauseUpdatesAction: TAction;
     RefreshLogAction: TAction;
+    BackgroundRectangle: TRectangle;
     procedure TabControlChange(Sender: TObject);
     procedure ActionListUpdate(Action: TBasicAction; var Handled: Boolean);
     procedure PauseUpdatesActionExecute(Sender: TObject);
     procedure RefreshLogActionExecute(Sender: TObject);
   private
+    FPermissions: TPermissionsRequester;
     FReceiver: TServiceMessageReceiver;
     [Unsafe] FService: TServiceModule; // <--- This is a reference to the actual service datamodule
     FServiceConnection: TLocalServiceConnection;
     procedure ApplicationEventMessageHandler(const Sender: TObject; const M: TMessage);
     procedure RefreshLog;
+    procedure PermissionsResultHandler(Sender: TObject; const ARequestCode: Integer; const AResults: TPermissionResults);
     procedure ServiceConnectedHandler(const ALocalService: TAndroidBaseService);  // <--- Event called once the service is connected
     procedure ServiceMessageHandler(Sender: TObject; const AMsg: string);
   public
@@ -97,6 +100,8 @@ constructor TfrmMain.Create(AOwner: TComponent);
 begin
   inherited;
   TabControl.ActiveTab := MessagesTab;
+  FPermissions := TPermissionsRequester.Create;
+  FPermissions.OnPermissionsResult := PermissionsResultHandler;
   FReceiver := TServiceMessageReceiver.Create(True);
   FReceiver.OnMessageReceived := ServiceMessageHandler;
   FServiceConnection := TLocalServiceConnection.Create;
@@ -108,6 +113,7 @@ end;
 destructor TfrmMain.Destroy;
 begin
   TMessageManager.DefaultManager.Unsubscribe(TApplicationEventMessage, ApplicationEventMessageHandler);
+  FPermissions.Free;
   FReceiver.Free;
   inherited;
 end;
@@ -117,9 +123,20 @@ begin
   if FService <> nil then
   begin
     if FService.IsPaused then
-      FService.Resume
+      FPermissions.RequestPermissions([cPermissionAccessCoarseLocation, cPermissionAccessFineLocation], cRequestCodeLocation)
     else
       FService.Pause;
+  end;
+end;
+
+procedure TfrmMain.PermissionsResultHandler(Sender: TObject; const ARequestCode: Integer; const AResults: TPermissionResults);
+begin
+  case ARequestCode of
+    cRequestCodeLocation:
+    begin
+      if AResults.AreAllGranted and (FService <> nil) then
+        FService.Resume;
+    end;
   end;
 end;
 
@@ -151,13 +168,19 @@ procedure TfrmMain.ApplicationEventMessageHandler(const Sender: TObject; const M
 begin
   case TApplicationEventMessage(M).Value.Event of
     TApplicationEvent.BecameActive:
-      // Bind the service, so an reference to the service datamodule can be obtained
-      FServiceConnection.BindService('LocationService');
+    begin
+      if FService = nil then
+        // Bind the service, so an reference to the service datamodule can be obtained
+        FServiceConnection.BindService('LocationService');
+    end;
     TApplicationEvent.EnteredBackground:
     begin
-      // Make sure to "unbind" when the app becomes inactive!
-      FServiceConnection.UnbindService;
-      FService := nil;
+      if not FPermissions.IsRequesting then
+      begin
+        // Make sure to "unbind" when the app becomes inactive!
+        FServiceConnection.UnbindService;
+        FService := nil;
+      end;
     end;
   end;
 end;

@@ -4,10 +4,20 @@ object frmMain: TfrmMain
   Caption = 'Form1'
   ClientHeight = 538
   ClientWidth = 416
+  Fill.Color = claNull
+  Fill.Kind = Solid
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
   DesignerMasterStyle = 0
+  object BackgroundRectangle: TRectangle
+    Align = Contents
+    Fill.Color = claWhitesmoke
+    Sides = []
+    Size.Width = 416.000000000000000000
+    Size.Height = 538.000000000000000000
+    Size.PlatformDefault = False
+  end
   object TitleLabel: TLabel
     Align = Top
     StyledSettings = [Family, Style, FontColor]
