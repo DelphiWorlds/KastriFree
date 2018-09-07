@@ -40,12 +40,12 @@ type
 
   TServiceModule = class(TAndroidService)
     function AndroidServiceStartCommand(const Sender: TObject; const Intent: JIntent; Flags, StartId: Integer): Integer;
+    procedure AndroidServiceDestroy(Sender: TObject);
   private
     FDozeAlarmIntent: JPendingIntent;
     FGPSLocationListener: JLocationListener;
     FIsDozed: Boolean;
     FIsForeground: Boolean;
-    FIsPaused: Boolean;
     FKeyguardManager: JKeyguardManager;
     FLastSend: TDateTime;
     FNetworkLocationListener: JLocationListener;
@@ -60,6 +60,7 @@ type
     procedure CreateTimer;
     procedure DoMessage(const AMsg: string);
     procedure DozeModeChange(const ADozed: Boolean);
+    function GetIsPaused: Boolean;
     procedure PostRequest(const ARequest: TStream);
     procedure RemoveListeners;
     procedure SendNewLocation(const NewLocation: TLocationCoord2D; const AFrom: TLocationChangeFrom);
@@ -80,7 +81,7 @@ type
     destructor Destroy; override;
     procedure Pause;
     procedure Resume;
-    property IsPaused: Boolean read FIsPaused;
+    property IsPaused: Boolean read GetIsPaused;
   end;
 
 var
@@ -95,7 +96,7 @@ implementation
 uses
   System.IOUtils, System.Threading, System.DateUtils, System.NetConsts, System.Net.URLClient, System.Net.HttpClient, REST.Types, REST.Json,
   Androidapi.Helpers, Androidapi.JNI.Support,
-  DW.Androidapi.JNI.LocalBroadcastManager, DW.OSLog,
+  DW.Androidapi.JNI.LocalBroadcastManager, DW.OSLog, DW.OSDevice,
   LS.Consts;
 
 const
@@ -110,7 +111,7 @@ const
   cMinDozeAlarmIntervalSecs = 9 * 60; // Once per 9 minutes is the minimum when "dozed", apparently
   // ***** Modify the following 2 lines to suit your requirements *****
   cLocationUpdateURL = 'http://your.locationupdate.url';
-  cLocationRequestJSON = '{"deviceid":"%s", "latitude":"%2.6f","longitude":"%2.6f", "tag":"%S"}';
+  cLocationRequestJSON = '{"deviceid":"%s", "latitude":"%2.6f","longitude":"%2.6f", "tag":"%S", "inactive":"%d"}';
 
   cHTTPResultOK = 200;
   cTimerIntervalMinimum = 240000; // = 4 minutes
@@ -209,17 +210,22 @@ end;
 
 destructor TServiceModule.Destroy;
 begin
-  FReceiver.Free;
-  FTimer.Enabled := False;
-  FTimer.Free;
-  RemoveListeners;
-  FLogWriter.Free;
+  // Do not use an overridden Destroy for cleanup in a service - use the OnDestroy event
   inherited;
 end;
 
 function TServiceModule.Service: JService;
 begin
   Result := TJService.Wrap(System.JavaContext);
+end;
+
+procedure TServiceModule.AndroidServiceDestroy(Sender: TObject);
+begin
+  TOSLog.d('TServiceModule.AndroidServiceDestroy');
+  FReceiver.DisposeOf;
+  FTimer.DisposeOf;
+  RemoveListeners;
+  FLogWriter.DisposeOf;
 end;
 
 function TServiceModule.AndroidServiceStartCommand(const Sender: TObject; const Intent: JIntent; Flags, StartId: Integer): Integer;
@@ -296,6 +302,9 @@ procedure TServiceModule.CreateListeners;
 var
   LObject: JObject;
 begin
+  // Must use the app (UI) to request permissions
+  if not IsPaused or not TOSDevice.CheckPermissions([cPermissionAccessCoarseLocation, cPermissionAccessFineLocation]) then
+    Exit; // <======
   LObject := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.LOCATION_SERVICE);
   if LObject <> nil then
   begin
@@ -305,14 +314,14 @@ begin
       FGPSLocationListener := TLocationListener.Create(Self);
       FLocationManager.requestLocationUpdates(TJLocationManager.JavaClass.GPS_PROVIDER, cLocationMonitoringInterval, cLocationMonitoringDistance,
         FGPSLocationListener, TJLooper.JavaClass.getMainLooper);
-      TOSLog.d('GPS Location Listener created and listening');
+      WriteLog('GPS Location Listener created and listening');
     end;
     if FLocationManager.isProviderEnabled(TJLocationManager.JavaClass.NETWORK_PROVIDER) then
     begin
       FNetworkLocationListener := TLocationListener.Create(Self);
       FLocationManager.requestLocationUpdates(TJLocationManager.JavaClass.NETWORK_PROVIDER, cLocationMonitoringInterval, cLocationMonitoringDistance,
         FNetworkLocationListener, TJLooper.JavaClass.getMainLooper);
-      TOSLog.d('Network Location Listener created and listening');
+      WriteLog('Network Location Listener created and listening');
     end;
   end;
 end;
@@ -324,6 +333,9 @@ begin
     FLocationManager.removeUpdates(FGPSLocationListener);
     FLocationManager.removeUpdates(FNetworkLocationListener);
   end;
+  FGPSLocationListener := nil;
+  FNetworkLocationListener := nil;
+  FLocationManager := nil;
 end;
 
 procedure TServiceModule.DoMessage(const AMsg: string);
@@ -338,7 +350,7 @@ end;
 
 procedure TServiceModule.WriteLog(const AMsg: string);
 begin
-  // In theory, this should probably be queued on the main thread, however it hasn't had any problems as yet
+  TOSLog.d(AMsg);
   FLogWriter.WriteLine(GetLogTime + ': ' + AMsg);
 end;
 
@@ -377,7 +389,6 @@ end;
 
 procedure TServiceModule.ScreenLockChange(const ALocked: Boolean);
 begin
-  TOSLog.d('TServiceModule.ScreenLockChange: ' + BoolToStr(ALocked, True));
   WriteLog('TServiceModule.ScreenLockChange: ' + BoolToStr(ALocked, True));
   // If the screen is being locked, put the service into foreground mode so that it can still have network access
   if ALocked then
@@ -388,7 +399,6 @@ end;
 
 procedure TServiceModule.DozeModeChange(const ADozed: Boolean);
 begin
-  TOSLog.d('TServiceModule.DozeModeChange: ' + BoolToStr(ADozed, True));
   WriteLog('TServiceModule.DozeModeChange: ' + BoolToStr(ADozed, True));
   // If the device is going into "doze" mode, set an alarm
   FIsDozed := ADozed;
@@ -396,6 +406,11 @@ begin
     StartDozeAlarm
   else
     StopDozeAlarm;
+end;
+
+function TServiceModule.GetIsPaused: Boolean;
+begin
+  Result := (FGPSLocationListener = nil) or (FNetworkLocationListener = nil);
 end;
 
 procedure TServiceModule.TimerEventHandler(Sender: TObject);
@@ -408,6 +423,8 @@ procedure TServiceModule.UpdateFromLastKnownLocation(const AFrom: TLocationChang
 var
   LLocation: JLocation;
 begin
+  if FLocationManager = nil then
+    Exit; // <======
   LLocation := FLocationManager.getLastKnownLocation(TJLocationManager.JavaClass.GPS_PROVIDER);
   if LLocation <> nil then
   begin
@@ -419,7 +436,7 @@ end;
 procedure TServiceModule.LocationChanged(const ANewLocation: TLocationCoord2D; const AFrom: TLocationChangeFrom);
 begin
   // Don't send any updates if paused
-  if FIsPaused then
+  if IsPaused then
   begin
     WriteLog('Updates paused; not sending');
     Exit; // <======
@@ -427,8 +444,7 @@ begin
   // Only send if a location change has been obtained within the specified interval
   if not FSending and (SecondsBetween(Now, FLastSend) >= cSendIntervalMinimum) then
   begin
-    TOSLog.d('Time difference >= cSendIntervalMinimum');
-    WriteLog('Starting send task');
+    WriteLog('Starting send task (Time difference >= cSendIntervalMinimum)');
     // Send the new location in a separate task
     TTask.Run(
       procedure
@@ -455,7 +471,7 @@ begin
   // Format the request, and post it
   // ****** Modify the following 2 lines to suit your location update request requirements *******
   LTag := Format(cLocationUpdateTag, ['DW', cLocationFromCaptions[AFrom], FormatDateTime('mm-dd hh:nn:ss.zzz', Now)]);
-  LStream := TStringStream.Create(Format(cLocationRequestJSON, ['x', NewLocation.Latitude, NewLocation.Longitude, LTag]));
+  LStream := TStringStream.Create(Format(cLocationRequestJSON, ['x', NewLocation.Latitude, NewLocation.Longitude, LTag, Ord(FIsDozed)]));
   try
     TOSLog.d('Posting request: %s', [LStream.DataString]);
     try
@@ -480,7 +496,6 @@ var
 begin
   // Posts the JSON request to the server
   WriteLog('Sending new location..');
-  TOSLog.d('+TServiceModule.PostRequest');
   LHTTP := THTTPClient.Create;
   try
     LHTTP.Accept := CONTENTTYPE_APPLICATION_JSON;
@@ -500,17 +515,16 @@ begin
     LHTTP.Free;
   end;
   WriteLog('Successfully sent new location');
-  TOSLog.d('-TServiceModule.PostRequest');
 end;
 
 procedure TServiceModule.Pause;
 begin
-  FIsPaused := True;
+  RemoveListeners;
 end;
 
 procedure TServiceModule.Resume;
 begin
-  FIsPaused := False;
+  CreateListeners;
 end;
 
 end.
