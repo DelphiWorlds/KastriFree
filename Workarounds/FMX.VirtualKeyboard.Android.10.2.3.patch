@@ -1,4 +1,4 @@
-64c64,182
+64c64,187
 <   System.Messaging, FMX.Forms, FMX.Platform.Android, FMX.Platform;
 ---
 >   System.Messaging, FMX.Forms, FMX.Platform.Android, FMX.Platform,
@@ -24,6 +24,7 @@
 >     FListener: JViewTreeObserver_OnGlobalLayoutListener;
 >     FPendingShow: Boolean;
 >     FVKListener: TVKListener;
+>     FVKRect: TRect;
 >     FVKVisible: Boolean;
 >     procedure ApplicationEventMessageHandler(const Sender: TObject; const M: TMessage);
 >     procedure InstallListener;
@@ -91,7 +92,10 @@
 > end;
 > 
 > procedure TVirtualKeyboardRect.GlobalLayoutChange;
+> var
+>   LRect: TRect;
 > begin
+>   LRect := FVKListener.ObtainKeyboardRect;
 >   if FPendingShow then
 >   begin
 >     FCanFireEvent := True;
@@ -100,9 +104,10 @@
 >     finally
 >       FCanFireEvent := False;
 >     end;
->   end
->   else if FVKVisible and not FCanFireEvent then
->     TMessageManager.DefaultManager.SendMessage(Self, TVKStateChangeMessage.Create(True, FVKListener.ObtainKeyboardRect), True);
+>   end;
+>   if FVKVisible and (LRect <> FVKRect) then
+>     TMessageManager.DefaultManager.SendMessage(Self, TVKStateChangeMessage.Create(True, LRect), True);
+>   FVKRect := LRect;
 >   FPendingShow := False;
 > end;
 > 
@@ -120,10 +125,10 @@
 > var
 >   VirtualKeyboardRect: TVirtualKeyboardRect;
 > // DW - https://quality.embarcadero.com/browse/RSP-17917 - END
-173a292,293
+173a297,298
 >   // DW
 >   VirtualKeyboardRect.VKListener := Self;
-210,211c330,333
+210,211c335,338
 <   WaitingForContentChanged(Self);
 <   TThread.Synchronize(nil, procedure
 ---
@@ -131,7 +136,7 @@
 >   // Removing less than optimal routine
 >   // WaitingForContentChanged(Self);
 >   if VirtualKeyboardRect.CanFireEvent then
-213,215c335,342
+213,215c340,347
 <     FKeyboardService.SetState(TVirtualKeyboardAndroid.TvkbState.Shown);
 <     FEvent.SetEvent;
 <   end);
@@ -144,9 +149,9 @@
 >   end
 >   else
 >     VirtualKeyboardRect.VirtualKeyboardShown;
-219a347
+219a352
 >   VirtualKeyboardRect.VirtualKeyboardHidden;
-243a372,374
+243a377,379
 > 
 > initialization
 >   VirtualKeyboardRect := TVirtualKeyboardRect.Create;
