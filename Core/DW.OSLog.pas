@@ -24,6 +24,7 @@ type
   TOSLog = record
   private
     class var FEnabled: Boolean;
+    class var FTag: string;
     /// <summary>
     ///   Timestamps ASrc if prefixed with an '@'
     /// </summary>
@@ -54,6 +55,7 @@ type
     /// </remarks>
     class procedure Trace; static;
     class property Enabled: Boolean read FEnabled write FEnabled;
+    class property Tag: string read FTag write FTag;
   end;
 
 const
@@ -85,11 +87,20 @@ begin
 end;
 
 class function TOSLog.ts(const ASrc: string): string;
+var
+  LUseTimestamp: Boolean;
 begin
-  if ASrc.StartsWith('@') then
-    Result := Format('%s - %s', [FormatDateTime('yyyy/mm/dd hh:nn:ss.zzz', Now), ASrc.Substring(1)])
-  else
-    Result := ASrc;
+  Result := ASrc;
+  LUseTimestamp := False;
+  if Result.StartsWith('@') then
+  begin
+    LUseTimestamp := True;
+    Result := Result.Substring(1);
+  end;
+  if not FTag.IsEmpty then
+    Result := Format('[%s] %s', [FTag, Result]);
+  if LUseTimestamp then
+    Result := Format('%s - %s', [FormatDateTime('yyyy/mm/dd hh:nn:ss.zzz', Now), Result]);
 end;
 
 class procedure TOSLog.d(const AFmt: string);
