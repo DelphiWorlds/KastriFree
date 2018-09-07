@@ -7,7 +7,7 @@
         android:installLocation="%installLocation%">
 
     <!-- This is the platform API where NativeActivity was introduced. -->
-    <uses-sdk android:minSdkVersion="%minSdkVersion%" android:targetSdkVersion="%targetSdkVersion%" />
+    <uses-sdk android:minSdkVersion="%minSdkVersion%" android:targetSdkVersion="26" />
 <%uses-permission%>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-feature android:glEsVersion="0x00020000" android:required="True"/>
