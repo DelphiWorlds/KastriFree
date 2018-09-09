@@ -106,7 +106,7 @@ end;
 function TServiceModule.AndroidServiceStartCommand(const Sender: TObject; const Intent: JIntent; Flags, StartId: Integer): Integer;
 begin
   TOSLog.d('Service started');
-  if JStringToString(Intent.getAction).Equals(cActionServiceAlarm) then
+  if (Intent <> nil) and JStringToString(Intent.getAction).Equals(cActionServiceAlarm) then
   begin
     TOSLog.d('Alarm was triggered');
     // Do whatever should happen as a result of the alarm
