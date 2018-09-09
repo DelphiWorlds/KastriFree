@@ -71,8 +71,6 @@ begin
 end;
 
 procedure TServiceModule.SetAlarm(const AAction: string; AStartAt: Int64 = 0; AInterval: Int64 = 0);
-var
-  LIntent: JIntent;
 begin
   if AStartAt = 0 then
     AStartAt := GetTimeFromNowInMillis(0);
