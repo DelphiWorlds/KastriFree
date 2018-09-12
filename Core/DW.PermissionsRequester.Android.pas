@@ -23,6 +23,7 @@ uses
 type
   TPlatformPermissionsRequester = class(TCustomPlatformPermissionsRequester)
   private
+    FIsSubmitted: Boolean;
     FPermissions: array of string;
     FRequestCode: Integer;
     procedure ApplicationEventMessageHandler(const Sender: TObject; const AMsg: TMessage);
@@ -54,7 +55,6 @@ type
 constructor TPlatformPermissionsRequester.Create(const APermissionsRequester: TPermissionsRequester);
 begin
   inherited;
-  FRequestCode := -1;
   TMessageManager.DefaultManager.SubscribeToMessage(TApplicationEventMessage, ApplicationEventMessageHandler);
 end;
 
@@ -68,17 +68,18 @@ procedure TPlatformPermissionsRequester.ApplicationEventMessageHandler(const Sen
 begin
   case TApplicationEventMessage(AMsg).Value.Event of
     TApplicationEvent.BecameActive:
-      CheckPermissionsResults;
+    begin
+      if FIsSubmitted then
+        CheckPermissionsResults;
+    end;
   end;
 end;
 
 procedure TPlatformPermissionsRequester.CheckPermissionsResults;
 var
   LResults: TPermissionResults;
-  LIndex, I: Integer;
+  LIndex, I, LCode: Integer;
 begin
-  if FRequestCode = -1 then
-    Exit;
   SetLength(LResults, Length(FPermissions));
   for I := Low(FPermissions) to High(FPermissions) do
   begin
@@ -86,8 +87,8 @@ begin
     LResults[LIndex].Permission := FPermissions[I];
     LResults[LIndex].Granted := TOSDevice.CheckPermission(FPermissions[I]);
   end;
+  FIsSubmitted := False;
   TOpenPermissionsRequester(PermissionsRequester).DoPermissionsResult(FRequestCode, LResults);
-  FRequestCode := -1;
 end;
 
 procedure TPlatformPermissionsRequester.RequestPermissions(const APermissions: array of string; const ARequestCode: Integer);
@@ -102,7 +103,9 @@ begin
   LPermissions := TJavaObjectArray<JString>.Create(Length(FPermissions));
   for I := Low(FPermissions) to High(FPermissions) do
     LPermissions.Items[I] := StringToJString(FPermissions[I]);
+  FIsSubmitted := True;
   TAndroidHelper.Activity.requestPermissions(LPermissions, ARequestCode);
 end;
 
 end.
+
