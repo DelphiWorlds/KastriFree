@@ -43,6 +43,7 @@
         <receiver android:name="com.delphiworlds.kastri.DWMultiBroadcastReceiver"> 
             <intent-filter> 
                 <action android:name="com.delphiworlds.kastri.DWMultiBroadcastReceiver.ACTION_SERVICE_ALARM" />
+                <action android:name="com.delphiworlds.kastri.DWMultiBroadcastReceiver.ACTION_SERVICE_RESTART" />
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
             </intent-filter> 
