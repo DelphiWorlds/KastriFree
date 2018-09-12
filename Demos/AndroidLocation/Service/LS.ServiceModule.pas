@@ -7,7 +7,7 @@ uses
   Androidapi.JNI.App, AndroidApi.JNI.GraphicsContentViewText, Androidapi.JNI.Os, Androidapi.JNIBridge, Androidapi.JNI.Location,
   AndroidApi.JNI.JavaTypes,
   DW.FileWriter, DW.MultiReceiver.Android, DW.Androidapi.JNI.KeyguardManager,
-  LS.AndroidTimer;
+  LS.AndroidTimer, LS.Config;
 
 type
   TServiceModule = class;
@@ -36,37 +36,59 @@ type
     constructor Create(const AService: TServiceModule);
   end;
 
+  /// <summary>
+  ///   Acts as a receiver of broadcasts sent by the application
+  /// </summary>
+  TLocalReceiver = class(TMultiReceiver)
+  private
+    FService: TServiceModule;
+  protected
+    procedure ConfigureActions; override;
+    procedure Receive(context: JContext; intent: JIntent); override;
+  public
+    constructor Create(const AService: TServiceModule);
+  end;
+
   TLocationChangeFrom = (Listener, Timer, Alarm);
 
   TServiceModule = class(TAndroidService)
     function AndroidServiceStartCommand(const Sender: TObject; const Intent: JIntent; Flags, StartId: Integer): Integer;
     procedure AndroidServiceDestroy(Sender: TObject);
   private
+    FConfig: TLocationConfig;
     FDozeAlarmIntent: JPendingIntent;
     FGPSLocationListener: JLocationListener;
     FIsDozed: Boolean;
     FIsForeground: Boolean;
     FKeyguardManager: JKeyguardManager;
     FLastSend: TDateTime;
+    FLocalReceiver: TLocalReceiver;
     FNetworkLocationListener: JLocationListener;
     FLocationManager: JLocationManager;
     FLogWriter: TFileWriter;
     FPowerManager: JPowerManager;
-    FReceiver: TServiceReceiver;
     FSending: Boolean;
+    FServiceReceiver: TServiceReceiver;
     FTimer: TAndroidTimer;
     function CreateDozeAlarm(const AAction: string; const AStartAt: Int64): Boolean;
     procedure CreateListeners;
     procedure CreateTimer;
     procedure DoMessage(const AMsg: string);
+    procedure DoStatus;
     procedure DozeModeChange(const ADozed: Boolean);
     function GetIsPaused: Boolean;
+    procedure LocalReceiverReceive(intent: JIntent);
+    procedure Pause;
     procedure PostRequest(const ARequest: TStream);
     procedure RemoveListeners;
+    procedure RestartService;
+    procedure Resume;
     procedure SendNewLocation(const NewLocation: TLocationCoord2D; const AFrom: TLocationChangeFrom);
     function Service: JService;
     procedure ScreenLockChange(const ALocked: Boolean);
     procedure ServiceReceiverReceive(intent: JIntent);
+    procedure SetIsPaused(const AValue: Boolean);
+    procedure SetIsServiceRunning(const AValue: Boolean);
     procedure StartDozeAlarm;
     procedure StartForeground;
     procedure StopDozeAlarm;
@@ -79,9 +101,6 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    procedure Pause;
-    procedure Resume;
-    property IsPaused: Boolean read GetIsPaused;
   end;
 
 var
@@ -94,9 +113,9 @@ implementation
 {$R *.dfm}
 
 uses
-  System.IOUtils, System.Threading, System.DateUtils, System.NetConsts, System.Net.URLClient, System.Net.HttpClient, REST.Types, REST.Json,
+  System.IOUtils, System.DateUtils, System.NetConsts, System.Net.URLClient, System.Net.HttpClient, REST.Types, REST.Json,
   Androidapi.Helpers, Androidapi.JNI.Support,
-  DW.Androidapi.JNI.LocalBroadcastManager, DW.OSLog, DW.OSDevice,
+  DW.Androidapi.JNI.LocalBroadcastManager, DW.OSLog, DW.OSDevice, DW.Android.Helpers,
   LS.Consts;
 
 const
@@ -104,6 +123,8 @@ const
   // Defining these constants here just saves having to import it from Java code
   cReceiverName = 'com.delphiworlds.kastri.DWMultiBroadcastReceiver';
   cActionServiceAlarm = cReceiverName + '.ACTION_SERVICE_ALARM';
+  cActionServiceRestart = cReceiverName + '.ACTION_SERVICE_RESTART';
+  cExtraServiceRestart = cReceiverName + '.EXTRA_SERVICE_RESTART';
 
   cServiceForegroundId = 3987; // Just a random number
   cServiceNotificationCaption = 'Location Service';
@@ -157,6 +178,24 @@ begin
   FService.ServiceReceiverReceive(intent);
 end;
 
+{ TLocalReceiver }
+
+constructor TLocalReceiver.Create(const AService: TServiceModule);
+begin
+  inherited Create(True);
+  FService := AService;
+end;
+
+procedure TLocalReceiver.ConfigureActions;
+begin
+  IntentFilter.addAction(StringToJString(cServiceCommandAction));
+end;
+
+procedure TLocalReceiver.Receive(context: JContext; intent: JIntent);
+begin
+  FService.LocalReceiverReceive(intent);
+end;
+
 { TLocationListener }
 
 constructor TLocationListener.Create(const AService: TServiceModule);
@@ -193,6 +232,7 @@ var
   LService: JObject;
 begin
   inherited;
+  FConfig := TLocationConfig.GetConfig;
   // Creating a log file that can be read by both the service and the application
   FLogWriter := TFileWriter.Create(TPath.Combine(TPath.GetDocumentsPath, 'Location.log'), True);
   // AutoFlush means that writes are committed immediately
@@ -203,9 +243,11 @@ begin
   LService := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.POWER_SERVICE);
   if LService <> nil then
     FPowerManager := TJPowerManager.Wrap((LService as ILocalObject).GetObjectID);
-  FReceiver := TServiceReceiver.Create(Self);
-  CreateListeners;
+  FServiceReceiver := TServiceReceiver.Create(Self);
+  FLocalReceiver := TLocalReceiver.Create(Self);
   CreateTimer;
+  if not FConfig.IsPaused then
+    Resume;
 end;
 
 destructor TServiceModule.Destroy;
@@ -221,28 +263,47 @@ end;
 
 procedure TServiceModule.AndroidServiceDestroy(Sender: TObject);
 begin
-  TOSLog.d('TServiceModule.AndroidServiceDestroy');
-  FReceiver.DisposeOf;
+  SetIsServiceRunning(False);
+  FServiceReceiver.DisposeOf;
+  FLocalReceiver.DisposeOf;
   FTimer.DisposeOf;
   RemoveListeners;
   FLogWriter.DisposeOf;
+  FConfig.DisposeOf;
+  RestartService;
 end;
 
 function TServiceModule.AndroidServiceStartCommand(const Sender: TObject; const Intent: JIntent; Flags, StartId: Integer): Integer;
+var
+  LRestart: Boolean;
 begin
   // The broadcast receiver will send a start command when the doze alarm goes off, so there is a check here to see if that is why it was "started"
-  if FIsDozed and JStringToString(Intent.getAction).Equals(cActionServiceAlarm) then
+  if FIsDozed then
   begin
-    WriteLog('TServiceModule.AndroidServiceStartCommand from doze alarm');
-    UpdateFromLastKnownLocation(TLocationChangeFrom.Alarm);
-    // Starts the next alarm
-    StartDozeAlarm;
-  end
-  else
+    if (Intent <> nil) and JStringToString(Intent.getAction).Equals(cActionServiceAlarm) then
+    begin
+      WriteLog('TServiceModule.AndroidServiceStartCommand from doze alarm');
+      UpdateFromLastKnownLocation(TLocationChangeFrom.Alarm);
+      // Starts the next alarm
+      StartDozeAlarm;
+    end
+  end;
+  LRestart := (Intent <> nil) and (Intent.getIntExtra(StringToJString(cExtraServiceRestart), 0) = 1);
   // If the screen is locked when the service starts, it should start in "foreground" mode to ensure it can still access the network
-  if (FKeyguardManager <> nil) and FKeyguardManager.inKeyguardRestrictedInputMode then
+  if (LRestart and TAndroidHelperEx.CheckBuildAndTarget(26)) or ((FKeyguardManager <> nil) and FKeyguardManager.inKeyguardRestrictedInputMode) then
     StartForeground;
+  SetIsServiceRunning(True);
   Result := TJService.JavaClass.START_STICKY;
+end;
+
+procedure TServiceModule.RestartService;
+var
+  LIntent: JIntent;
+begin
+  LIntent := TJIntent.JavaClass.init(StringToJString(cActionServiceRestart));
+  LIntent.setClassName(TAndroidHelper.Context.getPackageName, StringToJString(cReceiverName));
+  LIntent.putExtra(StringToJString('ServiceName'), StringToJString(cServiceName));
+  TAndroidHelper.Context.sendBroadcast(LIntent);
 end;
 
 procedure TServiceModule.StartForeground;
@@ -303,7 +364,7 @@ var
   LObject: JObject;
 begin
   // Must use the app (UI) to request permissions
-  if not IsPaused or not TOSDevice.CheckPermissions([cPermissionAccessCoarseLocation, cPermissionAccessFineLocation]) then
+  if not GetIsPaused or not TOSDevice.CheckPermissions([cPermissionAccessCoarseLocation, cPermissionAccessFineLocation]) then
     Exit; // <======
   LObject := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.LOCATION_SERVICE);
   if LObject <> nil then
@@ -336,15 +397,25 @@ begin
   FGPSLocationListener := nil;
   FNetworkLocationListener := nil;
   FLocationManager := nil;
+  WriteLog('Listeners removed');
 end;
 
 procedure TServiceModule.DoMessage(const AMsg: string);
 var
   LIntent: JIntent;
 begin
-  // Sends a local broadcast that the app can receive. This *should* be thread-safe since it does not access any outside references
+  // Sends a local broadcast containing a debug message
   LIntent := TJIntent.JavaClass.init(StringToJString(cServiceMessageAction));
-  LIntent.putExtra(StringToJString(cServiceMessageParamMessage), StringToJString(GetLogTime + ': ' + AMsg));
+  LIntent.putExtra(StringToJString(cServiceBroadcastParamMessage), StringToJString(GetLogTime + ': ' + AMsg));
+  TJLocalBroadcastManager.JavaClass.getInstance(TAndroidHelper.Context).sendBroadcast(LIntent);
+end;
+
+procedure TServiceModule.DoStatus;
+var
+  LIntent: JIntent;
+begin
+  // Sends a local broadcast that informs the app that the status has changed
+  LIntent := TJIntent.JavaClass.init(StringToJString(cServiceStatusAction));
   TJLocalBroadcastManager.JavaClass.getInstance(TAndroidHelper.Context).sendBroadcast(LIntent);
 end;
 
@@ -373,6 +444,20 @@ begin
   FDozeAlarmIntent := nil;
 end;
 
+procedure TServiceModule.LocalReceiverReceive(intent: JIntent);
+begin
+  if intent.getAction.equals(StringToJString(cServiceCommandAction)) then
+  begin
+    // Commands from the app
+    case intent.getIntExtra(StringToJString(cServiceBroadcastParamCommand), 0) of
+      cServiceCommandPause:
+        Pause;
+      cServiceCommandResume:
+        Resume;
+    end;
+  end;
+end;
+
 procedure TServiceModule.ServiceReceiverReceive(intent: JIntent);
 begin
   // Handles the intent that was sent to the broadcast receiver
@@ -385,6 +470,20 @@ begin
   // Otherwise, check for "doze" mode changes
   else if TOSVersion.Check(6) and intent.getAction.equals(TJPowerManager.JavaClass.ACTION_DEVICE_IDLE_MODE_CHANGED) then
     DozeModeChange(FPowerManager.isDeviceIdleMode);
+end;
+
+procedure TServiceModule.SetIsPaused(const AValue: Boolean);
+begin
+  FConfig.IsPaused := AValue;
+  FConfig.Save;
+  DoStatus;
+end;
+
+procedure TServiceModule.SetIsServiceRunning(const AValue: Boolean);
+begin
+  FConfig.IsServiceRunning := AValue;
+  FConfig.Save;
+  DoStatus;
 end;
 
 procedure TServiceModule.ScreenLockChange(const ALocked: Boolean);
@@ -436,7 +535,7 @@ end;
 procedure TServiceModule.LocationChanged(const ANewLocation: TLocationCoord2D; const AFrom: TLocationChangeFrom);
 begin
   // Don't send any updates if paused
-  if IsPaused then
+  if GetIsPaused then
   begin
     WriteLog('Updates paused; not sending');
     Exit; // <======
@@ -445,19 +544,13 @@ begin
   if not FSending and (SecondsBetween(Now, FLastSend) >= cSendIntervalMinimum) then
   begin
     WriteLog('Starting send task (Time difference >= cSendIntervalMinimum)');
-    // Send the new location in a separate task
-    TTask.Run(
-      procedure
-      begin
-        // FSending flag is used to ensure that a request is not sent if it is already sending
-        FSending := True;
-        try
-          SendNewLocation(ANewLocation, AFrom);
-        finally
-          FSending := False;
-        end;
-      end
-    )
+    // FSending flag is used to ensure that a request is not sent if it is already sending
+    FSending := True;
+    try
+      SendNewLocation(ANewLocation, AFrom);
+    finally
+      FSending := False;
+    end;
   end;
 end;
 
@@ -520,11 +613,13 @@ end;
 procedure TServiceModule.Pause;
 begin
   RemoveListeners;
+  SetIsPaused(True);
 end;
 
 procedure TServiceModule.Resume;
 begin
   CreateListeners;
+  SetIsPaused((FGPSLocationListener = nil) and (FNetworkLocationListener = nil));
 end;
 
 end.
