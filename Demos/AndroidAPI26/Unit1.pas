@@ -14,8 +14,6 @@ type
     PhotoImage: TImage;
     BackgroundRectangle: TRectangle;
     BottomLayout: TLayout;
-    ButtonsLayout: TLayout;
-    QuitButton: TButton;
     TabControl: TTabControl;
     TakePhotoTab: TTabItem;
     NotificationsTab: TTabItem;

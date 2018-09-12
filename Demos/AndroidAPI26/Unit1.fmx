@@ -23,7 +23,7 @@ object Form1: TForm1
     Size.Width = 459.000000000000000000
     Size.Height = 551.000000000000000000
     Size.PlatformDefault = False
-    TabIndex = 1
+    TabIndex = 0
     TabOrder = 2
     TabPosition = PlatformDefault
     Sizes = (
@@ -35,13 +35,15 @@ object Form1: TForm1
       CustomIcon = <
         item
         end>
-      IsSelected = False
+      IsSelected = True
       Size.Width = 79.000000000000000000
       Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = ''
       TabOrder = 0
       Text = 'Take Photo'
+      ExplicitSize.cx = 79.000000000000000000
+      ExplicitSize.cy = 26.000000000000000000
       object BottomLayout: TLayout
         Align = Bottom
         Position.Y = 475.000000000000000000
@@ -49,31 +51,14 @@ object Form1: TForm1
         Size.Height = 50.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
-        object ButtonsLayout: TLayout
+        object TakePhotoButton: TButton
           Align = Center
-          Size.Width = 238.000000000000000000
-          Size.Height = 32.000000000000000000
+          Size.Width = 117.000000000000000000
+          Size.Height = 34.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 0
-          object TakePhotoButton: TButton
-            Align = Left
-            Size.Width = 117.000000000000000000
-            Size.Height = 32.000000000000000000
-            Size.PlatformDefault = False
-            TabOrder = 1
-            Text = 'Take Photo'
-            OnClick = TakePhotoButtonClick
-          end
-          object QuitButton: TButton
-            Align = Left
-            Margins.Left = 6.000000000000000000
-            Position.X = 123.000000000000000000
-            Size.Width = 117.000000000000000000
-            Size.Height = 32.000000000000000000
-            Size.PlatformDefault = False
-            TabOrder = 0
-            Text = 'Quit'
-          end
+          Text = 'Take Photo'
+          OnClick = TakePhotoButtonClick
         end
       end
       object PhotoImage: TImage
@@ -90,13 +75,15 @@ object Form1: TForm1
       CustomIcon = <
         item
         end>
-      IsSelected = True
+      IsSelected = False
       Size.Width = 88.000000000000000000
       Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = ''
       TabOrder = 0
       Text = 'Notifications'
+      ExplicitSize.cx = 88.000000000000000000
+      ExplicitSize.cy = 26.000000000000000000
       object ImmediateButton: TButton
         Align = Top
         Margins.Left = 6.000000000000000000
