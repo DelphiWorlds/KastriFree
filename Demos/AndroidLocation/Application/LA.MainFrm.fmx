@@ -45,8 +45,8 @@ object frmMain: TfrmMain
       Align = Center
       Enabled = True
       ImageIndex = -1
-      Size.Width = 150.000000000000000000
-      Size.Height = 41.000000000000000000
+      Size.Width = 160.000000000000000000
+      Size.Height = 39.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 0
     end
@@ -140,7 +140,6 @@ object frmMain: TfrmMain
     end
   end
   object ActionList: TActionList
-    OnUpdate = ActionListUpdate
     Left = 201
     Top = 205
     object PauseUpdatesAction: TAction

@@ -3,12 +3,11 @@ unit LA.MainFrm;
 interface
 
 uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants, System.Android.Service, System.Actions, System.Messaging,
+  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants, System.Actions, System.Messaging,
   Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.App, Androidapi.JNI.Location,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Controls.Presentation, FMX.StdCtrls, FMX.ScrollBox, FMX.Memo,
-  FMX.Layouts, FMX.TabControl, FMX.ActnList,
-  DW.MultiReceiver.Android, DW.PermissionsRequester, DW.PermissionsTypes,
-  LS.ServiceModule, FMX.Objects;
+  FMX.Layouts, FMX.TabControl, FMX.ActnList, FMX.Objects,
+  DW.MultiReceiver.Android, DW.PermissionsRequester, DW.PermissionsTypes;
 
 type
   TMessageReceivedEvent = procedure(Sender: TObject; const Msg: string) of object;
@@ -16,15 +15,18 @@ type
   /// <summary>
   ///   Acts as a receiver of local broadcasts sent by the service
   /// </summary>
-  TServiceMessageReceiver = class(TMultiReceiver)
+  TLocalReceiver = class(TMultiReceiver)
   private
     FOnMessageReceived: TMessageReceivedEvent;
+    FOnStatus: TNotifyEvent;
     procedure DoMessageReceived(const AMsg: string);
+    procedure DoStatus;
   protected
     procedure Receive(context: JContext; intent: JIntent); override;
     procedure ConfigureActions; override;
   public
     property OnMessageReceived: TMessageReceivedEvent read FOnMessageReceived write FOnMessageReceived;
+    property OnStatus: TNotifyEvent read FOnStatus write FOnStatus;
   end;
 
   TfrmMain = class(TForm)
@@ -36,25 +38,26 @@ type
     LogTab: TTabItem;
     LogMemo: TMemo;
     RefreshLogButton: TButton;
-    PauseUpdatesButton: TButton;
     ActionList: TActionList;
     PauseUpdatesAction: TAction;
     RefreshLogAction: TAction;
     BackgroundRectangle: TRectangle;
+    PauseUpdatesButton: TButton;
     procedure TabControlChange(Sender: TObject);
-    procedure ActionListUpdate(Action: TBasicAction; var Handled: Boolean);
-    procedure PauseUpdatesActionExecute(Sender: TObject);
     procedure RefreshLogActionExecute(Sender: TObject);
+    procedure PauseUpdatesActionExecute(Sender: TObject);
   private
     FPermissions: TPermissionsRequester;
-    FReceiver: TServiceMessageReceiver;
-    [Unsafe] FService: TServiceModule; // <--- This is a reference to the actual service datamodule
-    FServiceConnection: TLocalServiceConnection;
+    FReceiver: TLocalReceiver;
     procedure ApplicationEventMessageHandler(const Sender: TObject; const M: TMessage);
+    procedure CheckServiceStatus;
+    function IsServiceRunning: Boolean;
+    function IsPaused: Boolean;
     procedure RefreshLog;
     procedure PermissionsResultHandler(Sender: TObject; const ARequestCode: Integer; const AResults: TPermissionResults);
-    procedure ServiceConnectedHandler(const ALocalService: TAndroidBaseService);  // <--- Event called once the service is connected
     procedure ServiceMessageHandler(Sender: TObject; const AMsg: string);
+    procedure ServiceStatusHandler(Sender: TObject);
+    procedure SendCommand(const ACommand: Integer);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -68,30 +71,39 @@ implementation
 {$R *.fmx}
 
 uses
-  System.IOUtils,
+  System.IOUtils, System.Android.Service,
   Androidapi.Helpers, Androidapi.JNIBridge, Androidapi.JNI.JavaTypes,
   FMX.Platform,
-  DW.OSLog,
-  LS.Consts;
+  DW.OSLog, DW.OSDevice, DW.Androidapi.JNI.LocalBroadcastManager,
+  LS.Consts, LS.Config;
 
-{ TServiceMessageReceiver }
+{ TLocalReceiver }
 
-procedure TServiceMessageReceiver.ConfigureActions;
+procedure TLocalReceiver.ConfigureActions;
 begin
-  // Adds the appropriate action to the intent filter so that messages are received
+  // Adds the appropriate actions to the intent filter..
+  IntentFilter.addAction(StringToJString(cServiceStatusAction));
   IntentFilter.addAction(StringToJString(cServiceMessageAction));
 end;
 
-procedure TServiceMessageReceiver.DoMessageReceived(const AMsg: string);
+procedure TLocalReceiver.DoMessageReceived(const AMsg: string);
 begin
   if Assigned(FOnMessageReceived) then
     FOnMessageReceived(Self, AMsg);
 end;
 
-procedure TServiceMessageReceiver.Receive(context: JContext; intent: JIntent);
+procedure TLocalReceiver.DoStatus;
 begin
-  // Retrieves the message from the intent
-  DoMessageReceived(JStringToString(intent.getStringExtra(StringToJString(cServiceMessageParamMessage))));
+  if Assigned(FOnStatus) then
+    FOnStatus(Self);
+end;
+
+procedure TLocalReceiver.Receive(context: JContext; intent: JIntent);
+begin
+  if intent.getAction.equals(StringToJString(cServiceStatusAction)) then
+    DoStatus
+  else if intent.getAction.equals(StringToJString(cServiceMessageAction)) then
+    DoMessageReceived(JStringToString(intent.getStringExtra(StringToJString(cServiceBroadcastParamMessage))));
 end;
 
 { TfrmMain }
@@ -102,11 +114,11 @@ begin
   TabControl.ActiveTab := MessagesTab;
   FPermissions := TPermissionsRequester.Create;
   FPermissions.OnPermissionsResult := PermissionsResultHandler;
-  FReceiver := TServiceMessageReceiver.Create(True);
+  FReceiver := TLocalReceiver.Create(True);
   FReceiver.OnMessageReceived := ServiceMessageHandler;
-  FServiceConnection := TLocalServiceConnection.Create;
-  FServiceConnection.OnConnected := ServiceConnectedHandler;
-  FServiceConnection.StartService('LocationService');
+  FReceiver.OnStatus := ServiceStatusHandler;
+  if not IsServiceRunning then
+    TLocalServiceConnection.StartService('LocationService');
   TMessageManager.DefaultManager.SubscribeToMessage(TApplicationEventMessage, ApplicationEventMessageHandler);
 end;
 
@@ -118,14 +130,60 @@ begin
   inherited;
 end;
 
+function TfrmMain.IsPaused: Boolean;
+var
+  LConfig: TLocationConfig;
+begin
+  Result := True;
+  LConfig := TLocationConfig.GetConfig;
+  if LConfig <> nil then
+  try
+    Result := LConfig.IsPaused;
+  finally
+    LConfig.Free;
+  end;
+end;
+
+function TfrmMain.IsServiceRunning: Boolean;
+var
+  LConfig: TLocationConfig;
+begin
+  Result := False;
+  LConfig := TLocationConfig.GetConfig;
+  if LConfig <> nil then
+  try
+    Result := LConfig.IsServiceRunning;
+  finally
+    LConfig.Free;
+  end;
+end;
+
+procedure TfrmMain.CheckServiceStatus;
+begin
+  PauseUpdatesAction.Enabled := IsServiceRunning;
+  if IsPaused then
+    PauseUpdatesAction.Text := 'Resume Updates'
+  else
+    PauseUpdatesAction.Text := 'Pause Updates';
+end;
+
+procedure TfrmMain.SendCommand(const ACommand: Integer);
+var
+  LIntent: JIntent;
+begin
+  LIntent := TJIntent.JavaClass.init(StringToJString(cServiceCommandAction));
+  LIntent.putExtra(StringToJString(cServiceBroadcastParamCommand), ACommand);
+  TJLocalBroadcastManager.JavaClass.getInstance(TAndroidHelper.Context).sendBroadcast(LIntent);
+end;
+
 procedure TfrmMain.PauseUpdatesActionExecute(Sender: TObject);
 begin
-  if FService <> nil then
+  if IsServiceRunning then
   begin
-    if FService.IsPaused then
+    if IsPaused then
       FPermissions.RequestPermissions([cPermissionAccessCoarseLocation, cPermissionAccessFineLocation], cRequestCodeLocation)
     else
-      FService.Pause;
+      SendCommand(cServiceCommandPause);
   end;
 end;
 
@@ -134,8 +192,8 @@ begin
   case ARequestCode of
     cRequestCodeLocation:
     begin
-      if AResults.AreAllGranted and (FService <> nil) then
-        FService.Resume;
+      if AResults.AreAllGranted and IsServiceRunning then
+        SendCommand(cServiceCommandResume);
     end;
   end;
 end;
@@ -151,49 +209,28 @@ begin
   RefreshLog;
 end;
 
-procedure TfrmMain.ActionListUpdate(Action: TBasicAction; var Handled: Boolean);
-begin
-  PauseUpdatesAction.Enabled := FService <> nil;
-  if FService <> nil then
-  begin
-    if FService.IsPaused then
-      PauseUpdatesAction.Text := 'Resume Updates'
-    else
-      PauseUpdatesAction.Text := 'Pause Updates';
-  end;
-  Handled := True;
-end;
-
 procedure TfrmMain.ApplicationEventMessageHandler(const Sender: TObject; const M: TMessage);
 begin
   case TApplicationEventMessage(M).Value.Event of
     TApplicationEvent.BecameActive:
     begin
-      if FService = nil then
-        // Bind the service, so an reference to the service datamodule can be obtained
-        FServiceConnection.BindService('LocationService');
+      CheckServiceStatus;
     end;
     TApplicationEvent.EnteredBackground:
     begin
-      if not FPermissions.IsRequesting then
-      begin
-        // Make sure to "unbind" when the app becomes inactive!
-        FServiceConnection.UnbindService;
-        FService := nil;
-      end;
+      //
     end;
   end;
-end;
-
-procedure TfrmMain.ServiceConnectedHandler(const ALocalService: TAndroidBaseService);
-begin
-  // Obtain a reference to the service datamodule
-  FService := TServiceModule(ALocalService);
 end;
 
 procedure TfrmMain.ServiceMessageHandler(Sender: TObject; const AMsg: string);
 begin
   MessagesMemo.Lines.Add(AMsg);
+end;
+
+procedure TfrmMain.ServiceStatusHandler(Sender: TObject);
+begin
+  CheckServiceStatus;
 end;
 
 procedure TfrmMain.TabControlChange(Sender: TObject);
