@@ -310,7 +310,7 @@ procedure TServiceModule.StartForeground;
 var
   LBuilder: JNotificationCompat_Builder;
 begin
-  if FIsForeground then
+  if FIsForeground or not TAndroidHelperEx.CheckBuildAndTarget(26) then
     Exit; // <======
   TOSLog.d('TServiceModule.StartForeground');
   LBuilder := TJNotificationCompat_Builder.JavaClass.init(TAndroidHelper.Context);
@@ -326,8 +326,11 @@ end;
 procedure TServiceModule.StopForeground;
 begin
   TOSLog.d('TServiceModule.StopForeground');
-  Service.stopForeground(True);
-  FIsForeground := False;
+  if FIsForeground then
+  begin
+    Service.stopForeground(True);
+    FIsForeground := False;
+  end;
 end;
 
 function TServiceModule.CreateDozeAlarm(const AAction: string; const AStartAt: Int64): Boolean;
@@ -454,6 +457,10 @@ begin
         Pause;
       cServiceCommandResume:
         Resume;
+      cServiceCommandAppBecameActive:
+        StopForeground;
+      cServiceCommandAppEnteredBackground:
+        StartForeground;
     end;
   end;
 end;
@@ -514,7 +521,7 @@ end;
 
 procedure TServiceModule.TimerEventHandler(Sender: TObject);
 begin
-  WriteLog('TServiceModule.TimerEventHandler');
+  TOSLog.d('TServiceModule.TimerEventHandler');
   UpdateFromLastKnownLocation(TLocationChangeFrom.Timer);
 end;
 
