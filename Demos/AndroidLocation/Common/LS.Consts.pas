@@ -10,6 +10,8 @@ const
   cServiceBroadcastParamCommand = 'COMMAND';
   cServiceCommandPause = 1;
   cServiceCommandResume = 2;
+  cServiceCommandAppBecameActive = 3;
+  cServiceCommandAppEnteredBackground = 4;
 
   cPermissionAccessCoarseLocation = 'android.permission.ACCESS_COARSE_LOCATION';
   cPermissionAccessFineLocation = 'android.permission.ACCESS_FINE_LOCATION';
