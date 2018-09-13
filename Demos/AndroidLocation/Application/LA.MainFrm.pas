@@ -214,11 +214,12 @@ begin
   case TApplicationEventMessage(M).Value.Event of
     TApplicationEvent.BecameActive:
     begin
+      SendCommand(cServiceCommandAppBecameActive);
       CheckServiceStatus;
     end;
     TApplicationEvent.EnteredBackground:
     begin
-      //
+      SendCommand(cServiceCommandAppEnteredBackground);
     end;
   end;
 end;
