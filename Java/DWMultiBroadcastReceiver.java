@@ -14,6 +14,9 @@ package com.delphiworlds.kastri;
 
   <!-- **** Required for start on boot  **** -->
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+  <!-- **** Required for start with unlock  **** -->
+  <uses-permission android:name="android.permission.WAKE_LOCK" />
+  <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
 
   <!-- The application tag should already exist -->
   <application android:icon="@drawable/icon" android:label="@string/app_name">
@@ -43,6 +46,7 @@ package com.delphiworlds.kastri;
 */
 
 import android.app.AlarmManager;
+import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -53,6 +57,7 @@ import android.content.pm.PackageManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.util.Log;
 import java.util.Calendar;
 
@@ -63,25 +68,43 @@ public class DWMultiBroadcastReceiver extends BroadcastReceiver {
   private static final String KEY_RESTART_AFTER_REPLACE = "DWMultiBroadcastReceiver.KEY_RESTART_AFTER_REPLACE"; // true or false
   private static final String KEY_START_ON_BOOT = "DWMultiBroadcastReceiver.KEY_START_ON_BOOT"; // true or false
   private static final String KEY_START_SERVICE_ON_BOOT = "DWMultiBroadcastReceiver.KEY_START_SERVICE_ON_BOOT"; // string = service name
+  private static final String WAKE_LOCK_ID = "DWMultiBroadcastReceiver.WAKE_LOCK";
 
   public static final String ACTION_SERVICE_ALARM = "com.delphiworlds.kastri.DWMultiBroadcastReceiver.ACTION_SERVICE_ALARM";
-  public static final String ACTION_NOTIFICATION = "DWMultiBroadcastReceiver.ACTION_NOTIFICATION";
-  public static final String EXTRA_NOTIFICATION = "DWMultiBroadcastReceiver.EXTRA_NOTIFICATION";
-  public static final String EXTRA_NOTIFICATION_ID = "DWMultiBroadcastReceiver.EXTRA_NOTIFICATION_ID";
-  public static final String EXTRA_NOTIFICATION_NAME = "DWMultiBroadcastReceiver.EXTRA_NOTIFICATION_NAME";
-  public static final String EXTRA_NOTIFICATION_REPEATINTERVAL = "DWMultiBroadcastReceiver.EXTRA_NOTIFICATION_REPEATINTERVAL";
+  public static final String ACTION_SERVICE_RESTART = "com.delphiworlds.kastri.DWMultiBroadcastReceiver.ACTION_SERVICE_RESTART";
+  public static final String ACTION_START_ALARM = "com.delphiworlds.kastri.DWMultiBroadcastReceiver.ACTION_START_ALARM";
+  public static final String ACTION_NOTIFICATION = "com.delphiworlds.kastri.DWMultiBroadcastReceiver.ACTION_NOTIFICATION";
+  public static final String EXTRA_NOTIFICATION = "com.delphiworlds.kastri.DWMultiBroadcastReceiver.EXTRA_NOTIFICATION";
+  public static final String EXTRA_NOTIFICATION_ID = "com.delphiworlds.kastri.DWMultiBroadcastReceiver.EXTRA_NOTIFICATION_ID";
+  public static final String EXTRA_NOTIFICATION_NAME = "com.delphiworlds.kastri.DWMultiBroadcastReceiver.EXTRA_NOTIFICATION_NAME";
+  public static final String EXTRA_NOTIFICATION_REPEATINTERVAL = "com.delphiworlds.kastri.DWMultiBroadcastReceiver.EXTRA_NOTIFICATION_REPEATINTERVAL";
+  public static final String EXTRA_SERVICE_RESTART = "com.delphiworlds.kastri.DWMultiBroadcastReceiver.EXTRA_SERVICE_RESTART";
+  public static final String EXTRA_START_UNLOCK = "com.delphiworlds.kastri.DWMultiBroadcastReceiver.EXTRA_START_UNLOCK";
 
   private boolean startApp(Context context) {
     context.startActivity(context.getPackageManager().getLaunchIntentForPackage(context.getPackageName()));
     return true;
   }
 
+  private int getTargetSdkVersion(Context context) {
+    try {
+      return context.getPackageManager().getApplicationInfo(context.getPackageName(), 0).targetSdkVersion;
+    } catch (PackageManager.NameNotFoundException exception) {
+      return 0; // this should never happen :-)
+    }
+  }
+
+  private boolean checkBuildAndTarget(Context context, int value) {
+    return (getTargetSdkVersion(context) >= value) && (Build.VERSION.SDK_INT >= value);
+  }
+
   private boolean checkStartupIntent(Context context, Intent intent) {
+
     // Retrieve the metadata
     Bundle metaData = null;
     try {
       metaData = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA).metaData;
-    } catch (PackageManager.NameNotFoundException  exception) {
+    } catch (PackageManager.NameNotFoundException exception) {
       return false;
     }
     Boolean handled = false;
@@ -89,8 +112,8 @@ public class DWMultiBroadcastReceiver extends BroadcastReceiver {
     // This action will start the application if it has been updated, e.g. when "side-loaded".
     // Note: If your app is on Google Play, you will likely want to omit having the option in the metadata
     if (intent.getAction().equals(Intent.ACTION_MY_PACKAGE_REPLACED)) {
-      if ((metaData != null) && metaData.containsKey(DWMultiBroadcastReceiver.KEY_RESTART_AFTER_REPLACE)) {
-        if (metaData.getBoolean(DWMultiBroadcastReceiver.KEY_RESTART_AFTER_REPLACE))
+      if ((metaData != null) && metaData.containsKey(KEY_RESTART_AFTER_REPLACE)) {
+        if (metaData.getBoolean(KEY_RESTART_AFTER_REPLACE))
           return startApp(context);
       }
     }
@@ -99,26 +122,56 @@ public class DWMultiBroadcastReceiver extends BroadcastReceiver {
     // Note: This action also needs <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />  in the manifest    
     if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
       Log.v(TAG, "Intent.ACTION_BOOT_COMPLETED");
-      if ((metaData != null) && metaData.containsKey(DWMultiBroadcastReceiver.KEY_START_ON_BOOT)) {
-        if (metaData.getBoolean(DWMultiBroadcastReceiver.KEY_START_ON_BOOT))
+      if ((metaData != null) && metaData.containsKey(KEY_START_ON_BOOT)) {
+        if (metaData.getBoolean(KEY_START_ON_BOOT))
           return startApp(context);
       }
-      if ((metaData != null) && metaData.containsKey(DWMultiBroadcastReceiver.KEY_START_SERVICE_ON_BOOT)) {
-        String serviceName = "com.embarcadero.services." + metaData.getString(DWMultiBroadcastReceiver.KEY_START_SERVICE_ON_BOOT);
+      if ((metaData != null) && metaData.containsKey(KEY_START_SERVICE_ON_BOOT)) {
+        String serviceName = "com.embarcadero.services." + metaData.getString(KEY_START_SERVICE_ON_BOOT);
         Log.v(TAG, "Attempting to start service from boot: " + serviceName);
         Intent serviceIntent = new Intent();
         serviceIntent.setClassName(context.getPackageName(), serviceName);
-        context.startService(serviceIntent);
+        if (checkBuildAndTarget(context, 26)) 
+          context.startForegroundService(serviceIntent); // Service MUST call startForeground when it starts
+        else
+          context.startService(serviceIntent);
         return true;
       }
     }
 
-    // Starting a service from an alarm. The intent should already have the class name set in the intent
-    if (intent.getAction().equals(ACTION_SERVICE_ALARM)) {
-      Log.v(TAG, "Attempting to start service from alarm");
+    // Starting a service from an alarm or restart. The intent should already have the class name set in the intent
+    if (intent.getAction().equals(ACTION_SERVICE_ALARM) || intent.getAction().equals(ACTION_SERVICE_RESTART)) {
+      Log.v(TAG, "Attempting to restart service or start service from alarm");
       intent.setClassName(context.getPackageName(), intent.getStringExtra("ServiceName"));
-      context.startService(intent);
+      if (intent.getAction().equals(ACTION_SERVICE_RESTART))
+        intent.putExtra(EXTRA_SERVICE_RESTART, 1);
+      if (checkBuildAndTarget(context, 26)) 
+        context.startForegroundService(intent); // Service MUST call startForeground when it starts
+      else
+        context.startService(intent);
       return true;
+    }
+
+    // Starting the application from an alarm. 
+    if (intent.getAction().equals(ACTION_START_ALARM)) {
+      Log.v(TAG, "Attempting to start the application from an alarm");
+      PowerManager.WakeLock wakeLock = null;
+      if (intent.getBooleanExtra(EXTRA_START_UNLOCK, false)) {
+        Log.v(TAG, "Attempting to start from lock screen (if locked)");
+        PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        int wakeLevel = PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP;
+        wakeLock = powerManager.newWakeLock(wakeLevel, WAKE_LOCK_ID);
+        wakeLock.acquire();
+        Log.v(TAG, "Acquired WakeLock");
+        KeyguardManager manager = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+        KeyguardManager.KeyguardLock keyguardLock = manager.newKeyguardLock(TAG);
+        keyguardLock.disableKeyguard();
+        Log.v(TAG, "Disabled Keyguard");
+      }
+      boolean result = startApp(context);
+      if (wakeLock != null)
+        wakeLock.release();
+      return result;
     }
 
     return false;
