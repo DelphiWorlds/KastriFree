@@ -60,6 +60,13 @@ type
     /// </summary>
     class function GetBuildSdkVersion: Integer; static;
     /// <summary>
+    ///   Call this to start an activity from an alarm
+    /// </summary>
+    /// <remarks>
+    ///   Used in conjunction with dw-multireceiver.jar
+    /// </remarks>
+    class procedure SetStartAlarm(const AAlarm: TDateTime; const AStartFromLock: Boolean); static;
+    /// <summary>
     ///   Converts file to uri, using FileProvider if target API >= 24
     /// </summary>
     /// <remarks>
@@ -68,56 +75,21 @@ type
     class function UriFromFile(const AFile: JFile): Jnet_Uri; static;
   end;
 
-  TPreferences = class(TObject)
-  private
-    FPreferences: JSharedPreferences;
-  public
-    constructor Create(const AID: string);
-    destructor Destroy; override;
-    function GetValue(const AKey: string; const ADefaultValue: string = ''): string;
-    procedure SetValue(const AKey: string; const AValue: string);
-  end;
-
 implementation
 
 uses
   // RTL
-  System.SysUtils,
+  System.SysUtils, System.DateUtils,
   // Android
   Androidapi.Helpers, Androidapi.JNI.App, Androidapi.JNI.Os, Androidapi.JNI.Media,
   // DW
   DW.Androidapi.JNI.FileProvider;
 
-{ TPreferences }
-
-constructor TPreferences.Create(const AID: string);
-begin
-  inherited Create;
-  FPreferences := TAndroidHelper.Context.getSharedPreferences(StringToJString(AID), TJContext.JavaClass.MODE_PRIVATE);
-end;
-
-destructor TPreferences.Destroy;
-begin
-  FPreferences := nil;
-  inherited;
-end;
-
-function TPreferences.GetValue(const AKey: string; const ADefaultValue: string = ''): string;
-begin
-  Result := JStringToString(FPreferences.getString(StringToJString(AKey), StringToJString(ADefaultValue)));
-end;
-
-procedure TPreferences.SetValue(const AKey, AValue: string);
-var
-  LEditor: JSharedPreferences_Editor;
-begin
-  LEditor := FPreferences.edit;
-  try
-    LEditor.putString(StringToJString(AKey), StringToJString(AValue));
-  finally
-    LEditor.commit;
-  end;
-end;
+const
+  cReceiverClassName = 'DWMultiBroadcastReceiver';
+  cReceiverName = 'com.delphiworlds.kastri.' + cReceiverClassName;
+  cActionStartAlarm = cReceiverName + '.ACTION_START_ALARM';
+  cExtraStartUnlock = cReceiverClassName + '.EXTRA_START_UNLOCK';
 
 { TAndroidHelperEx }
 
@@ -165,6 +137,34 @@ var
 begin
   LApplicationInfo := TAndroidHelper.Context.getPackageManager.getApplicationInfo(TAndroidHelper.Context.getPackageName, 0);
   Result := LApplicationInfo.targetSdkVersion;
+end;
+
+function GetTimeFromNowInMillis(const ASecondsFromNow: Integer): Int64;
+var
+  LCalendar: JCalendar;
+begin
+  LCalendar := TJCalendar.JavaClass.getInstance;
+  if ASecondsFromNow > 0 then
+    LCalendar.add(TJCalendar.JavaClass.SECOND, ASecondsFromNow);
+  Result := LCalendar.getTimeInMillis;
+end;
+
+class procedure TAndroidHelperEx.SetStartAlarm(const AAlarm: TDateTime; const AStartFromLock: Boolean);
+var
+  LActionIntent: JIntent;
+  LAlarmIntent: JPendingIntent;
+  LStartAt: Int64;
+begin
+  LActionIntent := TJIntent.JavaClass.init(StringToJString(cActionStartAlarm));
+  LActionIntent.setClassName(TAndroidHelper.Context.getPackageName, StringToJString(cReceiverName));
+  LActionIntent.putExtra(StringToJString(cExtraStartUnlock), AStartFromLock);
+  LAlarmIntent := TJPendingIntent.JavaClass.getBroadcast(TAndroidHelper.Context, 0, LActionIntent, TJPendingIntent.JavaClass.FLAG_CANCEL_CURRENT);
+  LStartAt := GetTimeFromNowInMillis(SecondsBetween(Now, AAlarm));
+  // Allow for alarms while in "doze" mode
+  if TOSVersion.Check(6) then
+    TAndroidHelper.AlarmManager.setExactAndAllowWhileIdle(TJAlarmManager.JavaClass.RTC_WAKEUP, LStartAt, LAlarmIntent)
+  else
+    TAndroidHelper.AlarmManager.&set(TJAlarmManager.JavaClass.RTC_WAKEUP, LStartAt, LAlarmIntent);
 end;
 
 end.
