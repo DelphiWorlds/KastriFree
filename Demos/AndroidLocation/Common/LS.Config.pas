@@ -9,13 +9,11 @@ type
     class function GetJSON: string;
   private
     FIsPaused: Boolean;
-    FIsServiceRunning: Boolean;
   public
     class function GetConfig: TLocationConfig;
   public
     procedure Save;
     property IsPaused: Boolean read FIsPaused write FIsPaused;
-    property IsServiceRunning: Boolean read FIsServiceRunning write FIsServiceRunning;
   end;
 
 implementation
