@@ -70,13 +70,16 @@ type
     FSending: Boolean;
     FServiceReceiver: TServiceReceiver;
     FTimer: TAndroidTimer;
+    FWakeLock: JPowerManager_WakeLock;
+    function AreListenersInstalled: Boolean;
     function CreateDozeAlarm(const AAction: string; const AStartAt: Int64): Boolean;
     procedure CreateListeners;
     procedure CreateTimer;
     procedure DoMessage(const AMsg: string);
     procedure DoStatus;
     procedure DozeModeChange(const ADozed: Boolean);
-    function GetIsPaused: Boolean;
+    procedure EnableWakeLock(const AEnable: Boolean);
+    function HasPermissions: Boolean;
     procedure LocalReceiverReceive(intent: JIntent);
     procedure Pause;
     procedure PostRequest(const ARequest: TStream);
@@ -88,7 +91,6 @@ type
     procedure ScreenLockChange(const ALocked: Boolean);
     procedure ServiceReceiverReceive(intent: JIntent);
     procedure SetIsPaused(const AValue: Boolean);
-    procedure SetIsServiceRunning(const AValue: Boolean);
     procedure StartDozeAlarm;
     procedure StartForeground;
     procedure StopDozeAlarm;
@@ -125,6 +127,7 @@ const
   cActionServiceAlarm = cReceiverName + '.ACTION_SERVICE_ALARM';
   cActionServiceRestart = cReceiverName + '.ACTION_SERVICE_RESTART';
   cExtraServiceRestart = cReceiverName + '.EXTRA_SERVICE_RESTART';
+  cWakeLockTag = 'com.delphiworlds.locationservice.wakelock';
 
   cServiceForegroundId = 3987; // Just a random number
   cServiceNotificationCaption = 'Location Service';
@@ -263,7 +266,8 @@ end;
 
 procedure TServiceModule.AndroidServiceDestroy(Sender: TObject);
 begin
-  SetIsServiceRunning(False);
+  EnableWakeLock(False);
+  FWakeLock := nil;
   FServiceReceiver.DisposeOf;
   FLocalReceiver.DisposeOf;
   FTimer.DisposeOf;
@@ -292,7 +296,7 @@ begin
   // If the screen is locked when the service starts, it should start in "foreground" mode to ensure it can still access the network
   if (LRestart and TAndroidHelperEx.CheckBuildAndTarget(26)) or ((FKeyguardManager <> nil) and FKeyguardManager.inKeyguardRestrictedInputMode) then
     StartForeground;
-  SetIsServiceRunning(True);
+  DoStatus;
   Result := TJService.JavaClass.START_STICKY;
 end;
 
@@ -313,6 +317,7 @@ begin
   if FIsForeground or not TAndroidHelperEx.CheckBuildAndTarget(26) then
     Exit; // <======
   TOSLog.d('TServiceModule.StartForeground');
+  EnableWakeLock(True);
   LBuilder := TJNotificationCompat_Builder.JavaClass.init(TAndroidHelper.Context);
   LBuilder.setAutoCancel(True);
   LBuilder.setContentTitle(StrToJCharSequence(cServiceNotificationCaption));
@@ -328,9 +333,23 @@ begin
   TOSLog.d('TServiceModule.StopForeground');
   if FIsForeground then
   begin
+    EnableWakeLock(False);
     Service.stopForeground(True);
     FIsForeground := False;
   end;
+end;
+
+procedure TServiceModule.EnableWakeLock(const AEnable: Boolean);
+begin
+  if AEnable then
+  begin
+    if FWakeLock = nil then
+      FWakeLock := FPowerManager.newWakeLock(TJPowerManager.JavaClass.PARTIAL_WAKE_LOCK, StringToJString(cWakeLockTag));
+    if not FWakeLock.isHeld then
+      FWakeLock.acquire;
+  end
+  else if (FWakeLock <> nil) and FWakeLock.isHeld then
+    FWakeLock.release;
 end;
 
 function TServiceModule.CreateDozeAlarm(const AAction: string; const AStartAt: Int64): Boolean;
@@ -366,41 +385,56 @@ procedure TServiceModule.CreateListeners;
 var
   LObject: JObject;
 begin
+  TOSLog.d('+TServiceModule.CreateListeners');
   // Must use the app (UI) to request permissions
-  if not GetIsPaused or not TOSDevice.CheckPermissions([cPermissionAccessCoarseLocation, cPermissionAccessFineLocation]) then
-    Exit; // <======
-  LObject := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.LOCATION_SERVICE);
-  if LObject <> nil then
-  begin
-    FLocationManager := TJLocationManager.Wrap((LObject as ILocalObject).GetObjectID);
-    if FLocationManager.isProviderEnabled(TJLocationManager.JavaClass.GPS_PROVIDER) then
+  try
+    if HasPermissions and not AreListenersInstalled then
     begin
-      FGPSLocationListener := TLocationListener.Create(Self);
-      FLocationManager.requestLocationUpdates(TJLocationManager.JavaClass.GPS_PROVIDER, cLocationMonitoringInterval, cLocationMonitoringDistance,
-        FGPSLocationListener, TJLooper.JavaClass.getMainLooper);
-      WriteLog('GPS Location Listener created and listening');
-    end;
-    if FLocationManager.isProviderEnabled(TJLocationManager.JavaClass.NETWORK_PROVIDER) then
-    begin
-      FNetworkLocationListener := TLocationListener.Create(Self);
-      FLocationManager.requestLocationUpdates(TJLocationManager.JavaClass.NETWORK_PROVIDER, cLocationMonitoringInterval, cLocationMonitoringDistance,
-        FNetworkLocationListener, TJLooper.JavaClass.getMainLooper);
-      WriteLog('Network Location Listener created and listening');
-    end;
+      LObject := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.LOCATION_SERVICE);
+      if LObject <> nil then
+      begin
+        FLocationManager := TJLocationManager.Wrap((LObject as ILocalObject).GetObjectID);
+        if FLocationManager.isProviderEnabled(TJLocationManager.JavaClass.GPS_PROVIDER) then
+        begin
+          FGPSLocationListener := TLocationListener.Create(Self);
+          FLocationManager.requestLocationUpdates(TJLocationManager.JavaClass.GPS_PROVIDER, cLocationMonitoringInterval, cLocationMonitoringDistance,
+            FGPSLocationListener, TJLooper.JavaClass.getMainLooper);
+          WriteLog('GPS Location Listener created and listening');
+        end;
+        if FLocationManager.isProviderEnabled(TJLocationManager.JavaClass.NETWORK_PROVIDER) then
+        begin
+          FNetworkLocationListener := TLocationListener.Create(Self);
+          FLocationManager.requestLocationUpdates(TJLocationManager.JavaClass.NETWORK_PROVIDER, cLocationMonitoringInterval, cLocationMonitoringDistance,
+            FNetworkLocationListener, TJLooper.JavaClass.getMainLooper);
+          WriteLog('Network Location Listener created and listening');
+        end;
+      end;
+    end
+    else if not HasPermissions and AreListenersInstalled then
+      RemoveListeners;
+  finally
+    SetIsPaused(not AreListenersInstalled);
   end;
+  TOSLog.d('-TServiceModule.CreateListeners');
 end;
 
 procedure TServiceModule.RemoveListeners;
 begin
-  if FLocationManager <> nil then
-  begin
-    FLocationManager.removeUpdates(FGPSLocationListener);
-    FLocationManager.removeUpdates(FNetworkLocationListener);
+  TOSLog.d('+TServiceModule.RemoveListeners');
+  try
+    if FLocationManager <> nil then
+    begin
+      FLocationManager.removeUpdates(FGPSLocationListener);
+      FLocationManager.removeUpdates(FNetworkLocationListener);
+    end;
+    FGPSLocationListener := nil;
+    FNetworkLocationListener := nil;
+    FLocationManager := nil;
+    WriteLog('Listeners removed');
+  finally
+    SetIsPaused(not AreListenersInstalled);
   end;
-  FGPSLocationListener := nil;
-  FNetworkLocationListener := nil;
-  FLocationManager := nil;
-  WriteLog('Listeners removed');
+  TOSLog.d('-TServiceModule.RemoveListeners');
 end;
 
 procedure TServiceModule.DoMessage(const AMsg: string);
@@ -448,9 +482,13 @@ begin
 end;
 
 procedure TServiceModule.LocalReceiverReceive(intent: JIntent);
+var
+  LCommand: Integer;
 begin
   if intent.getAction.equals(StringToJString(cServiceCommandAction)) then
   begin
+    LCommand := intent.getIntExtra(StringToJString(cServiceBroadcastParamCommand), 0);
+    TOSLog.d('TServiceModule.LocalReceiverReceive received command: %d', [LCommand]);
     // Commands from the app
     case intent.getIntExtra(StringToJString(cServiceBroadcastParamCommand), 0) of
       cServiceCommandPause:
@@ -486,13 +524,6 @@ begin
   DoStatus;
 end;
 
-procedure TServiceModule.SetIsServiceRunning(const AValue: Boolean);
-begin
-  FConfig.IsServiceRunning := AValue;
-  FConfig.Save;
-  DoStatus;
-end;
-
 procedure TServiceModule.ScreenLockChange(const ALocked: Boolean);
 begin
   WriteLog('TServiceModule.ScreenLockChange: ' + BoolToStr(ALocked, True));
@@ -514,14 +545,19 @@ begin
     StopDozeAlarm;
 end;
 
-function TServiceModule.GetIsPaused: Boolean;
+function TServiceModule.HasPermissions: Boolean;
 begin
-  Result := (FGPSLocationListener = nil) or (FNetworkLocationListener = nil);
+  Result := TOSDevice.CheckPermissions([cPermissionAccessCoarseLocation, cPermissionAccessFineLocation])
+end;
+
+function TServiceModule.AreListenersInstalled: Boolean;
+begin
+  Result := (FGPSLocationListener <> nil) or (FNetworkLocationListener <> nil);
 end;
 
 procedure TServiceModule.TimerEventHandler(Sender: TObject);
 begin
-  TOSLog.d('TServiceModule.TimerEventHandler');
+  WriteLog('TServiceModule.TimerEventHandler');
   UpdateFromLastKnownLocation(TLocationChangeFrom.Timer);
 end;
 
@@ -541,12 +577,6 @@ end;
 
 procedure TServiceModule.LocationChanged(const ANewLocation: TLocationCoord2D; const AFrom: TLocationChangeFrom);
 begin
-  // Don't send any updates if paused
-  if GetIsPaused then
-  begin
-    WriteLog('Updates paused; not sending');
-    Exit; // <======
-  end;
   // Only send if a location change has been obtained within the specified interval
   if not FSending and (SecondsBetween(Now, FLastSend) >= cSendIntervalMinimum) then
   begin
@@ -620,13 +650,11 @@ end;
 procedure TServiceModule.Pause;
 begin
   RemoveListeners;
-  SetIsPaused(True);
 end;
 
 procedure TServiceModule.Resume;
 begin
   CreateListeners;
-  SetIsPaused((FGPSLocationListener = nil) and (FNetworkLocationListener = nil));
 end;
 
 end.
