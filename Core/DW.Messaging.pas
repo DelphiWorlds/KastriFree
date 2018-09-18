@@ -19,7 +19,6 @@ type
   TOrientationDidChangeMessage = class(TMessage);
   TOrientationWillChangeMessage = class(TMessage);
   TVirtualKeyboardRectChangeMessage = class(TMessage<TRect>);
-  TLocationChangedMessage = class(TMessage);
 
 implementation
 
