@@ -23,7 +23,7 @@ Steps:
 3. Copy System.Android.Notification.10.2.3.API26.patch from the Workarounds folder in the KastriFree library (described above) to the demo project folder
 3. Open a command prompt, change to the project folder, and execute the following command:
 
-  Patch <PatchFolder>\Patch System.Android.Notification.pas < System.Android.Notification.10.2.3.API26.patch
+  <PatchFolder>\Patch System.Android.Notification.pas < System.Android.Notification.10.2.3.API26.patch
 
   Where <PatchFolder> is where the Patch tool was installed to, e.g: C:\Program Files (x86)\Patch
 
