@@ -47,11 +47,11 @@ type
     procedure RefreshLogActionExecute(Sender: TObject);
     procedure PauseUpdatesActionExecute(Sender: TObject);
   private
+    FIsServiceRunning: Boolean;
     FPermissions: TPermissionsRequester;
     FReceiver: TLocalReceiver;
     procedure ApplicationEventMessageHandler(const Sender: TObject; const M: TMessage);
     procedure CheckServiceStatus;
-    function IsServiceRunning: Boolean;
     function IsPaused: Boolean;
     procedure RefreshLog;
     procedure PermissionsResultHandler(Sender: TObject; const ARequestCode: Integer; const AResults: TPermissionResults);
@@ -100,6 +100,7 @@ end;
 
 procedure TLocalReceiver.Receive(context: JContext; intent: JIntent);
 begin
+  TOSLog.d('TLocalReceiver.Receive');
   if intent.getAction.equals(StringToJString(cServiceStatusAction)) then
     DoStatus
   else if intent.getAction.equals(StringToJString(cServiceMessageAction)) then
@@ -117,8 +118,7 @@ begin
   FReceiver := TLocalReceiver.Create(True);
   FReceiver.OnMessageReceived := ServiceMessageHandler;
   FReceiver.OnStatus := ServiceStatusHandler;
-  if not IsServiceRunning then
-    TLocalServiceConnection.StartService('LocationService');
+  TLocalServiceConnection.StartService('LocationService');
   TMessageManager.DefaultManager.SubscribeToMessage(TApplicationEventMessage, ApplicationEventMessageHandler);
 end;
 
@@ -144,23 +144,9 @@ begin
   end;
 end;
 
-function TfrmMain.IsServiceRunning: Boolean;
-var
-  LConfig: TLocationConfig;
-begin
-  Result := False;
-  LConfig := TLocationConfig.GetConfig;
-  if LConfig <> nil then
-  try
-    Result := LConfig.IsServiceRunning;
-  finally
-    LConfig.Free;
-  end;
-end;
-
 procedure TfrmMain.CheckServiceStatus;
 begin
-  PauseUpdatesAction.Enabled := IsServiceRunning;
+  PauseUpdatesAction.Enabled := FIsServiceRunning;
   if IsPaused then
     PauseUpdatesAction.Text := 'Resume Updates'
   else
@@ -178,7 +164,7 @@ end;
 
 procedure TfrmMain.PauseUpdatesActionExecute(Sender: TObject);
 begin
-  if IsServiceRunning then
+  if FIsServiceRunning then
   begin
     if IsPaused then
       FPermissions.RequestPermissions([cPermissionAccessCoarseLocation, cPermissionAccessFineLocation], cRequestCodeLocation)
@@ -192,7 +178,7 @@ begin
   case ARequestCode of
     cRequestCodeLocation:
     begin
-      if AResults.AreAllGranted and IsServiceRunning then
+      if AResults.AreAllGranted and FIsServiceRunning then
         SendCommand(cServiceCommandResume);
     end;
   end;
@@ -231,6 +217,7 @@ end;
 
 procedure TfrmMain.ServiceStatusHandler(Sender: TObject);
 begin
+  FIsServiceRunning := True;
   CheckServiceStatus;
 end;
 
