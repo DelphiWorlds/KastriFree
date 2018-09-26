@@ -1,5 +1,7 @@
 ***** NOTE ******
 
+***** These instructions apply to Delphi 10.2.3 ONLY. You cannot apply this patch for any other version of Delphi *****
+
 In order for local notifications to work in this demo, you will need to create a patch for the Delphi source file:
 
   <BDS>\Source\rtl\common\System.Android.Notification.pas
@@ -10,7 +12,9 @@ The patch file to be applied is:
 
   <KastriFree>\Workarounds\System.Android.Notification.10.2.3.API26.patch
 
-(Where <KastriFree> is the root of the source files for the KastriFree library)
+(Where <KastriFree> is the root of the source files for the KastriFree library)  
+
+**** REMEMBER: This patch is for Delphi 10.2.3 ONLY ****
 
 The tool for applying patches can be obtained from:
 
@@ -21,7 +25,7 @@ Steps:
 1. Install the Patch tool from http://gnuwin32.sourceforge.net/packages/patch.htm
 2. Copy System.Android.Notification.pas from the Delphi source (described above) to the demo project folder
 3. Copy System.Android.Notification.10.2.3.API26.patch from the Workarounds folder in the KastriFree library (described above) to the demo project folder
-3. Open a command prompt, change to the project folder, and execute the following command:
+4. Open a command prompt, change to the project folder, and execute the following command:
 
   <PatchFolder>\Patch System.Android.Notification.pas < System.Android.Notification.10.2.3.API26.patch
 
@@ -33,3 +37,4 @@ If you open the file you should note comments starting with:
   // DW
 
 Indicating where changes have been made. Note that the changes require units from the Workarounds folder, the API folder and the Core folder in the KastriFree library
+
