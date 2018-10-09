@@ -78,14 +78,14 @@ end;
 procedure TPlatformPermissionsRequester.CheckPermissionsResults;
 var
   LResults: TPermissionResults;
-  LIndex, I, LCode: Integer;
+  LIndex, I: Integer;
 begin
   SetLength(LResults, Length(FPermissions));
   for I := Low(FPermissions) to High(FPermissions) do
   begin
     LIndex := I - Low(FPermissions);
     LResults[LIndex].Permission := FPermissions[I];
-    LResults[LIndex].Granted := TOSDevice.CheckPermission(FPermissions[I]);
+    LResults[LIndex].Granted := TOSDevice.CheckPermission(FPermissions[I], True);
   end;
   FIsSubmitted := False;
   TOpenPermissionsRequester(PermissionsRequester).DoPermissionsResult(FRequestCode, LResults);
