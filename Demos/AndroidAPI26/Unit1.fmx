@@ -23,10 +23,12 @@ object Form1: TForm1
     Size.Width = 459.000000000000000000
     Size.Height = 551.000000000000000000
     Size.PlatformDefault = False
-    TabIndex = 0
+    TabIndex = 2
     TabOrder = 2
     TabPosition = PlatformDefault
     Sizes = (
+      459s
+      525s
       459s
       525s
       459s
@@ -35,7 +37,7 @@ object Form1: TForm1
       CustomIcon = <
         item
         end>
-      IsSelected = True
+      IsSelected = False
       Size.Width = 79.000000000000000000
       Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
@@ -125,6 +127,56 @@ object Form1: TForm1
         TabOrder = 2
         Text = 'Cancel Scheduled'
         OnClick = CancelScheduledClick
+      end
+    end
+    object ExtraTab: TTabItem
+      CustomIcon = <
+        item
+        end>
+      IsSelected = True
+      Size.Width = 46.000000000000000000
+      Size.Height = 26.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = ''
+      TabOrder = 0
+      Text = 'Extra'
+      ExplicitSize.cx = 46.000000000000000000
+      ExplicitSize.cy = 26.000000000000000000
+      object ExtraButtonsLayout: TLayout
+        Align = HorzCenter
+        Position.X = 64.000000000000000000
+        Size.Width = 331.000000000000000000
+        Size.Height = 525.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        object RequestWriteSettingsButton: TButton
+          Align = Top
+          Margins.Left = 4.000000000000000000
+          Margins.Top = 4.000000000000000000
+          Margins.Right = 4.000000000000000000
+          Position.X = 4.000000000000000000
+          Position.Y = 4.000000000000000000
+          Size.Width = 323.000000000000000000
+          Size.Height = 34.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 1
+          Text = 'Request Write Settings'
+          Visible = False
+        end
+        object RequestSMSPermissionsButton: TButton
+          Align = Top
+          Margins.Left = 4.000000000000000000
+          Margins.Top = 4.000000000000000000
+          Margins.Right = 4.000000000000000000
+          Position.X = 4.000000000000000000
+          Position.Y = 4.000000000000000000
+          Size.Width = 323.000000000000000000
+          Size.Height = 34.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 0
+          Text = 'Request SMS Permissions'
+          OnClick = RequestSMSPermissionsButtonClick
+        end
       end
     end
   end

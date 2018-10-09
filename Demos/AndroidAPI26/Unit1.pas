@@ -21,10 +21,15 @@ type
     Schedule10SecondsButton: TButton;
     CancelScheduled: TButton;
     NotificationCenter: TNotificationCenter;
+    ExtraTab: TTabItem;
+    ExtraButtonsLayout: TLayout;
+    RequestWriteSettingsButton: TButton;
+    RequestSMSPermissionsButton: TButton;
     procedure TakePhotoButtonClick(Sender: TObject);
     procedure ImmediateButtonClick(Sender: TObject);
     procedure Schedule10SecondsButtonClick(Sender: TObject);
     procedure CancelScheduledClick(Sender: TObject);
+    procedure RequestSMSPermissionsButtonClick(Sender: TObject);
   private
     FRequester: TPermissionsRequester;
     FMediaLibrary: TMediaLibrary;
@@ -48,7 +53,13 @@ const
   cPermissionReadExternalStorage = 'android.permission.READ_EXTERNAL_STORAGE';
   cPermissionWriteExternalStorage = 'android.permission.WRITE_EXTERNAL_STORAGE';
   cPermissionCamera = 'android.permission.CAMERA';
+  cPermissionSendSMS = 'android.permission.SEND_SMS';
+  cPermissionReceiveSMS = 'android.permission.RECEIVE_SMS';
+  cPermissionReadSMS = 'android.permission.READ_SMS';
+  cPermissionReceiveMMS = 'android.permission.RECEIVE_MMS';
+  cPermissionReceiveWAPPush = 'android.permission.RECEIVE_WAP_PUSH';
   cPermissionsCodeExternalStorage = 1;
+  cPermissionsCodeSMS = 2;
 
 constructor TForm1.Create(AOwner: TComponent);
 begin
@@ -77,7 +88,19 @@ begin
       else
         ShowMessage('You need to grant all required permissions for the app to be able to take photos!');
     end;
+    cPermissionsCodeSMS:
+    begin
+      if AResults.AreAllGranted then
+        ShowMessage('SMS permissions granted')
+      else
+        ShowMessage('You need to grant all required permissions for the app to be able to handle SMS!');
+    end;
   end;
+end;
+
+procedure TForm1.RequestSMSPermissionsButtonClick(Sender: TObject);
+begin
+  FRequester.RequestPermissions([cPermissionSendSMS, cPermissionReceiveSMS, cPermissionReadSMS, cPermissionReceiveMMS, cPermissionReceiveWAPPush], cPermissionsCodeSMS);
 end;
 
 procedure TForm1.TakePhotoButtonClick(Sender: TObject);
