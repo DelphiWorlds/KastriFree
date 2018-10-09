@@ -89,13 +89,11 @@ procedure TPermissionsRequester.RequestPermissions(const APermissions: array of 
 var
   LResults: TPermissionResults;
 begin
+  FIsRequesting := True;
   if TOSDevice.CheckPermissions(APermissions, LResults) then
     DoPermissionsResult(ARequestCode, LResults)
   else
-  begin
-    FIsRequesting := True;
     FPlatformPermissionsRequester.RequestPermissions(APermissions, ARequestCode);
-  end;
 end;
 
 end.
