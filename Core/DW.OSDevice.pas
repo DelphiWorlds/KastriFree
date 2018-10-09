@@ -30,7 +30,7 @@ type
     /// <summary>
     ///   Checks whether or not a single permissions has been granted
     /// </summary>
-    class function CheckPermission(const APermission: string): Boolean; static;
+    class function CheckPermission(const APermission: string; const ALog: Boolean = False): Boolean; static;
     /// <summary>
     ///   Checks whether or not a set of permissions have been granted
     /// </summary>
@@ -90,10 +90,17 @@ uses
 
 { TOSDevice }
 
-class function TOSDevice.CheckPermission(const APermission: string): Boolean;
+class function TOSDevice.CheckPermission(const APermission: string; const ALog: Boolean = False): Boolean;
 begin
   {$IF Defined(ANDROID)}
   Result := TPlatformOSDevice.CheckPermission(APermission);
+  if ALog then
+  begin
+    if Result then
+      TOSLog.d('%s granted', [APermission])
+    else
+      TOSLog.d('%s denied', [APermission]);
+  end;
   {$ELSE}
   Result := True;
   {$ENDIF}
@@ -108,12 +115,6 @@ begin
   begin
     AResults[I].Permission := APermissions[I];
     AResults[I].Granted := CheckPermission(AResults[I].Permission);
-    {$IF Defined(ANDROID)}
-    if AResults[I].Granted then
-      TOSLog.d('%s granted', [AResults[I].Permission])
-    else
-      TOSLog.d('%s denied', [AResults[I].Permission]);
-    {$ENDIF}
   end;
   Result := AResults.AreAllGranted;
 end;
