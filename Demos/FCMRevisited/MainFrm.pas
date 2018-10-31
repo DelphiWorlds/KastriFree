@@ -4,8 +4,9 @@ interface
 
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.ScrollBox, FMX.Memo, FMX.Controls.Presentation, FMX.StdCtrls, FMX.Layouts,
-  DW.Firebase.Messaging, DW.PermissionsRequester, DW.PermissionsTypes, FMX.Objects;
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.ScrollBox, FMX.Memo, FMX.Controls.Presentation,
+  FMX.StdCtrls, FMX.Layouts, FMX.Objects,
+  DW.Firebase.Messaging, DW.PermissionsRequester, DW.PermissionsTypes;
 
 type
   TfrmMain = class(TForm)
@@ -53,11 +54,6 @@ const
 
 { TfrmMain }
 
-procedure TfrmMain.ClearMessagesButtonClick(Sender: TObject);
-begin
-  MessagesMemo.Lines.Clear;
-end;
-
 constructor TfrmMain.Create(AOwner: TComponent);
 begin
   inherited;
@@ -65,9 +61,12 @@ begin
   FFCM.OnAuthorizationResult := FCMAuthorizationResultHandler;
   FFCM.OnTokenReceived := FCMTokenReceivedHandler;
   FFCM.OnMessageReceived := FCMMessageReceivedHandler;
+  // The TPermissionsRequester in this demo is actually *optional*, i.e. the permissions it asks for are not actually required for push notifications
   FRequester := TPermissionsRequester.Create;
   FRequester.OnPermissionsResult := RequesterPermissionsResultHandler;
   FRequester.RequestPermissions(cDangerousPermissions, 1);
+  // If the permissions are not required by your app, you could omit all references to FRequester, and just call the next line:
+  // FFCM.RequestAuthorization;
 end;
 
 destructor TfrmMain.Destroy;
@@ -75,6 +74,11 @@ begin
   FRequester.Free;
   FFCM.Free;
   inherited;
+end;
+
+procedure TfrmMain.ClearMessagesButtonClick(Sender: TObject);
+begin
+  MessagesMemo.Lines.Clear;
 end;
 
 procedure TfrmMain.RequesterPermissionsResultHandler(Sender: TObject; const ARequestCode: Integer; const AResults: TPermissionResults);
@@ -99,7 +103,7 @@ end;
 procedure TfrmMain.FCMTokenReceivedHandler(Sender: TObject; const AToken: string);
 begin
   TokenMemo.Lines.Text := AToken;
-  TOSLog.d('Token in FCMTokenReceivedHandler: %s', [TokenMemo.Lines.Text]);
+  TOSLog.d('Token in FCMTokenReceivedHandler: %s', [AToken]);
 end;
 
 procedure TfrmMain.FCMMessageReceivedHandler(Sender: TObject; const APayload: TStrings);
