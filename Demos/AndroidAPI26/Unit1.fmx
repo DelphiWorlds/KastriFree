@@ -159,7 +159,7 @@ object Form1: TForm1
           Size.Width = 323.000000000000000000
           Size.Height = 34.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 1
+          TabOrder = 2
           Text = 'Request Write Settings'
           Visible = False
         end
@@ -173,9 +173,23 @@ object Form1: TForm1
           Size.Width = 323.000000000000000000
           Size.Height = 34.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 0
+          TabOrder = 1
           Text = 'Request SMS Permissions'
           OnClick = RequestSMSPermissionsButtonClick
+        end
+        object OpenPDFButton: TButton
+          Align = Top
+          Margins.Left = 4.000000000000000000
+          Margins.Top = 4.000000000000000000
+          Margins.Right = 4.000000000000000000
+          Position.X = 4.000000000000000000
+          Position.Y = 42.000000000000000000
+          Size.Width = 323.000000000000000000
+          Size.Height = 34.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 0
+          Text = 'Open PDF'
+          OnClick = OpenPDFButtonClick
         end
       end
     end

@@ -25,14 +25,17 @@ type
     ExtraButtonsLayout: TLayout;
     RequestWriteSettingsButton: TButton;
     RequestSMSPermissionsButton: TButton;
+    OpenPDFButton: TButton;
     procedure TakePhotoButtonClick(Sender: TObject);
     procedure ImmediateButtonClick(Sender: TObject);
     procedure Schedule10SecondsButtonClick(Sender: TObject);
     procedure CancelScheduledClick(Sender: TObject);
     procedure RequestSMSPermissionsButtonClick(Sender: TObject);
+    procedure OpenPDFButtonClick(Sender: TObject);
   private
     FRequester: TPermissionsRequester;
     FMediaLibrary: TMediaLibrary;
+    procedure CopyPDFSample;
     procedure MediaLibraryReceivedImageHandler(Sender: TObject; const AImagePath: string; const AImage: TBitmap);
     procedure PermissionsResultHandler(Sender: TObject; const ARequestCode: Integer; const AResults: TPermissionResults);
     procedure ImmediateNotification;
@@ -49,6 +52,11 @@ implementation
 
 {$R *.fmx}
 
+uses
+  System.IOUtils,
+  Androidapi.JNI.GraphicsContentViewText, Androidapi.Helpers, Androidapi.JNI.Net,
+  DW.Android.Helpers;
+
 const
   cPermissionReadExternalStorage = 'android.permission.READ_EXTERNAL_STORAGE';
   cPermissionWriteExternalStorage = 'android.permission.WRITE_EXTERNAL_STORAGE';
@@ -61,9 +69,12 @@ const
   cPermissionsCodeExternalStorage = 1;
   cPermissionsCodeSMS = 2;
 
+  cPDFSampleFileName = 'pdf-sample.pdf';
+
 constructor TForm1.Create(AOwner: TComponent);
 begin
   inherited;
+  CopyPDFSample;
   TabControl.ActiveTab := TakePhotoTab;
   FRequester := TPermissionsRequester.Create;
   FRequester.OnPermissionsResult := PermissionsResultHandler;
@@ -76,6 +87,16 @@ begin
   FRequester.Free;
   FMediaLibrary.Free;
   inherited;
+end;
+
+procedure TForm1.CopyPDFSample;
+var
+  LFileName, LCopyFileName: string;
+begin
+  LFileName := TPath.Combine(TPath.GetDocumentsPath, cPDFSampleFileName);
+  LCopyFileName := TPath.Combine(TPath.GetPublicPath, cPDFSampleFileName);
+  if TFile.Exists(LFileName) and not TFile.Exists(LCopyFileName) then
+    TFile.Copy(LFileName, LCopyFileName);
 end;
 
 procedure TForm1.PermissionsResultHandler(Sender: TObject; const ARequestCode: Integer; const AResults: TPermissionResults);
@@ -111,6 +132,19 @@ end;
 procedure TForm1.MediaLibraryReceivedImageHandler(Sender: TObject; const AImagePath: string; const AImage: TBitmap);
 begin
   PhotoImage.Bitmap.Assign(AImage);
+end;
+
+procedure TForm1.OpenPDFButtonClick(Sender: TObject);
+var
+  LIntent: JIntent;
+  LFileName: string;
+begin
+  // NOTE: You will need a PDF viewer installed on your device in order for this to work
+  LFileName := TPath.Combine(TPath.GetPublicPath, cPDFSampleFileName);
+  LIntent := TJIntent.JavaClass.init(TJIntent.JavaClass.ACTION_VIEW);
+  LIntent.setDataAndType(TAndroidHelperEx.UriFromFileName(LFileName), StringToJString('application/pdf'));
+  LIntent.setFlags(TJIntent.JavaClass.FLAG_GRANT_READ_URI_PERMISSION);
+  TAndroidHelper.Activity.startActivity(LIntent);
 end;
 
 procedure TForm1.CancelScheduledClick(Sender: TObject);
