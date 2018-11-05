@@ -60,6 +60,10 @@ type
     /// </summary>
     class function GetBuildSdkVersion: Integer; static;
     /// <summary>
+    ///   Returns whether or not a service is running
+    /// </summary>
+    class function IsServiceRunning(const AServiceName: string): Boolean; static;
+    /// <summary>
     ///   Call this to start an activity from an alarm
     /// </summary>
     /// <remarks>
@@ -73,6 +77,13 @@ type
     ///   Use this only when accessing files with an "external" URI
     /// </remarks>
     class function UriFromFile(const AFile: JFile): Jnet_Uri; static;
+    /// <summary>
+    ///   Converts filename to uri, using FileProvider if target API >= 24
+    /// </summary>
+    /// <remarks>
+    ///   Use this only when accessing files with an "external" URI
+    /// </remarks>
+    class function UriFromFileName(const AFileName: string): Jnet_Uri; static;
   end;
 
 implementation
@@ -131,12 +142,27 @@ begin
     Result := TJnet_uri.JavaClass.fromFile(AFile);
 end;
 
+class function TAndroidHelperEx.UriFromFileName(const AFileName: string): Jnet_Uri;
+begin
+  Result := UriFromFile(TJFile.JavaClass.init(StringToJString(AFileName)));
+end;
+
 class function TAndroidHelperEx.GetTargetSdkVersion: Integer;
 var
   LApplicationInfo: JApplicationInfo;
 begin
   LApplicationInfo := TAndroidHelper.Context.getPackageManager.getApplicationInfo(TAndroidHelper.Context.getPackageName, 0);
   Result := LApplicationInfo.targetSdkVersion;
+end;
+
+class function TAndroidHelperEx.IsServiceRunning(const AServiceName: string): Boolean;
+var
+  LIntent: JIntent;
+  LPendingIntent: JPendingIntent;
+begin
+  LIntent := TJIntent.JavaClass.init(TAndroidHelper.Context, GetClass(AServiceName));
+  LPendingIntent := TJPendingIntent.JavaClass.getService(TAndroidHelper.Context, 0, LIntent, TJPendingIntent.JavaClass.FLAG_NO_CREATE);
+  Result := LPendingIntent <> nil;
 end;
 
 function GetTimeFromNowInMillis(const ASecondsFromNow: Integer): Int64;
