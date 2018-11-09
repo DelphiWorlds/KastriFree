@@ -61,7 +61,7 @@ uses
   FMX.Platform.Android,
   // DW
   DW.OSLog,
-  DW.Classes.Helpers, DW.Androidapi.JNI.FirebaseServiceHelpers,
+  DW.Classes.Helpers, DW.Androidapi.JNI.FirebaseServiceHelpers, DW.FirebaseApp.Android,
   DW.Androidapi.JNI.LocalBroadcastManager, DW.Androidapi.JNI.Firebase, DW.Androidapi.JNI.ContextWrapper;
 
 { TFirebaseMessagingReceiverListener }
@@ -90,6 +90,7 @@ var
   LIntentFilter: JIntentFilter;
 begin
   inherited;
+  TPlatformFirebaseApp.Start;
   FFirebaseMessagingReceiverListener := TFirebaseMessagingReceiverListener.Create(Self);
   FFirebaseMessagingBroadcastReceiver := TJFMXBroadcastReceiver.JavaClass.init(FFirebaseMessagingReceiverListener);
   LIntentFilter := TJIntentFilter.JavaClass.init;
