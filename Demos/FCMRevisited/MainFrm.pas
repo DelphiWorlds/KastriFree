@@ -21,7 +21,7 @@ type
     procedure ClearMessagesButtonClick(Sender: TObject);
   private
     FFCM: TFirebaseMessaging;
-    FRequester: TPermissionsRequester;
+    // FRequester: TPermissionsRequester;
     procedure FCMAuthorizationResultHandler(Sender: TObject; const AGranted: Boolean);
     procedure FCMTokenReceivedHandler(Sender: TObject; const AToken: string);
     procedure FCMMessageReceivedHandler(Sender: TObject; const APayload: TStrings);
@@ -62,16 +62,16 @@ begin
   FFCM.OnTokenReceived := FCMTokenReceivedHandler;
   FFCM.OnMessageReceived := FCMMessageReceivedHandler;
   // The TPermissionsRequester in this demo is actually *optional*, i.e. the permissions it asks for are not actually required for push notifications
-  FRequester := TPermissionsRequester.Create;
-  FRequester.OnPermissionsResult := RequesterPermissionsResultHandler;
-  FRequester.RequestPermissions(cDangerousPermissions, 1);
+  // FRequester := TPermissionsRequester.Create;
+  // FRequester.OnPermissionsResult := RequesterPermissionsResultHandler;
+  // FRequester.RequestPermissions(cDangerousPermissions, 1);
   // If the permissions are not required by your app, you could omit all references to FRequester, and just call the next line:
-  // FFCM.RequestAuthorization;
+  FFCM.RequestAuthorization;
 end;
 
 destructor TfrmMain.Destroy;
 begin
-  FRequester.Free;
+  // FRequester.Free;
   FFCM.Free;
   inherited;
 end;
