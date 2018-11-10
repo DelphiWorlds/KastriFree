@@ -22,8 +22,4 @@ Slack (https://slack.com/) users:
 
 I have a Slack team for Delphi Worlds, which contains a channel for discussion about Kastri Free (as well as other channels). If you would like to join, please visit this link:
 
-  http://slack.freedelphicode.com:8080/
-
-
-
-
+  https://slack.delphiworlds.com
