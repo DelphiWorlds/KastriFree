@@ -24,7 +24,10 @@ type
   TPlatformMediaLibrary = class(TCustomPlatformMediaLibrary)
   private
     FImageFile: JFile;
+    FIsImageReceived: Boolean;
     function GetPhotosPath: JFile;
+    procedure HandleReceivedImage;
+    procedure ApplicationEventMessageHandler(const Sender: TObject; const M: TMessage);
     procedure MessageResultNotificationHandler(const Sender: TObject; const M: TMessage);
   protected
     procedure TakePhoto; override;
@@ -41,7 +44,7 @@ uses
   // Android
   Androidapi.JNI.Provider, Androidapi.JNI.App, Androidapi.Helpers, Androidapi.JNI.Os, Androidapi.JNIBridge,
   // FMX
-  FMX.Graphics,
+  FMX.Graphics, FMX.Platform,
   // DW
   DW.Androidapi.JNI.Os, DW.Androidapi.JNI.FileProvider, DW.Android.Helpers;
 
@@ -64,6 +67,21 @@ begin
   inherited;
 end;
 
+procedure TPlatformMediaLibrary.ApplicationEventMessageHandler(const Sender: TObject; const M: TMessage);
+begin
+  if FIsImageReceived and (M is TApplicationEventMessage) then
+  begin
+    case TApplicationEventMessage(M).Value.Event of
+      TApplicationEvent.BecameActive:
+      begin
+        FIsImageReceived := False;
+        TMessageManager.DefaultManager.Unsubscribe(TApplicationEventMessage, ApplicationEventMessageHandler);
+        HandleReceivedImage;
+      end;
+    end;
+  end;
+end;
+
 function TPlatformMediaLibrary.GetPhotosPath: JFile;
 var
   LDCIMPath, LStoragePath: JFile;
@@ -80,6 +98,20 @@ begin
   end;
 end;
 
+procedure TPlatformMediaLibrary.HandleReceivedImage;
+var
+  LBitmap: TBitmap;
+  LImagePath: string;
+begin
+  LImagePath := JStringToString(FImageFile.getAbsolutePath);
+  LBitmap := TBitmap.CreateFromFile(LImagePath);
+  try
+    DoReceivedImage(LImagePath, LBitmap);
+  finally
+    LBitmap.Free;
+  end;
+end;
+
 procedure TPlatformMediaLibrary.MessageResultNotificationHandler(const Sender: TObject; const M: TMessage);
 var
   LResult: TMessageResultNotification;
@@ -91,13 +123,12 @@ begin
     LResult := TMessageResultNotification(M);
     if LResult.ResultCode = TJActivity.JavaClass.RESULT_OK then
     begin
-      LImagePath := JStringToString(FImageFile.getAbsolutePath);
-      LBitmap := TBitmap.CreateFromFile(LImagePath);
-      try
-        DoReceivedImage(LImagePath, LBitmap);
-      finally
-        LBitmap.Free;
-      end;
+      {$IF CompilerVersion > 31}
+      HandleReceivedImage;
+      {$ELSE} // Workaround for: https://quality.embarcadero.com/browse/RSP-14217
+      FIsImageReceived := True;
+      TMessageManager.DefaultManager.SubscribeToMessage(TApplicationEventMessage, ApplicationEventMessageHandler);
+      {$ENDIF}
     end
     else
       DoCanceled;
