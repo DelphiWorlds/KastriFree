@@ -27,7 +27,8 @@ type
     FWhitespace: TCharArray;
     function IsWhitespace(const AChar: Char): Boolean;
   public
-    constructor Create;
+    constructor Create; overload;
+    constructor Create(const AText: string); overload;
     procedure Tokenize(const ATokenProc: TTokenProc);
     function Replace(const AReplaceFunction: TTextReplaceFunc): string;
     property Text: string read FText write FText;
@@ -45,6 +46,13 @@ constructor TTokenizer.Create;
 begin
   inherited;
   FWhitespace := cDefaultWhitespace;
+end;
+
+constructor TTokenizer.Create(const AText: string);
+begin
+  inherited Create;
+  FWhitespace := cDefaultWhitespace;
+  FText := AText;
 end;
 
 function TTokenizer.IsWhitespace(const AChar: Char): Boolean;
