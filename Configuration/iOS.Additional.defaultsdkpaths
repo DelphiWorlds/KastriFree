@@ -1,4 +1,4 @@
-	<ProfileFramework Include="$(SDKROOT)/System/Library/Frameworks">
+  <ProfileFramework Include="$(SDKROOT)/System/Library/Frameworks">
       <Name>AdSupport</Name>
       <AllFiles>False</AllFiles>
   </ProfileFramework>	
