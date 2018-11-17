@@ -71,6 +71,56 @@ begin
   Result := Tidy(AJsonValue.ToString, AIndentSize);
 end;
 
+// Now based on: https://pastebin.com/Juks92Y2 (if the link still exists), by Lars Fosdal
+class function TJsonHelper.Tidy(const AJson: string; const AIndentSize: Integer = 2): string;
+const
+  cEOL = #13#10;
+var
+  LChar: Char;
+  LIsInString: boolean;
+  LIsEscape: boolean;
+  LIsHandled: boolean;
+  LIndent: Integer;
+begin
+  Result := '';
+  LIndent := 0;
+  LIsInString := False;
+  LIsEscape := False;
+  for LChar in AJson do
+  begin
+    if not LIsInString then
+    begin
+      LIsHandled := False;
+      if (LChar = '{') or (LChar = '[') then
+      begin
+        Inc(LIndent);
+        Result := Result + LChar + cEOL + StringOfChar(' ', LIndent * AIndentSize);
+        LIsHandled := True;
+      end
+      else if LChar = ',' then
+      begin
+        Result := Result + LChar + cEOL + StringOfChar(' ', LIndent * AIndentSize);
+        LIsHandled := True;
+      end
+      else if (LChar = '}') or (LChar = ']') then
+      begin
+        Dec(LIndent);
+        Result := Result + cEOL + StringOfChar(' ', LIndent * AIndentSize) + LChar;
+        LIsHandled := True;
+      end;
+      if not LIsHandled and not LChar.IsWhiteSpace then
+        Result := Result + LChar;
+    end
+    else
+      Result := Result + LChar;
+    if not LIsEscape and (LChar = '"') then
+      LIsInString := not LIsInString;
+    LIsEscape := (LChar = '\') and not LIsEscape;
+  end;
+end;
+
+
+(*
 class function TJsonHelper.Tidy(const AJson: string; const AIndentSize: Integer = 2): string;
 const
   cEOL = #13#10;
@@ -146,5 +196,6 @@ begin
       LIsInString := not LIsInString;
   end;
 end;
+*)
 
 end.
