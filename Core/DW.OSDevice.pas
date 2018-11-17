@@ -41,6 +41,10 @@ type
     /// </summary>
     class function GetDeviceName: string; static;
     /// <summary>
+    ///   Special function for handling of iPhoneX
+    /// </summary>
+    class function GetOffsetRect: TRectF; static;
+    /// <summary>
     ///   Returns build for the application package, if any exists
     /// </summary>
     class function GetPackageBuild: string; static;
@@ -52,10 +56,6 @@ type
     ///   Returns version for the application package, if any exists
     /// </summary>
     class function GetPackageVersion: string; static;
-    /// <summary>
-    ///   Special function for handling of iPhoneX
-    /// </summary>
-    class function GetOffsetRect: TRectF; static;
     /// <summary>
     ///   Returns the unique id for the device, if any exists
     /// </summary>
