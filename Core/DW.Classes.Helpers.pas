@@ -34,6 +34,10 @@ type
     /// </summary>
     class procedure Sync(const AProc: TThreadProcedure; const ADelay: Integer = 0); static;
     /// <summary>
+    ///   Syncs a method in the main thread, if necessary
+    /// </summary>
+    class procedure SyncMain(const ARunProc: TThreadProcedure); static;
+    /// <summary>
     ///   Runs a method in a thread
     /// </summary>
     class procedure Run(const ARunProc: TThreadProcedure); static;
@@ -80,6 +84,14 @@ begin
       TThread.Synchronize(nil, AProc);
     end
   ).Start;
+end;
+
+class procedure TDo.SyncMain(const ARunProc: TThreadProcedure);
+begin
+  if TThread.CurrentThread.ThreadID <> MainThreadID then
+    TThread.Synchronize(nil, ARunProc)
+  else
+    ARunProc;
 end;
 
 class procedure TDo.Run(const ARunProc: TThreadProcedure);
