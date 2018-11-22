@@ -27,6 +27,9 @@ implementation
 uses
   // Android
   Androidapi.JNI.GraphicsContentViewText,
+  {$IF CompilerVersion > 32}
+  FMX.Platform.UI.Android,
+  {$ENDIF}
   // FMX
   FMX.Platform.Android;
 
