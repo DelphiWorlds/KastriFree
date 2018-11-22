@@ -29,9 +29,9 @@ type
 
   TiOSHelperEx = record
   public
-    class function IsIPhoneX: Boolean; static;
     class function GetLocationManagerAuthorization: TAuthorizationType; static;
     class function HasBackgroundMode(const AMode: string): Boolean; static;
+    class function IsIPhoneX: Boolean; static;
     class function NSDictionaryToJSON(const ADictionary: NSDictionary): string; static;
     class function SharedApplication: UIApplication; static;
     class function StandardUserDefaults: NSUserDefaults; static;
