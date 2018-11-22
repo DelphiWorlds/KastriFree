@@ -7,3 +7,6 @@
 {$IF CompilerVersion = 32}
   {$LIBSUFFIX 'D10T'}
 {$ENDIF}
+{$IF CompilerVersion = 33}
+  {$LIBSUFFIX 'D10R'}
+{$ENDIF}
