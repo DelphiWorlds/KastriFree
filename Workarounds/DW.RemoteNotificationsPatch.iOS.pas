@@ -1,4 +1,4 @@
-unit DW.RemoteNotifcationsPatch.iOS;
+unit DW.RemoteNotificationsPatch.iOS;
 
 interface
 
