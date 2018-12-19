@@ -27,10 +27,10 @@ implementation
 uses
   // Android
   Androidapi.JNI.GraphicsContentViewText,
+  // FMX
   {$IF CompilerVersion > 32}
   FMX.Platform.UI.Android,
   {$ENDIF}
-  // FMX
   FMX.Platform.Android;
 
 class function TPlatformVirtualKeyboard.GetBounds: TRect;
