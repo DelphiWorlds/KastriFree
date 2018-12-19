@@ -20,6 +20,9 @@ uses
   // Android
   Androidapi.Helpers, Androidapi.JNI.Util, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNIBridge, Androidapi.JNI.App,
   // FMX
+  {$IF CompilerVersion > 32}
+  FMX.Platform.UI.Android,
+  {$ENDIF}
   FMX.Platform, FMX.Platform.Android,
   // DW
   DW.Messaging;
