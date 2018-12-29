@@ -136,14 +136,12 @@ var
   LValue: string;
 begin
   TOSLog.d('+TPlatformFirebaseMessaging.HandleMessageReceived');
-  if not IsForeground then
-  begin
-    TDo.Run(
-      procedure
-      begin
-        TJDWNotificationPublisher.JavaClass.sendNotification(TAndroidHelper.Context, data, True);
-      end
-    );
+  TDo.Run(
+    procedure
+    begin
+      TJDWNotificationPublisher.JavaClass.sendNotification(TAndroidHelper.Context, data, True);
+    end
+  );
   end;
   LPayload := TStringList.Create;
   try
