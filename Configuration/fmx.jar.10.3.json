@@ -1,0 +1,17 @@
+{
+  "includedJars":[
+    "C:\\Program Files (x86)\\Embarcadero\\Studio\\20.0\\lib\\android\\debug\\android-support-v4.jar",
+    "C:\\Program Files (x86)\\Embarcadero\\Studio\\20.0\\lib\\android\\debug\\cloud-messaging.jar",
+    "C:\\Program Files (x86)\\Embarcadero\\Studio\\20.0\\lib\\android\\debug\\google-play-services-base-7.0.0.jar",
+    "C:\\Program Files (x86)\\Embarcadero\\Studio\\20.0\\lib\\android\\debug\\google-play-services-ads-7.0.0.jar",
+    "C:\\Program Files (x86)\\Embarcadero\\Studio\\20.0\\lib\\android\\debug\\google-play-services-maps-7.0.0.jar"
+  ],
+  "javaFiles":[
+    "C:\\Program Files (x86)\\Embarcadero\\Studio\\20.0\\source\\rtl\\androiddex\\java\\fmx\\src\\com\\*.java",
+    "C:\\Program Files (x86)\\Embarcadero\\Studio\\20.0\\source\\rtl\\androiddex\\java\\fmx\\src\\android\\bluetooth\\*.java",
+    "C:\\Program Files (x86)\\Embarcadero\\Studio\\20.0\\source\\rtl\\androiddex\\java\\fmx\\src\\android\\telephony\\*.java"
+  ],
+  "outputFile":"S:\\ThirdParty\\Embarcadero\\Lib\\Android\\fmx.jar",
+  "sourceVersion":"1.7",
+  "targetVersion":"1.7"
+}
