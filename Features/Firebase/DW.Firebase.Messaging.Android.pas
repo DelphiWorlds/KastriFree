@@ -40,8 +40,9 @@ type
     procedure Connect; override;
     procedure Disconnect; override;
     procedure DoApplicationBecameActive; override;
-    procedure HandleMessageReceived(const data: JIntent);
+    procedure HandleMessageReceived(const data: JIntent; const AIsStartup: Boolean = False);
     procedure HandleNewToken(const data: JIntent);
+    procedure PublishNotification(const data: JIntent);
     procedure RequestAuthorization; override;
     procedure SubscribeToTopic(const ATopicName: string); override;
     procedure UnsubscribeFromTopic(const ATopicName: string); override;
@@ -121,12 +122,14 @@ procedure TPlatformFirebaseMessaging.DoApplicationBecameActive;
 begin
   if not FStartupIntentHandled then
   begin
-    HandleMessageReceived(MainActivity.getIntent);
+    HandleMessageReceived(MainActivity.getIntent, True);
     FStartupIntentHandled := True;
   end;
 end;
 
-procedure TPlatformFirebaseMessaging.HandleMessageReceived(const data: JIntent);
+procedure TPlatformFirebaseMessaging.HandleMessageReceived(const data: JIntent; const AIsStartup: Boolean = False);
+const
+  cGCMMessageIDKey = 'gcm.message_id';
 var
   LPayload: TStrings;
   LBundle: JBundle;
@@ -136,13 +139,6 @@ var
   LValue: string;
 begin
   TOSLog.d('+TPlatformFirebaseMessaging.HandleMessageReceived');
-  TDo.Run(
-    procedure
-    begin
-      TJDWNotificationPublisher.JavaClass.sendNotification(TAndroidHelper.Context, data, True);
-    end
-  );
-  end;
   LPayload := TStringList.Create;
   try
     LBundle := data.getExtras;
@@ -162,8 +158,10 @@ begin
         LPayload.Values[JStringToString(LKeyObject.toString)] := LValue;
       end;
     end;
-    if LPayload.Count > 0 then
+    if LPayload.IndexOfName(cGCMMessageIDKey) > -1 then
     begin
+      if not AIsStartup then
+        PublishNotification(data);
       TThread.Synchronize(nil,
         procedure
         begin
@@ -175,6 +173,16 @@ begin
     LPayload.Free;
   end;
   TOSLog.d('-TPlatformFirebaseMessaging.HandleMessageReceived');
+end;
+
+procedure TPlatformFirebaseMessaging.PublishNotification(const data: JIntent);
+begin
+  TDo.Run(
+    procedure
+    begin
+      TJDWNotificationPublisher.JavaClass.sendNotification(TAndroidHelper.Context, data, True);
+    end
+  );
 end;
 
 procedure TPlatformFirebaseMessaging.HandleNewToken(const data: JIntent);
