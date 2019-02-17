@@ -3,7 +3,7 @@ unit LS.ServiceModule;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Android.Service, System.Sensors,
+  System.SysUtils, System.Classes, System.Android.Service, System.Sensors, System.Notification,
   Androidapi.JNI.App, AndroidApi.JNI.GraphicsContentViewText, Androidapi.JNI.Os, Androidapi.JNIBridge, Androidapi.JNI.Location,
   AndroidApi.JNI.JavaTypes,
   DW.FileWriter, DW.MultiReceiver.Android, DW.Androidapi.JNI.KeyguardManager,
@@ -52,6 +52,7 @@ type
   TLocationChangeFrom = (Listener, Timer, Alarm);
 
   TServiceModule = class(TAndroidService)
+    NotificationCenter: TNotificationCenter;
     function AndroidServiceStartCommand(const Sender: TObject; const Intent: JIntent; Flags, StartId: Integer): Integer;
     procedure AndroidServiceDestroy(Sender: TObject);
   private
@@ -97,6 +98,7 @@ type
     procedure StopForeground;
     procedure TimerEventHandler(Sender: TObject);
     procedure UpdateFromLastKnownLocation(const AFrom: TLocationChangeFrom);
+    procedure SendNotification(const NewLocation: TLocationCoord2D; const AFrom: TLocationChangeFrom);
   protected
     procedure LocationChanged(const ANewLocation: TLocationCoord2D; const AFrom: TLocationChangeFrom);
     procedure WriteLog(const AMsg: string);
@@ -296,7 +298,6 @@ begin
   // If the screen is locked when the service starts, it should start in "foreground" mode to ensure it can still access the network
   if (LRestart and TAndroidHelperEx.CheckBuildAndTarget(26)) or ((FKeyguardManager <> nil) and FKeyguardManager.inKeyguardRestrictedInputMode) then
     StartForeground;
-  DoStatus;
   Result := TJService.JavaClass.START_STICKY;
 end;
 
@@ -501,6 +502,7 @@ begin
         StartForeground;
     end;
   end;
+  DoStatus;
 end;
 
 procedure TServiceModule.ServiceReceiverReceive(intent: JIntent);
@@ -584,7 +586,8 @@ begin
     // FSending flag is used to ensure that a request is not sent if it is already sending
     FSending := True;
     try
-      SendNewLocation(ANewLocation, AFrom);
+      SendNewLocation(ANewLocation, AFrom); // <---- Comment out this line and uncomment the next line to test notifications
+      // SendNotification(ANewLocation, AFrom); // <---- This line was added to test notifications inside an Android service.
     finally
       FSending := False;
     end;
@@ -645,6 +648,21 @@ begin
     LHTTP.Free;
   end;
   WriteLog('Successfully sent new location');
+end;
+
+procedure TServiceModule.SendNotification(const NewLocation: TLocationCoord2D; const AFrom: TLocationChangeFrom);
+var
+  LNotification: TNotification;
+begin
+  LNotification := NotificationCenter.CreateNotification;
+  try
+    LNotification.EnableSound := False;
+    LNotification.AlertBody := Format('Received location update from %s @ %.4f, %.4f', [cLocationFromCaptions[AFrom],
+      NewLocation.Latitude, NewLocation.Longitude]);
+    NotificationCenter.PresentNotification(LNotification);
+  finally
+    LNotification.Free;
+  end;
 end;
 
 procedure TServiceModule.Pause;
