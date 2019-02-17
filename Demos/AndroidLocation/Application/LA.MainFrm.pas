@@ -47,12 +47,12 @@ type
     procedure RefreshLogActionExecute(Sender: TObject);
     procedure PauseUpdatesActionExecute(Sender: TObject);
   private
-    FIsServiceRunning: Boolean;
     FPermissions: TPermissionsRequester;
     FReceiver: TLocalReceiver;
     procedure ApplicationEventMessageHandler(const Sender: TObject; const M: TMessage);
-    procedure CheckServiceStatus;
+    procedure EnablePauseUpdates;
     function IsPaused: Boolean;
+    function IsServiceRunning: Boolean;
     procedure RefreshLog;
     procedure PermissionsResultHandler(Sender: TObject; const ARequestCode: Integer; const AResults: TPermissionResults);
     procedure ServiceMessageHandler(Sender: TObject; const AMsg: string);
@@ -74,7 +74,7 @@ uses
   System.IOUtils, System.Android.Service,
   Androidapi.Helpers, Androidapi.JNIBridge, Androidapi.JNI.JavaTypes,
   FMX.Platform,
-  DW.OSLog, DW.OSDevice, DW.Androidapi.JNI.LocalBroadcastManager,
+  DW.OSLog, DW.OSDevice, DW.Androidapi.JNI.LocalBroadcastManager, DW.Android.Helpers,
   LS.Consts, LS.Config;
 
 { TLocalReceiver }
@@ -118,7 +118,8 @@ begin
   FReceiver := TLocalReceiver.Create(True);
   FReceiver.OnMessageReceived := ServiceMessageHandler;
   FReceiver.OnStatus := ServiceStatusHandler;
-  TLocalServiceConnection.StartService('LocationService');
+  if not IsServiceRunning then
+    TLocalServiceConnection.StartService('LocationService');
   TMessageManager.DefaultManager.SubscribeToMessage(TApplicationEventMessage, ApplicationEventMessageHandler);
 end;
 
@@ -144,9 +145,14 @@ begin
   end;
 end;
 
-procedure TfrmMain.CheckServiceStatus;
+function TfrmMain.IsServiceRunning: Boolean;
 begin
-  PauseUpdatesAction.Enabled := FIsServiceRunning;
+  Result := TAndroidHelperEx.IsServiceRunning('com.embarcadero.services.LocationService');
+end;
+
+procedure TfrmMain.EnablePauseUpdates;
+begin
+  PauseUpdatesAction.Enabled := True;
   if IsPaused then
     PauseUpdatesAction.Text := 'Resume Updates'
   else
@@ -164,13 +170,10 @@ end;
 
 procedure TfrmMain.PauseUpdatesActionExecute(Sender: TObject);
 begin
-  if FIsServiceRunning then
-  begin
-    if IsPaused then
-      FPermissions.RequestPermissions([cPermissionAccessCoarseLocation, cPermissionAccessFineLocation], cRequestCodeLocation)
-    else
-      SendCommand(cServiceCommandPause);
-  end;
+  if IsPaused then
+    FPermissions.RequestPermissions([cPermissionAccessCoarseLocation, cPermissionAccessFineLocation], cRequestCodeLocation)
+  else
+    SendCommand(cServiceCommandPause);
 end;
 
 procedure TfrmMain.PermissionsResultHandler(Sender: TObject; const ARequestCode: Integer; const AResults: TPermissionResults);
@@ -178,7 +181,7 @@ begin
   case ARequestCode of
     cRequestCodeLocation:
     begin
-      if AResults.AreAllGranted and FIsServiceRunning then
+      if AResults.AreAllGranted then
         SendCommand(cServiceCommandResume);
     end;
   end;
@@ -200,8 +203,9 @@ begin
   case TApplicationEventMessage(M).Value.Event of
     TApplicationEvent.BecameActive:
     begin
+      // Assume the service is not running until the app "hears" from it
+      PauseUpdatesAction.Enabled := False;
       SendCommand(cServiceCommandAppBecameActive);
-      CheckServiceStatus;
     end;
     TApplicationEvent.EnteredBackground:
     begin
@@ -217,8 +221,8 @@ end;
 
 procedure TfrmMain.ServiceStatusHandler(Sender: TObject);
 begin
-  FIsServiceRunning := True;
-  CheckServiceStatus;
+  // If a status message is received from the service it *is* obviously running (IsServiceRunning may return false if it is still starting)
+  EnablePauseUpdates;
 end;
 
 procedure TfrmMain.TabControlChange(Sender: TObject);
