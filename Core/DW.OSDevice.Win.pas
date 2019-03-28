@@ -31,6 +31,7 @@ type
     class function GetPackageID: string; static;
     class function GetPackageVersion: string; static;
     class function GetUniqueDeviceID: string; static;
+    class function IsBeta: Boolean; static;
     class function IsTouchDevice: Boolean; static;
   end;
 
@@ -111,6 +112,11 @@ begin
   finally
     LRegistry.Free;
   end;
+end;
+
+class function TPlatformOSDevice.IsBeta: Boolean;
+begin
+  Result := TFileFlag.PreRelease in GetFileVersionInfo.FileFlags;
 end;
 
 class function TPlatformOSDevice.IsTouchDevice: Boolean;
