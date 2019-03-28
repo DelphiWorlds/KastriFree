@@ -98,8 +98,18 @@ public class DWFirebaseMessagingService extends FirebaseMessagingService {
       //no exception handling
     }
     // App is not running if no receiver
-    if (!hasReceiver)
+    if (!hasReceiver) {
       DWNotificationPublisher.sendNotification(this, intent, true);
+      // Launch the application if launchapp is 1
+      if (intent.hasExtra("launchapp")) {
+        String launchapp = intent.getStringExtra("launchapp");
+        // Log.v(TAG, "Payload has launchapp flag set to: " + launchapp);
+        if (launchapp.equals("1")) {
+          // Log.v(TAG, "Launching..");
+          this.startActivity(this.getPackageManager().getLaunchIntentForPackage(this.getPackageName()));
+        }
+      }
+    }
     Log.v(TAG, "-onMessageReceived");
   }
 }
