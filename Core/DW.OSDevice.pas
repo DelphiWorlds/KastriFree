@@ -41,10 +41,6 @@ type
     /// </summary>
     class function GetDeviceName: string; static;
     /// <summary>
-    ///   Special function for handling of iPhoneX
-    /// </summary>
-    class function GetOffsetRect: TRectF; static;
-    /// <summary>
     ///   Returns build for the application package, if any exists
     /// </summary>
     class function GetPackageBuild: string; static;
@@ -148,15 +144,6 @@ end;
 class function TOSDevice.GetPackageVersion: string;
 begin
   Result := TPlatformOSDevice.GetPackageVersion;
-end;
-
-class function TOSDevice.GetOffsetRect: TRectF;
-begin
-  {$IF Defined(IOS)}
-  Result := TPlatformOSDevice.GetOffsetRect;
-  {$ELSE}
-  Result := RectF(0, 0, 0, 0);
-  {$ENDIF}
 end;
 
 class function TOSDevice.GetUniqueDeviceID: string;
