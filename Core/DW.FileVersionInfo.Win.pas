@@ -19,6 +19,9 @@ uses
   Winapi.Windows;
 
 type
+  TFileFlag = (Debug, InfoInferred, Patched, PreRelease, PrivateBuild, SpecialBuild);
+  TFileFlags = set of TFileFlag;
+
   TVersionLanguage = (Arabic, Bulgarian, Catalan, TraditionalChinese, Czech, Danish, German, Greek, USEnglish, CastilianSpanish, Finnish, French,
     Hebrew, Hungarian, Icelandic, Italian, Japanese, Korean, Dutch, NorwegianBokmel, Polish, BrazilianPortuguese, RhaetoRomanic, Romanian, Russian,
     CroatoSerbian, Slovak, Albanian, Swedish, Thai, Turkish, Urdu, Bahasa, SimplifiedChinese, SwissGerman, UKEnglish, MexicanSpanish, BelgianFrench,
@@ -43,6 +46,7 @@ type
     function GetComments: string;
     function GetCompanyName: string;
     function GetFileDescription: string;
+    function GetFileFlags: TFileFlags;
     function GetFileVersion: string;
     function GetFileLongVersion: TLongVersion;
     function GetFixedFileInfo: PVSFixedFileInfo;
@@ -71,6 +75,7 @@ type
     property CompanyName: string read GetCompanyName;
     property FileDescription: string read GetFileDescription;
     property FileLongVersion: TLongVersion read GetFileLongVersion;
+    property FileFlags: TFileFlags read GetFileFlags;
     property FileName: TFileName read FFileName write SetFileName;
     property FileVersion: string read GetFileVersion;
     property FixedFileInfo: PVSFixedFileInfo read GetFixedFileInfo;
@@ -302,6 +307,28 @@ end;
 function TFileVersionInfo.GetFileDescription: string;
 begin
   Result := GetVerValue('FileDescription');
+end;
+
+function TFileVersionInfo.GetFileFlags: TFileFlags;
+var
+  LMasked: DWORD;
+  LFixedInfo: PVSFixedFileInfo;
+begin
+  Result := [];
+  LFixedInfo := GetFixedFileInfo;
+  LMasked := LFixedInfo^.dwFileFlags and LFixedInfo^.dwFileFlagsMask;
+  if (LMasked and VS_FF_DEBUG) <> 0 then
+    Include(Result, TFileFlag.Debug);
+  if (LMasked and VS_FF_INFOINFERRED) <> 0 then
+    Include(Result, TFileFlag.InfoInferred);
+  if (LMasked and VS_FF_PATCHED) <> 0 then
+    Include(Result, TFileFlag.Patched);
+  if (LMasked and VS_FF_PRERELEASE) <> 0 then
+    Include(Result, TFileFlag.PreRelease);
+  if (LMasked and VS_FF_PRIVATEBUILD) <> 0 then
+    Include(Result, TFileFlag.PrivateBuild);
+  if (LMasked and VS_FF_SPECIALBUILD) <> 0 then
+    Include(Result, TFileFlag.SpecialBuild);
 end;
 
 function TFileVersionInfo.GetFileVersion: string;
