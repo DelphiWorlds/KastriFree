@@ -17,6 +17,7 @@ uses
 
 type
   TTokenProc = reference to procedure(const AToken: string);
+  TTokenFunc = reference to function(const AToken: string): Boolean;
   TTextReplaceFunc = reference to function(const AText: string): string;
 
   TTokenizer = class(TObject)
@@ -29,7 +30,8 @@ type
   public
     constructor Create; overload;
     constructor Create(const AText: string); overload;
-    procedure Tokenize(const ATokenProc: TTokenProc);
+    procedure Tokenize(const ATokenProc: TTokenProc); overload;
+    function Tokenize(const ATokenFunc: TTokenFunc): Boolean; overload;
     function Replace(const AReplaceFunction: TTextReplaceFunc): string;
     property Text: string read FText write FText;
     property Whitespace: TCharArray read FWhitespace write FWhitespace;
@@ -81,6 +83,31 @@ begin
       ATokenProc(Text.Substring(LStartIndex, LIndex - LStartIndex));
     end;
   end;
+end;
+
+function TTokenizer.Tokenize(const ATokenFunc: TTokenFunc): Boolean;
+var
+  LIndex, LLastIndex, LStartIndex, LLow: Integer;
+begin
+  if Text.Trim.IsEmpty then
+    Exit(False); // <======
+  LLow := Low(string);
+  LIndex := 0;
+  LLastIndex := Length(Text) + LLow;
+  while LIndex < LLastIndex do
+  begin
+    while IsWhitespace(Text[LIndex + LLow]) and (LIndex < LLastIndex) do
+      Inc(LIndex);
+    if LIndex < LLastIndex then
+    begin
+      LStartIndex := LIndex;
+      while not IsWhitespace(Text[LIndex + LLow]) and (LIndex < Length(Text) + LLow) do
+        Inc(LIndex);
+      if not ATokenFunc(Text.Substring(LStartIndex, LIndex - LStartIndex)) then
+        Exit(False); // <======
+    end;
+  end;
+  Result := True;
 end;
 
 function TTokenizer.Replace(const AReplaceFunction: TTextReplaceFunc): string;
