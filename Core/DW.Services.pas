@@ -29,6 +29,7 @@ type
     class destructor Finalise;
   private
     FList: TServiceList;
+    class function GetService(const AIndex: Integer): IInterface; static;
   protected
     property List: TServiceList read FList;
   public
@@ -46,6 +47,14 @@ type
     ///   Removes a service from the list
     /// </summary>
     class procedure Remove(const AServiceGUID: TGUID);
+    /// <summary>
+    ///   Count of the services in the list
+    /// </summary>
+    class function ServiceCount: Integer;
+    /// <summary>
+    ///   Access to individual services
+    /// </summary>
+    class property Services[const AIndex: Integer]: IInterface read GetService;
   end;
 
 implementation
@@ -95,9 +104,19 @@ begin
     Result := Supports(FServices.List.Items[AServiceGUID], AServiceGUID, AService);
 end;
 
+class function TServices.GetService(const AIndex: Integer): IInterface;
+begin
+  Result := FServices.List.ToArray[AIndex].Value;
+end;
+
 class procedure TServices.Remove(const AServiceGUID: TGUID);
 begin
   FServices.List.Remove(AServiceGUID);
+end;
+
+class function TServices.ServiceCount: Integer;
+begin
+  Result := FServices.List.Count;
 end;
 
 end.
