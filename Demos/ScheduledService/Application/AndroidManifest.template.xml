@@ -23,6 +23,7 @@
       <meta-data android:name="DWMultiBroadcastReceiver.KEY_START_AT_BOOT" android:value="true" /> <!-- Start at device boot -->
       <meta-data android:name="DWMultiBroadcastReceiver.KEY_START_SERVICE_AT_BOOT" android:value="ScheduledService" /> <!-- Service to start at device boot -->
 <%application-meta-data%>
+      <%provider%>
       <!-- service android:name="com.embarcadero.services.ScheduledService"></service> -->
 		<%services%>
         <!-- Our activity is a subclass of the built-in NativeActivity framework class.
