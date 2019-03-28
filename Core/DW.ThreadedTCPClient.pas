@@ -24,11 +24,15 @@ type
   // Based partly on: https://forums.embarcadero.com/message.jspa?messageID=773729&tstart=0
   // PROBLEM!!!! This code can be Windows-only because of WaitForMultiple - check http://seanbdurkin.id.au/pascaliburnus2/archives/230
   TErrorEvent = procedure(Sender: TObject; const ErrorMsg: string) of object;
+  TExceptionEvent = procedure(Sender: TObject; const E: Exception) of object;
   TResponseEvent = procedure(Sender: TObject; const Code: Integer; const Response: string) of object;
   TReceiveDataEvent = procedure(Sender: TObject; const Data: TBytes) of object;
 
+  TClientState = (None, Connecting, Disconnecting, Sending, Receiving);
+
   TThreadedTCPClient = class(TThread)
   private
+    FClientState: TClientState;
     FCommand: string;
     FConnectEvent: TEvent;
     FData: TBytes;
@@ -38,11 +42,13 @@ type
     FTCPClient: TIdTCPClient;
     FOnConnected: TNotifyEvent;
     FOnDisconnected: TNotifyEvent;
+    FOnException: TExceptionEvent;
     FOnReceiveData: TReceiveDataEvent;
     FOnResponse: TResponseEvent;
     function ConnectClient: Boolean;
     procedure DoConnected;
     procedure DoDisconnected;
+    procedure DoException(const AException: Exception);
     procedure DoReceiveData;
     procedure DoResponse(const ACode: Integer; const AResponse: string);
     function GetConnectTimeout: Integer;
@@ -50,6 +56,7 @@ type
     function GetIsConnected: Boolean;
     function GetPort: Integer;
     function GetReadTimeout: Integer;
+    procedure HandleException(const AException: Exception);
     function InternalConnect: Boolean;
     procedure InternalDisconnect;
     procedure InternalSendCmd;
@@ -67,6 +74,7 @@ type
     procedure Connect;
     procedure Disconnect;
     procedure SendCmd(const ACmd: string);
+    property ClientState: TClientState read FClientState;
     property ConnectTimeout: Integer read GetConnectTimeout write SetConnectTimeout;
     property Host: string read GetHost write SetHost;
     property IsConnected: Boolean read GetIsConnected;
@@ -74,6 +82,7 @@ type
     property ReadTimeout: Integer read GetReadTimeout write SetReadTimeout;
     property OnConnected: TNotifyEvent read FOnConnected write FOnConnected;
     property OnDisconnected: TNotifyEvent read FOnDisconnected write FOnDisconnected;
+    property OnException: TExceptionEvent read FOnException write FOnException;
     property OnReceiveData: TReceiveDataEvent read FOnReceiveData write FOnReceiveData;
     property OnResponse: TResponseEvent read FOnResponse write FOnResponse;
   end;
@@ -179,20 +188,29 @@ begin
   Result := False;
   try
     if not FTCPClient.Connected then
+    begin
+      FClientState := TClientState.Connecting;
       FTCPClient.Connect;
+    end;
     Result := FTCPClient.Connected;
+    FClientState := TClientState.None;
   except
     on E: Exception do
-    begin
-      // Do some connect exception thing
-    end;
+      HandleException(E);
   end;
 end;
 
 procedure TThreadedTCPClient.InternalDisconnect;
 begin
   FDisconnectEvent.ResetEvent;
-  FTCPClient.Disconnect;
+  FClientState := TClientState.Connecting;
+  try
+    FTCPClient.Disconnect;
+    FClientState := TClientState.None;
+  except
+    on E: Exception do
+      HandleException(E);
+  end;
 end;
 
 procedure TThreadedTCPClient.InternalSendCmd;
@@ -201,7 +219,14 @@ begin
   if InternalConnect then
   begin
     TOSLog.d('FTCPClient.SendCmd(%s)', [FCommand]);
-    FTCPClient.SendCmd(FCommand);
+    FClientState := TClientState.Sending;
+    try
+      FTCPClient.SendCmd(FCommand);
+      FClientState := TClientState.None;
+    except
+      on E: Exception do
+        HandleException(E);
+    end;
     if Assigned(FOnResponse) then
       DoResponse(FTCPClient.LastCmdResult.NumericCode, FTCPClient.LastCmdResult.Text.Text);
   end;
@@ -210,9 +235,16 @@ end;
 procedure TThreadedTCPClient.ReadData;
 begin
   SetLength(FData, 0);
-  FTCPClient.IOHandler.ReadBytes(TIdBytes(FData), -1);
-  if (Length(FData) > 0) and Assigned(FOnReceiveData) then
-    DoReceiveData;
+  FClientState := TClientState.Receiving;
+  try
+    FTCPClient.IOHandler.ReadBytes(TIdBytes(FData), -1);
+    FClientState := TClientState.None;
+    if (Length(FData) > 0) and Assigned(FOnReceiveData) then
+      DoReceiveData;
+  except
+    on E: Exception do
+      HandleException(E);
+  end;
 end;
 
 procedure TThreadedTCPClient.DoConnected;
@@ -231,6 +263,26 @@ begin
     procedure
     begin
       FOnDisconnected(Self);
+    end
+  );
+end;
+
+procedure TThreadedTCPClient.HandleException(const AException: Exception);
+begin
+  try
+    if Assigned(FOnException) then
+      DoException(AException);
+  finally
+    FClientState := TClientState.None;
+  end;
+end;
+
+procedure TThreadedTCPClient.DoException(const AException: Exception);
+begin
+  Synchronize(Self,
+    procedure
+    begin
+      FOnException(Self, AException);
     end
   );
 end;
