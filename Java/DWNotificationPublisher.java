@@ -27,7 +27,7 @@ public class DWNotificationPublisher {
 
   private static final String TAG = "DWNotificationPublisher";
   private static int mUniqueId = 0;
-  private static NotificationChannel mChannel;
+  private static NotificationChannel mDefaultChannel;
   private static NotificationManager mNotificationManager = null;
 
   private static void initialize(Context context) {
@@ -36,13 +36,14 @@ public class DWNotificationPublisher {
       mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
       if (Build.VERSION.SDK_INT < 26)
         return; 
-      mChannel = new NotificationChannel(context.getPackageName(), "default", 4);
-      mChannel.enableLights(true);
-      mChannel.enableVibration(true);
-      mChannel.setLightColor(Color.GREEN);
-      mChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-      mChannel.setImportance(NotificationManager.IMPORTANCE_HIGH);
-      mNotificationManager.createNotificationChannel(mChannel);
+      mDefaultChannel = new NotificationChannel(context.getPackageName(), "default", 4);
+      mDefaultChannel.setName("Default");
+      mDefaultChannel.enableLights(true);
+      mDefaultChannel.enableVibration(true);
+      mDefaultChannel.setLightColor(Color.GREEN);
+      mDefaultChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+      mDefaultChannel.setImportance(NotificationManager.IMPORTANCE_HIGH);
+      mNotificationManager.createNotificationChannel(mDefaultChannel);
   }
 
   private static void getLargeIcon(URL url, NotificationCompat.Builder builder) throws IOException {
@@ -64,7 +65,12 @@ public class DWNotificationPublisher {
   public static void sendNotification(Context context, Intent intent, boolean pending) {
     Log.v(TAG, "+sendNotification");
     initialize(context);
-    NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
+    NotificationChannel channel = mDefaultChannel;
+    if (Build.VERSION.SDK_INT >= 26) {
+      if (intent.hasExtra("android_channel_id"))
+        channel = mNotificationManager.getNotificationChannel(intent.getStringExtra("android_channel_id"));
+    }
+    NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channel.getId());
     if (intent.hasExtra("notification_color")) { 
       builder = builder.setColor(Integer.parseInt(intent.getStringExtra("notification_color")));
     }
@@ -125,8 +131,6 @@ public class DWNotificationPublisher {
       .setWhen(System.currentTimeMillis())
       .setShowWhen(true)
       .setAutoCancel(true);
-    if (Build.VERSION.SDK_INT >= 26)       
-      builder = builder.setChannelId(mChannel.getId());
     // if (intent.hasExtra("notification_badgecount")) 
     //  ShortcutBadger.applyCount(this.getApplicationContext(), Integer.parseInt(intent.getStringExtra("notification_badgecount")));
     mNotificationManager.notify(mUniqueId, builder.build());
