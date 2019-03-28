@@ -86,7 +86,23 @@ uses
 
 {$IF not Defined(IOS) and not Defined(ANDROID)}
 type
-  TPlatformNFCReader = class(TCustomPlatformNFCReader);
+  TPlatformNFCReader = class(TCustomPlatformNFCReader)
+  protected
+    procedure BeginSession; override;
+    procedure EndSession; override;
+  end;
+
+{ TPlatformNFCReader }
+
+procedure TPlatformNFCReader.BeginSession;
+begin
+  //
+end;
+
+procedure TPlatformNFCReader.EndSession;
+begin
+  //
+end;
 {$ENDIF}
 
 { TCustomPlatformNFCReader }

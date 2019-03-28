@@ -115,8 +115,6 @@ end;
 procedure TPlatformMediaLibrary.MessageResultNotificationHandler(const Sender: TObject; const M: TMessage);
 var
   LResult: TMessageResultNotification;
-  LBitmap: TBitmap;
-  LImagePath: string;
 begin
   if M is TMessageResultNotification then
   begin
