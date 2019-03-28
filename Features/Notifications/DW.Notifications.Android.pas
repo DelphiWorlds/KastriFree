@@ -35,10 +35,36 @@ type
     constructor Create(const ANotifications: TNotifications);
   end;
 
+  TPlatformNotificationChannel = class(TCustomPlatformNotificationChannel)
+  private
+    FChannel: JNotificationChannel;
+  protected
+    procedure DoRegisterChannel; override;
+    function GetDescription: string; override;
+    function GetGroup: string; override;
+    function GetId: string; override;
+    function GetImportance: Integer; override;
+    function GetLightColor: Integer; override;
+    function GetLockScreenVisibility: Integer; override;
+    function GetName: string; override;
+    function GetSound: string; override;
+    procedure SetDescription(const Value: string); override;
+    procedure SetGroup(const Value: string); override;
+    procedure SetImportance(const Value: Integer); override;
+    procedure SetLightColor(const Value: Integer); override;
+    procedure SetLockScreenVisibility(const Value: Integer); override;
+    procedure SetName(const Value: string); override;
+    procedure SetSound(const Value: string); override;
+  public
+    constructor Create(const AId, AName: string; const AImportance: Integer); override;
+  end;
+
   TPlatformNotifications = class(TCustomPlatformNotifications)
   private
+    class var FNotificationManager: JNotificationManager;
+    class function GetNotificationManager: JNotificationManager; static;
+  private
     FNotificationChannel: JNotificationChannel;
-    FNotificationManager: JNotificationManager;
     FNotificationReceiver: TNotificationReceiver;
     FNotificationStore: JSharedPreferences;
     function GetNativeNotification(const ANotification: TNotification): JNotification;
@@ -46,6 +72,8 @@ type
     function GetUniqueID: Integer;
     function GetNotificationIntent(const ANotification: TNotification): JPendingIntent;
     procedure StoreNotification(const ANotification: TNotification; const AID: Integer);
+  protected
+    class property NotificationManager: JNotificationManager read GetNotificationManager;
   protected
     procedure CancelAll; override;
     procedure CancelNotification(const AName: string); override;
@@ -104,24 +132,109 @@ begin
   TOpenNotifications(FNotifications).DoNotificationReceived(LNotification);
 end;
 
+{ TPlatformNotificationChannel }
+
+constructor TPlatformNotificationChannel.Create(const AId, AName: string; const AImportance: Integer);
+begin
+  inherited;
+  FChannel := TJNotificationChannel.JavaClass.init(StringToJString(AId), StrToJCharSequence(AName), AImportance);
+end;
+
+procedure TPlatformNotificationChannel.DoRegisterChannel;
+begin
+  TPlatformNotifications.NotificationManager.createNotificationChannel(FChannel);
+end;
+
+function TPlatformNotificationChannel.GetDescription: string;
+begin
+  Result := JStringToString(FChannel.getDescription);
+end;
+
+function TPlatformNotificationChannel.GetGroup: string;
+begin
+  Result := JStringToString(FChannel.getGroup);
+end;
+
+function TPlatformNotificationChannel.GetId: string;
+begin
+  Result := JStringToString(FChannel.getId);
+end;
+
+function TPlatformNotificationChannel.GetImportance: Integer;
+begin
+  Result := FChannel.getImportance;
+end;
+
+function TPlatformNotificationChannel.GetLightColor: Integer;
+begin
+  Result := FChannel.getLightColor;
+end;
+
+function TPlatformNotificationChannel.GetLockScreenVisibility: Integer;
+begin
+  Result := FChannel.getLockscreenVisibility;
+end;
+
+function TPlatformNotificationChannel.GetName: string;
+begin
+  Result := JCharSequenceToStr(FChannel.getName);
+end;
+
+function TPlatformNotificationChannel.GetSound: string;
+begin
+  Result := JURIToStr(FChannel.getSound);
+end;
+
+procedure TPlatformNotificationChannel.SetDescription(const Value: string);
+begin
+  FChannel.setDescription(StringToJString(Value));
+end;
+
+procedure TPlatformNotificationChannel.SetGroup(const Value: string);
+begin
+  //!!!! Cannot set this if already "registered", unless current value is blank
+  FChannel.setDescription(StringToJString(Value));
+end;
+
+procedure TPlatformNotificationChannel.SetImportance(const Value: Integer);
+begin
+  FChannel.setImportance(Value);
+end;
+
+procedure TPlatformNotificationChannel.SetLightColor(const Value: Integer);
+begin
+  FChannel.setLightColor(Value);
+end;
+
+procedure TPlatformNotificationChannel.SetLockScreenVisibility(const Value: Integer);
+begin
+  FChannel.setLockscreenVisibility(Value);
+end;
+
+procedure TPlatformNotificationChannel.SetName(const Value: string);
+begin
+  FChannel.setName(StrToJCharSequence(Value));
+end;
+
+procedure TPlatformNotificationChannel.SetSound(const Value: string);
+begin
+  FChannel.setSound(StrToJURI(Value), FChannel.getAudioAttributes); //!!!!!
+end;
+
 { TPlatformNotifications }
 
 constructor TPlatformNotifications.Create(const ANotifications: TNotifications);
-var
-  LService: JObject;
 begin
   inherited;
   FNotificationStore := TAndroidHelper.Context.getSharedPreferences(StringToJString(ClassName), TJContext.JavaClass.MODE_PRIVATE);
-  LService := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.NOTIFICATION_SERVICE);
-  FNotificationManager := TJNotificationManager.Wrap((LService as ILocalObject).GetObjectID);
   if TAndroidHelperEx.CheckBuildAndTarget(TAndroidHelperEx.OREO) then
   begin
-    FNotificationChannel := TJNotificationChannel.JavaClass.init(TAndroidHelper.Context.getPackageName, StrToJCharSequence('default'), 4);
+    FNotificationChannel := TJNotificationChannel.JavaClass.init(TAndroidHelper.Context.getPackageName, StrToJCharSequence('default'), 4); // TJNotificationChannel.JavaClass.DEFAULT_CHANNEL_ID
     FNotificationChannel.enableLights(True);
     FNotificationChannel.enableVibration(True);
     FNotificationChannel.setLightColor(TJColor.JavaClass.GREEN);
     FNotificationChannel.setLockscreenVisibility(TJNotification.JavaClass.VISIBILITY_PRIVATE);
-    FNotificationManager.createNotificationChannel(FNotificationChannel);
+    NotificationManager.createNotificationChannel(FNotificationChannel);
   end;
   FNotificationReceiver := TNotificationReceiver.Create(ANotifications);
 end;
@@ -130,9 +243,20 @@ destructor TPlatformNotifications.Destroy;
 begin
   FNotificationStore := nil;
   FNotificationChannel := nil;
-  FNotificationManager := nil;
   FNotificationReceiver.Free;
   inherited;
+end;
+
+class function TPlatformNotifications.GetNotificationManager: JNotificationManager;
+var
+  LService: JObject;
+begin
+  if FNotificationManager = nil then
+  begin
+    LService := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.NOTIFICATION_SERVICE);
+    FNotificationManager := TJNotificationManager.Wrap((LService as ILocalObject).GetObjectID);
+  end;
+  Result := FNotificationManager;
 end;
 
 function TPlatformNotifications.GetUniqueID: Integer;
@@ -231,9 +355,9 @@ var
 begin
   LNotification := GetNativeNotification(ANotification);
   if ANotification.Name.IsEmpty then
-    FNotificationManager.notify(GetUniqueID, LNotification)
+    NotificationManager.notify(GetUniqueID, LNotification)
   else
-    FNotificationManager.notify(StringToJString(ANotification.Name), 0, LNotification);
+    NotificationManager.notify(StringToJString(ANotification.Name), 0, LNotification);
   LNotification := nil;
 end;
 
