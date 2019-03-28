@@ -26,7 +26,9 @@ uses
   DW.ThreadedTimer in '..\..\Core\DW.ThreadedTimer.pas',
   DW.Connectivity in '..\..\Features\Connectivity\DW.Connectivity.pas',
   DW.NFC in '..\..\Features\NFC\DW.NFC.pas',
-  DW.Notifications in '..\..\Features\Notifications\DW.Notifications.pas';
+  DW.Notifications in '..\..\Features\Notifications\DW.Notifications.pas',
+  DW.Form.Contents in '..\..\ComponentHelpers\DW.Form.Contents.pas',
+  DW.SysUtils.Helpers in '..\..\Core\DW.SysUtils.Helpers.pas';
 
 {$R *.res}
 
