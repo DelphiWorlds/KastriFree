@@ -41,7 +41,7 @@ implementation
 {$R *.fmx}
 
 uses
-  DW.Classes.Helpers, DW.OSLog, DW.OSDevice;
+  DW.Classes.Helpers, DW.OSLog, DW.UIHelper;
 
 const
   cDangerousPermissions: array[0..4] of string = (
@@ -91,7 +91,7 @@ procedure TfrmMain.Resize;
 begin
   inherited;
   // Spacing for iPhoneX display
-  ContentLayout.Margins.Rect := TOSDevice.GetOffsetRect;
+  ContentLayout.Margins.Rect := TUIHelper.GetOffsetRect;
 end;
 
 procedure TfrmMain.FCMAuthorizationResultHandler(Sender: TObject; const AGranted: Boolean);
