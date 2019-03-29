@@ -65,12 +65,13 @@ public class DWNotificationPublisher {
   public static void sendNotification(Context context, Intent intent, boolean pending) {
     Log.v(TAG, "+sendNotification");
     initialize(context);
-    NotificationChannel channel = mDefaultChannel;
+    String channelId = "";
     if (Build.VERSION.SDK_INT >= 26) {
+      channelId = mDefaultChannel.getId();
       if (intent.hasExtra("android_channel_id"))
-        channel = mNotificationManager.getNotificationChannel(intent.getStringExtra("android_channel_id"));
+        channelId = mNotificationManager.getNotificationChannel(intent.getStringExtra("android_channel_id")).getId();
     }
-    NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channel.getId());
+    NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId);
     if (intent.hasExtra("notification_color")) { 
       builder = builder.setColor(Integer.parseInt(intent.getStringExtra("notification_color")));
     }
