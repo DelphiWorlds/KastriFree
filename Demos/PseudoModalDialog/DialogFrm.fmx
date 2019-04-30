@@ -1,0 +1,91 @@
+object frmDialog: TfrmDialog
+  Left = 0
+  Top = 0
+  Caption = 'Form2'
+  ClientHeight = 480
+  ClientWidth = 343
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  DesignerMasterStyle = 0
+  object DialogLayout: TLayout
+    Align = Contents
+    Size.Width = 343.000000000000000000
+    Size.Height = 480.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object FaderRectangle: TRectangle
+      Align = Contents
+      Fill.Color = claBlack
+      Opacity = 0.000000000000000000
+      Size.Width = 343.000000000000000000
+      Size.Height = 480.000000000000000000
+      Size.PlatformDefault = False
+    end
+    object CenterLayout: TPanel
+      Align = Center
+      HitTest = False
+      Padding.Left = 6.000000000000000000
+      Padding.Top = 6.000000000000000000
+      Padding.Right = 6.000000000000000000
+      Padding.Bottom = 6.000000000000000000
+      Size.Width = 273.000000000000000000
+      Size.Height = 197.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      object Edit1: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        Align = Top
+        TabOrder = 0
+        Text = 'An edit in the dialog'
+        Position.X = 6.000000000000000000
+        Position.Y = 6.000000000000000000
+        Margins.Bottom = 4.000000000000000000
+        Size.Width = 261.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+      end
+      object CheckBox1: TCheckBox
+        Align = Top
+        Position.X = 6.000000000000000000
+        Position.Y = 32.000000000000000000
+        Size.Width = 261.000000000000000000
+        Size.Height = 19.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        Text = 'Dialog CheckBox'
+      end
+      object ButtonsLayout: TPanel
+        Align = Bottom
+        HitTest = False
+        Position.X = 6.000000000000000000
+        Position.Y = 164.000000000000000000
+        Size.Width = 261.000000000000000000
+        Size.Height = 27.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+        object CancelButton: TButton
+          Align = Right
+          Margins.Left = 8.000000000000000000
+          Position.X = 181.000000000000000000
+          Size.Width = 80.000000000000000000
+          Size.Height = 27.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 1
+          Text = 'Cancel'
+          OnClick = CancelButtonClick
+        end
+        object OKButton: TButton
+          Align = Right
+          Position.X = 93.000000000000000000
+          Size.Width = 80.000000000000000000
+          Size.Height = 27.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 0
+          Text = 'OK'
+          OnClick = OKButtonClick
+        end
+      end
+    end
+  end
+end
