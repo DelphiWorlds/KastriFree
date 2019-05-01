@@ -42,6 +42,9 @@ type
     ///   Checks if both build and target are greater or equal to the tested value
     /// </summary>
     class function CheckBuildAndTarget(const AValue: Integer): Boolean; static;
+    /// <summary>
+    ///   Enables/disables the Wake Lock. Needs Wake Lock checked in the Permissions section of the Project Options
+    /// </summary>
     class procedure EnableWakeLock(const AEnable: Boolean); static;
     /// <summary>
     ///   Returns the equivalent of "AndroidClass.class"
@@ -76,6 +79,13 @@ type
     /// </summary>
     class function PowerManager: JPowerManager; static;
     /// <summary>
+    ///   Restarts the app if it is not ignoring battery optimizations.
+    /// </summary>
+    /// <remarks>
+    ///   Needs this in the manifest: <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+    /// </remarks>
+    class procedure RestartIfNotIgnoringBatteryOptimizations; static;
+    /// <summary>
     ///   Call this to start an activity from an alarm
     /// </summary>
     /// <remarks>
@@ -104,7 +114,7 @@ uses
   // RTL
   System.SysUtils, System.DateUtils,
   // Android
-  Androidapi.Helpers, Androidapi.JNI.App, Androidapi.JNI.Media,
+  Androidapi.Helpers, Androidapi.JNI.App, Androidapi.JNI.Media, Androidapi.JNI.Provider,
   // DW
   DW.Androidapi.JNI.FileProvider;
 
@@ -215,6 +225,20 @@ begin
       FPowerManager := TJPowerManager.Wrap(JObjectToID(LService));
   end;
   Result := FPowerManager;
+end;
+
+class procedure TAndroidHelperEx.RestartIfNotIgnoringBatteryOptimizations;
+var
+  LIntent: JIntent;
+begin
+  if not IsIgnoringBatteryOptimizations then
+  begin
+    LIntent := TJIntent.Create;
+    LIntent.setAction(TJSettings.javaClass.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+    LIntent.setData(TJnet_Uri.JavaClass.parse(StringToJString('package:' + JStringtoString(TAndroidHelper.Context.getPackageName()))));
+    // Restart app with action request
+    TAndroidHelper.Context.startActivity(LIntent);
+  end;
 end;
 
 function GetTimeFromNowInMillis(const ASecondsFromNow: Integer): Int64;
