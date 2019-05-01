@@ -14,10 +14,13 @@ interface
 
 uses
   // Android
-  Androidapi.JNI.JavaTypes, Androidapi.JNI.Net, Androidapi.JNI.GraphicsContentViewText;
+  Androidapi.JNI.JavaTypes, Androidapi.JNI.Net, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.Os;
 
 type
   TAndroidHelperEx = record
+  private
+    class var FPowerManager: JPowerManager;
+    class var FWakeLock: JPowerManager_WakeLock;
   public
     const
       ICE_CREAM_SANDWICH = 14;
@@ -34,11 +37,12 @@ type
       NOUGAT_MR1 = 25;
       OREO = 26;
       OREO_MR1 = 27;
-      ANDROID_P = 28;
+      PIE = 28;
     /// <summary>
     ///   Checks if both build and target are greater or equal to the tested value
     /// </summary>
     class function CheckBuildAndTarget(const AValue: Integer): Boolean; static;
+    class procedure EnableWakeLock(const AEnable: Boolean); static;
     /// <summary>
     ///   Returns the equivalent of "AndroidClass.class"
     /// </summary>
@@ -60,9 +64,17 @@ type
     /// </summary>
     class function GetBuildSdkVersion: Integer; static;
     /// <summary>
+    ///   Returns whether or not battery optimizations are being ignored
+    /// </summary>
+    class function IsIgnoringBatteryOptimizations: Boolean; static;
+    /// <summary>
     ///   Returns whether or not a service is running
     /// </summary>
     class function IsServiceRunning(const AServiceName: string): Boolean; static;
+    /// <summary>
+    ///   Returns the power manager
+    /// </summary>
+    class function PowerManager: JPowerManager; static;
     /// <summary>
     ///   Call this to start an activity from an alarm
     /// </summary>
@@ -92,7 +104,7 @@ uses
   // RTL
   System.SysUtils, System.DateUtils,
   // Android
-  Androidapi.Helpers, Androidapi.JNI.App, Androidapi.JNI.Os, Androidapi.JNI.Media,
+  Androidapi.Helpers, Androidapi.JNI.App, Androidapi.JNI.Media,
   // DW
   DW.Androidapi.JNI.FileProvider;
 
@@ -107,6 +119,28 @@ const
 class function TAndroidHelperEx.CheckBuildAndTarget(const AValue: Integer): Boolean;
 begin
   Result := (GetBuildSdkVersion >= AValue) and (GetTargetSdkVersion >= AValue);
+end;
+
+class procedure TAndroidHelperEx.EnableWakeLock(const AEnable: Boolean);
+var
+  LTag: string;
+begin
+  if AEnable then
+  begin
+    if FWakeLock = nil then
+    begin
+      LTag := JStringToString(TAndroidHelper.Context.getPackageName) + '.wakelock';
+      FWakeLock := PowerManager.newWakeLock(TJPowerManager.JavaClass.PARTIAL_WAKE_LOCK, StringToJString(LTag));
+    end;
+    if not FWakeLock.isHeld then
+      FWakeLock.acquire;
+  end
+  else
+  begin
+    if (FWakeLock <> nil) and FWakeLock.isHeld then
+      FWakeLock.release;
+    FWakeLock := nil;
+  end;
 end;
 
 class function TAndroidHelperEx.GetBuildSdkVersion: Integer;
@@ -155,6 +189,11 @@ begin
   Result := LApplicationInfo.targetSdkVersion;
 end;
 
+class function TAndroidHelperEx.IsIgnoringBatteryOptimizations: Boolean;
+begin
+  Result := PowerManager.isIgnoringBatteryOptimizations(TAndroidHelper.Context.getPackageName);
+end;
+
 class function TAndroidHelperEx.IsServiceRunning(const AServiceName: string): Boolean;
 var
   LIntent: JIntent;
@@ -163,6 +202,19 @@ begin
   LIntent := TJIntent.JavaClass.init(TAndroidHelper.Context, GetClass(AServiceName));
   LPendingIntent := TJPendingIntent.JavaClass.getService(TAndroidHelper.Context, 0, LIntent, TJPendingIntent.JavaClass.FLAG_NO_CREATE);
   Result := LPendingIntent <> nil;
+end;
+
+class function TAndroidHelperEx.PowerManager: JPowerManager;
+var
+  LService: JObject;
+begin
+  if FPowerManager = nil then
+  begin
+    LService := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.POWER_SERVICE);
+    if LService <> nil then
+      FPowerManager := TJPowerManager.Wrap(JObjectToID(LService));
+  end;
+  Result := FPowerManager;
 end;
 
 function GetTimeFromNowInMillis(const ASecondsFromNow: Integer): Int64;
