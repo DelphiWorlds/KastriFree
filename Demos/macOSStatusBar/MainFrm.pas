@@ -32,6 +32,14 @@ implementation
 
 {$R *.fmx}
 
+uses
+  Macapi.AppKit;
+
+function SharedApplication: NSApplication;
+begin
+  Result := TNSApplication.Wrap(TNSApplication.OCClass.sharedApplication);
+end;
+
 { TfrmMain }
 
 constructor TfrmMain.Create(AOwner: TComponent);
@@ -53,6 +61,8 @@ end;
 
 procedure TfrmMain.TestMenuItemClick(Sender: TObject);
 begin
+  // Make sure the app is active
+  SharedApplication.activateIgnoringOtherApps(True);
   ShowMessage('Test');
 end;
 
