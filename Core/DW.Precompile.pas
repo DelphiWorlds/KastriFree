@@ -33,7 +33,7 @@ uses
 uses
   DW.Macapi.ObjCRuntime, DW.Macapi.Helpers, DW.Macapi.Dispatch,
 {$IF Defined(MACDEV)}
-  DW.Macapi.IOKit;
+  DW.Macapi.IOKit, DW.StatusBarMenu.Mac;
 {$ENDIF}
 {$IF Defined(IOS)}
   DW.iOSapi.CoreNFC, DW.iOSapi.DeviceCheck, DW.iOSapi.SystemConfiguration, DW.iOSapi.UserNotifications, DW.iOSapi.Helpers;
