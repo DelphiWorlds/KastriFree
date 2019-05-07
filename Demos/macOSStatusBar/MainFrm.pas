@@ -19,10 +19,9 @@ type
     procedure TestMenuItemClick(Sender: TObject);
   private
     FStatusBarMenu: TStatusBarMenu;
-  protected
-    function CanShow: Boolean; override;
   public
     constructor Create(AOwner: TComponent); override;
+    function CanShow: Boolean; override;
   end;
 
 var
