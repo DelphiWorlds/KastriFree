@@ -14,11 +14,12 @@ interface
 
 uses
   // Android
-  Androidapi.JNI.JavaTypes, Androidapi.JNI.Net, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.Os;
+  Androidapi.JNI.JavaTypes, Androidapi.JNI.Net, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.Os, Androidapi.JNI.App;
 
 type
   TAndroidHelperEx = record
   private
+    class var FNotificationManager: JNotificationManager;
     class var FPowerManager: JPowerManager;
     class var FWakeLock: JPowerManager_WakeLock;
   public
@@ -75,6 +76,10 @@ type
     /// </summary>
     class function IsServiceRunning(const AServiceName: string): Boolean; static;
     /// <summary>
+    ///   Returns the notification manager
+    /// </summary>
+    class function NotificationManager: JNotificationManager; static;
+    /// <summary>
     ///   Returns the power manager
     /// </summary>
     class function PowerManager: JPowerManager; static;
@@ -114,7 +119,7 @@ uses
   // RTL
   System.SysUtils, System.DateUtils,
   // Android
-  Androidapi.Helpers, Androidapi.JNI.App, Androidapi.JNI.Media, Androidapi.JNI.Provider,
+  Androidapi.Helpers, Androidapi.JNI.Media, Androidapi.JNI.Provider,
   // DW
   DW.Androidapi.JNI.FileProvider;
 
@@ -212,6 +217,18 @@ begin
   LIntent := TJIntent.JavaClass.init(TAndroidHelper.Context, GetClass(AServiceName));
   LPendingIntent := TJPendingIntent.JavaClass.getService(TAndroidHelper.Context, 0, LIntent, TJPendingIntent.JavaClass.FLAG_NO_CREATE);
   Result := LPendingIntent <> nil;
+end;
+
+class function TAndroidHelperEx.NotificationManager: JNotificationManager;
+var
+  LService: JObject;
+begin
+  if FNotificationManager = nil then
+  begin
+    LService := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.NOTIFICATION_SERVICE);
+    FNotificationManager := TJNotificationManager.Wrap(JObjectToID(LService));
+  end;
+  Result := FNotificationManager;
 end;
 
 class function TAndroidHelperEx.PowerManager: JPowerManager;
