@@ -65,6 +65,7 @@ type
     FLastSend: TDateTime;
     FLocalReceiver: TLocalReceiver;
     FNetworkLocationListener: JLocationListener;
+    FNotificationChannel: JNotificationChannel;
     FLocationManager: JLocationManager;
     FLogWriter: TFileWriter;
     FPowerManager: JPowerManager;
@@ -75,11 +76,13 @@ type
     function AreListenersInstalled: Boolean;
     function CreateDozeAlarm(const AAction: string; const AStartAt: Int64): Boolean;
     procedure CreateListeners;
+    procedure CreateNotificationChannel;
     procedure CreateTimer;
     procedure DoMessage(const AMsg: string);
     procedure DoStatus;
     procedure DozeModeChange(const ADozed: Boolean);
     procedure EnableWakeLock(const AEnable: Boolean);
+    function GetLocationMode: Integer;
     function HasPermissions: Boolean;
     procedure LocalReceiverReceive(intent: JIntent);
     procedure Pause;
@@ -118,7 +121,7 @@ implementation
 
 uses
   System.IOUtils, System.DateUtils, System.NetConsts, System.Net.URLClient, System.Net.HttpClient, REST.Types, REST.Json,
-  Androidapi.Helpers, Androidapi.JNI.Support,
+  Androidapi.Helpers, Androidapi.JNI.Support, Androidapi.JNI.Provider,
   DW.Androidapi.JNI.LocalBroadcastManager, DW.OSLog, DW.OSDevice, DW.Android.Helpers,
   LS.Consts;
 
@@ -130,6 +133,7 @@ const
   cActionServiceRestart = cReceiverName + '.ACTION_SERVICE_RESTART';
   cExtraServiceRestart = cReceiverName + '.EXTRA_SERVICE_RESTART';
   cWakeLockTag = 'com.delphiworlds.locationservice.wakelock';
+  cNotificationChannelName = 'AndroidLocation';
 
   cServiceForegroundId = 3987; // Just a random number
   cServiceNotificationCaption = 'Location Service';
@@ -311,15 +315,29 @@ begin
   TAndroidHelper.Context.sendBroadcast(LIntent);
 end;
 
+procedure TServiceModule.CreateNotificationChannel;
+begin
+  if FNotificationChannel <> nil then
+    Exit; // <======
+  FNotificationChannel := TJNotificationChannel.JavaClass.init(TAndroidHelper.Context.getPackageName, StrToJCharSequence(cNotificationChannelName),
+    TJNotificationManager.JavaClass.IMPORTANCE_HIGH);
+  FNotificationChannel.enableLights(True);
+  FNotificationChannel.enableVibration(True);
+  FNotificationChannel.setLightColor(TJColor.JavaClass.GREEN);
+  FNotificationChannel.setLockscreenVisibility(TJNotification.JavaClass.VISIBILITY_PRIVATE);
+  TAndroidHelperEx.NotificationManager.createNotificationChannel(FNotificationChannel);
+end;
+
 procedure TServiceModule.StartForeground;
 var
   LBuilder: JNotificationCompat_Builder;
 begin
-  if FIsForeground or not TAndroidHelperEx.CheckBuildAndTarget(26) then
+  if FIsForeground or not TAndroidHelperEx.CheckBuildAndTarget(TAndroidHelperEx.OREO) then
     Exit; // <======
   TOSLog.d('TServiceModule.StartForeground');
   EnableWakeLock(True);
-  LBuilder := TJNotificationCompat_Builder.JavaClass.init(TAndroidHelper.Context);
+  CreateNotificationChannel;
+  LBuilder := TJNotificationCompat_Builder.JavaClass.init(TAndroidHelper.Context, StringToJString(cNotificationChannelName));
   LBuilder.setAutoCancel(True);
   LBuilder.setContentTitle(StrToJCharSequence(cServiceNotificationCaption));
   LBuilder.setContentText(StrToJCharSequence('Monitoring location changes'));
@@ -351,6 +369,11 @@ begin
   end
   else if (FWakeLock <> nil) and FWakeLock.isHeld then
     FWakeLock.release;
+end;
+
+function TServiceModule.GetLocationMode: Integer;
+begin
+  Result := TJSettings_Secure.JavaClass.getInt(TAndroidHelper.ContentResolver, TJSettings_Secure.JavaClass.LOCATION_MODE);
 end;
 
 function TServiceModule.CreateDozeAlarm(const AAction: string; const AStartAt: Int64): Boolean;
