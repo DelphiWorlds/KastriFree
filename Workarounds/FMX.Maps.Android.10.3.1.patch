@@ -1,0 +1,98 @@
+28a29,54
+>   JOnMapReadyCallbackClass = interface(IJavaClass)
+>     ['{75E226D0-0B16-4010-BC3C-2FA794786A9A}']
+>   end;
+> 
+>   [JavaSignature('com/google/android/gms/maps/OnMapReadyCallback')]
+>   JOnMapReadyCallback = interface(IJavaInstance)
+>     ['{A4B9E81C-A485-46D3-A68D-E9E584987863}']
+>     procedure onMapReady(map: JGoogleMap); cdecl;
+>   end;
+>   TJOnMapReadyCallback = class(TJavaGenericImport<JOnMapReadyCallbackClass, JOnMapReadyCallback>) end;
+> 
+>   JMapViewWithGestures = interface;
+>   
+>   JMapViewWithGesturesClass = interface(Androidapi.JNI.Embarcadero.JMapViewWithGesturesClass)
+>     ['{1DB1AC2A-085A-4D8F-97F1-91F2A5C1BD10}']
+>     {class} function init(context: JContext; options: JGoogleMapOptions): JMapViewWithGestures; cdecl;
+>   end;
+>   
+>   [JavaSignature('com/embarcadero/firemonkey/maps/MapViewWithGestures')]
+>   JMapViewWithGestures = interface(Androidapi.JNI.Embarcadero.JMapViewWithGestures)
+>     ['{9F8896FE-FBD7-43F1-B951-B04158362800}']
+>     procedure getMapAsync(callback: JOnMapReadyCallback); cdecl;
+>   end;
+>   TJMapViewWithGestures = class(TJavaGenericImport<JMapViewWithGesturesClass, JMapViewWithGestures>)
+>   end;
+> 
+115a142,151
+>   TMapReadyCallback = class(TJavaLocal, JOnMapReadyCallback)
+>   private
+>     [Weak] FMapView: TAndroidMapView;
+>   public
+>     { JOnMapReadyCallback }
+>     procedure onMapReady(map: JGoogleMap); cdecl;
+>   public
+>     constructor Create(const AMapView: TAndroidMapView);
+>   end;
+> 
+150a187,190
+>     FMapReadyCallback: TMapReadyCallback;
+>     FGoogleMap: JGoogleMap;
+>     procedure SetGoogleMapType(map: JGoogleMap);
+> 
+173a214,215
+>     procedure MapReady(map: JGoogleMap);
+>     property GoogleMap: JGoogleMap read FGoogleMap; 
+296a339,351
+> { TMapReadyCallback }
+> 
+> constructor TMapReadyCallback.Create(const AMapView: TAndroidMapView);
+> begin
+>   inherited Create;
+>   FMapView := AMapView;
+> end;
+> 
+> procedure TMapReadyCallback.onMapReady(map: JGoogleMap);
+> begin
+>   FMapView.MapReady(map);
+> end;
+> 
+381a437
+>   FMapReadyCallback := TMapReadyCallback.Create(Self);
+388a445
+>   FMapReadyCallback.Free;
+446c503
+<       InitializeMapObjects;
+---
+>       FMapView.getMapAsync(FMapReadyCallback)
+451a509,514
+> procedure TAndroidMapView.MapReady(map: JGoogleMap);
+> begin
+>   FGoogleMap := map;
+>   InitializeMapObjects;
+> end;
+> 
+719c782
+<     Map := FMapView.getMap;
+---
+>     Map := FGoogleMap;
+724a788,792
+> procedure TAndroidMapView.SetGoogleMapType(map: JGoogleMap);
+> begin
+>   map.setMapType(GetGoogleMapType);
+> end;
+> 
+935c1003
+<     Map := MapView.getMap;
+---
+>     Map := FGoogleMap;
+959c1027
+<     Map := MapView.getMap;
+---
+>     Map := FGoogleMap;
+1435c1503,1504
+<   LatLng := FMapView.FMapView.getMap.getProjection.fromScreenLocation(P);
+---
+>   if FMapView.GoogleMap <> nil then
+>     LatLng := FMapView.GoogleMap.getProjection.fromScreenLocation(P);
