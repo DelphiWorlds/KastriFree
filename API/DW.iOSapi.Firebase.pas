@@ -173,9 +173,7 @@ begin
   Result := StrToNSStr('com.firebase.iid.notif.refresh-token');
 end;
 
-{$IF Defined(IOS12_2_SDK)}
-procedure CLangRTLoader; cdecl; external '/usr/lib/clang/lib/darwin/libclang_rt.ios.a'; // Fixes linker error: ___isOSVersionAtLeast missing
-{$ENDIF}
+procedure CLangRTLoader; cdecl; external '/usr/lib/clang/lib/darwin/libclang_rt.ios.a'; // Fixes linker error: ___isOSVersionAtLeast missing (iOS SDK 12.x)
 procedure FirebaseAnalyticsLoader; cdecl; external 'FirebaseAnalytics';
 procedure FirebaseCoreLoader; cdecl; external 'FirebaseCore';
 procedure FirebaseCoreDiagnosticsLoader; cdecl; external 'FirebaseCoreDiagnostics';
