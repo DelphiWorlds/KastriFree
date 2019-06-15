@@ -39,7 +39,8 @@ const
   FIRInstanceIDAPNSTokenTypeSandbox = 1;
   // Production token type.
   FIRInstanceIDAPNSTokenTypeProd = 2;
-  // Unknown error.
+
+  // Unknown error.
   FIRMessagingErrorUnknown = 0;
   // FIRMessaging couldn't validate request from this client.
   FIRMessagingErrorAuthentication = 1;
@@ -53,17 +54,19 @@ const
   FIRMessagingErrorOperationInProgress = 5;
   // Some parameters of the request were invalid.
   FIRMessagingErrorInvalidRequest = 7;
+
   // Unknown status.
   FIRMessagingMessageStatusUnknown = 0;
   // New downstream message received by the app.
   FIRMessagingMessageStatusNew = 1;
   // Unknown token type.
   FIRMessasingAPNSTokenTypeUnknown = 0;
+
   // Sandbox token type.
   FIRMessasingAPNSTokenTypeSandbox = 1;
   // Production token type.
   FIRMessasingAPNSTokenTypeProd = 2;
-
+
 
 type
   FIRInstanceIDAPNSTokenType = NSInteger;
@@ -170,17 +173,20 @@ begin
   Result := StrToNSStr('com.firebase.iid.notif.refresh-token');
 end;
 
+{$IF Defined(IOS12_2_SDK)}
+procedure CLangRTLoader; cdecl; external '/usr/lib/clang/lib/darwin/libclang_rt.ios.a'; // Fixes linker error: ___isOSVersionAtLeast missing
+{$ENDIF}
 procedure FirebaseAnalyticsLoader; cdecl; external 'FirebaseAnalytics';
 procedure FirebaseCoreLoader; cdecl; external 'FirebaseCore';
 procedure FirebaseCoreDiagnosticsLoader; cdecl; external 'FirebaseCoreDiagnostics';
 procedure FirebaseInstanceIDLoader; cdecl; external 'FirebaseInstanceID';
 procedure FirebaseMessagingLoader; cdecl; external 'FirebaseMessaging';
-//procedure FirebaseNanoPBLoader; cdecl; external 'FirebaseNanoPB'; // 5.4.1 and below
-procedure MeasurementNanoPBLoader; cdecl; external 'MeasurementNanoPB'; // 5.5.0
+{$IF Defined(Firebase_5_5)}
+procedure MeasurementNanoPBLoader; cdecl; external 'MeasurementNanoPB'; // 5.5.0 - does not exist in (at least) 5.12+
+{$ENDIF}
 procedure FoundationLoader; cdecl; external libFoundation;
-procedure GoogleAppMeasurementLoader; cdecl; external 'GoogleAppMeasurement'; // 5.5.0
-//procedure GoogleToolboxForMacLoader; cdecl; external 'GoogleToolboxForMac'; // 5.4.1 and below
-procedure GoogleUtilitiesLoader; cdecl; external 'GoogleUtilities'; // 5.5.0
+procedure GoogleAppMeasurementLoader; cdecl; external 'GoogleAppMeasurement';
+procedure GoogleUtilitiesLoader; cdecl; external 'GoogleUtilities';
 procedure nanoPBLoader; cdecl; external 'nanoPB';
 procedure ProtobufLoader; cdecl; external 'Protobuf';
 procedure SystemConfigurationLoader; cdecl; external libSystemConfiguration;
