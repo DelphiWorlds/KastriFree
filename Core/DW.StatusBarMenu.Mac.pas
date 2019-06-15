@@ -64,7 +64,6 @@ type
     procedure AddMenuItem(const AItem: TMenuItem);
     procedure AddSubMenuItem(const AMacOSMenuItem: TMacOSMenuItem; const AItem: TMenuItem);
     procedure ClearMenuItems;
-    procedure RecreateMenu;
     procedure RemoveStatusItem;
     procedure SetPopupMenu(const Value: TPopupMenu);
   protected
@@ -76,6 +75,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure RecreateMenu;
     property PopupMenu: TPopupMenu read FPopupMenu write SetPopupMenu;
   end;
 
@@ -85,9 +85,14 @@ uses
   // RTL
   System.Types, System.SysUtils,
   // Mac
-  Macapi.Helpers, Macapi.ObjCRuntime,
+  Macapi.Helpers, Macapi.ObjCRuntime, Macapi.CocoaTypes,
   // FMX
   FMX.Helpers.Mac, FMX.Graphics;
+
+function SharedApplication: NSApplication;
+begin
+  Result := TNSApplication.Wrap(TNSApplication.OCClass.sharedApplication);
+end;
 
 function GetMenuImage(const AFMXItem: TMenuItem): NSImage;
 var
@@ -180,6 +185,8 @@ destructor TMacOSMenuItem.Destroy;
 begin
   FFMXItem := nil;
   FStatusBarMenu := nil;
+  if FNSMenuItem.menu <> nil then
+    FNSMenuItem.menu.removeItem(FNSMenuItem);
   FNSMenuItem.release;
   FNSMenuItem := nil;
   inherited;
@@ -213,11 +220,15 @@ begin
   inherited;
   FMenuItems := TMacOSMenuItems.Create;
   FMenu := TNSMenu.Create;
+  FStatusItem := StatusBar.statusItemWithLength(NSVariableStatusItemLength);
+  FStatusItem.setMenu(FMenu);
+  FStatusItem.setHighlightMode(True);
 end;
 
 destructor TStatusBarMenu.Destroy;
 begin
   ClearMenuItems;
+  RemoveStatusItem;
   FMenuItems.Free;
   FMenu.release;
   FMenu := nil;
@@ -260,9 +271,6 @@ begin
   ClearMenuItems;
   if (FPopupMenu <> nil) and (FPopupMenu.ItemsCount > 0) then
   begin
-    FStatusItem := StatusBar.statusItemWithLength(NSVariableStatusItemLength);
-    FStatusItem.setMenu(FMenu);
-    FStatusItem.setHighlightMode(True);
     UpdateNSStatusItemImage(FStatusItem, FPopupMenu.Items[0]);
     for I := 1 to FPopupMenu.ItemsCount - 1 do
       AddMenuItem(FPopupMenu.Items[I]);
@@ -294,14 +302,17 @@ end;
 procedure TStatusBarMenu.ClearMenuItems;
 var
   LItem: TMacOSMenuItem;
+  LIndex: Integer;
 begin
   while FMenuItems.Count > 0 do
   begin
-    LItem := FMenuItems.Items[FMenuItems.Count - 1];
-    FMenuItems.Delete(FMenuItems.Count - 1);
-    LItem.DisposeOf;
+    LIndex := FMenuItems.Count - 1;
+    LItem := FMenuItems.Items[LIndex];
+    if LItem.FMXItem <> nil then
+      LItem.FMXItem.RemoveFreeNotification(Self);
+    FMenuItems.Delete(LIndex);
+    LItem.Free;
   end;
-  RemoveStatusItem;
 end;
 
 procedure TStatusBarMenu.SetPopupMenu(const Value: TPopupMenu);
