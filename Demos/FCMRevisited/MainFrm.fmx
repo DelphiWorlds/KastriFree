@@ -24,6 +24,20 @@ object frmMain: TfrmMain
     Size.Height = 518.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 0
+    object ClearMessagesButton: TButton
+      Align = Bottom
+      Margins.Left = 4.000000000000000000
+      Margins.Right = 4.000000000000000000
+      Margins.Bottom = 4.000000000000000000
+      Position.X = 4.000000000000000000
+      Position.Y = 476.000000000000000000
+      Size.Width = 371.000000000000000000
+      Size.Height = 38.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'Clear Messages'
+      OnClick = ClearMessagesButtonClick
+    end
     object FirebaseCMLabel: TLabel
       Align = Top
       StyledSettings = [Family, Style, FontColor]
@@ -33,37 +47,7 @@ object frmMain: TfrmMain
       TextSettings.Font.Size = 16.000000000000000000
       TextSettings.HorzAlign = Center
       Text = 'Firebase Cloud Messaging Revisited'
-      TabOrder = 0
-    end
-    object TokenLabel: TLabel
-      Align = Top
-      StyledSettings = [Family, Style, FontColor]
-      Margins.Top = 4.000000000000000000
-      Position.Y = 33.000000000000000000
-      Size.Width = 379.000000000000000000
-      Size.Height = 28.000000000000000000
-      Size.PlatformDefault = False
-      TextSettings.Font.Size = 14.000000000000000000
-      TextSettings.HorzAlign = Center
-      Text = 'Your device token:'
-      TabOrder = 2
-    end
-    object TokenMemo: TMemo
-      Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
-      DataDetectorTypes = []
-      ReadOnly = True
-      TextSettings.WordWrap = True
-      Align = Top
-      Margins.Left = 4.000000000000000000
-      Margins.Right = 4.000000000000000000
-      Position.X = 4.000000000000000000
-      Position.Y = 61.000000000000000000
-      Size.Width = 371.000000000000000000
-      Size.Height = 152.000000000000000000
-      Size.PlatformDefault = False
-      TabOrder = 4
-      Viewport.Width = 367.000000000000000000
-      Viewport.Height = 148.000000000000000000
+      TabOrder = 1
     end
     object MessagesLabel: TLabel
       Align = Top
@@ -76,7 +60,7 @@ object frmMain: TfrmMain
       TextSettings.Font.Size = 14.000000000000000000
       TextSettings.HorzAlign = Center
       Text = 'FCM Messages:'
-      TabOrder = 1
+      TabOrder = 2
     end
     object MessagesMemo: TMemo
       Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
@@ -94,19 +78,35 @@ object frmMain: TfrmMain
       Viewport.Width = 367.000000000000000000
       Viewport.Height = 218.000000000000000000
     end
-    object ClearMessagesButton: TButton
-      Align = Bottom
+    object TokenLabel: TLabel
+      Align = Top
+      StyledSettings = [Family, Style, FontColor]
+      Margins.Top = 4.000000000000000000
+      Position.Y = 33.000000000000000000
+      Size.Width = 379.000000000000000000
+      Size.Height = 28.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.Font.Size = 14.000000000000000000
+      TextSettings.HorzAlign = Center
+      Text = 'Your device token:'
+      TabOrder = 4
+    end
+    object TokenMemo: TMemo
+      Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+      DataDetectorTypes = []
+      ReadOnly = True
+      TextSettings.WordWrap = True
+      Align = Top
       Margins.Left = 4.000000000000000000
       Margins.Right = 4.000000000000000000
-      Margins.Bottom = 4.000000000000000000
       Position.X = 4.000000000000000000
-      Position.Y = 476.000000000000000000
+      Position.Y = 61.000000000000000000
       Size.Width = 371.000000000000000000
-      Size.Height = 38.000000000000000000
+      Size.Height = 152.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 5
-      Text = 'Clear Messages'
-      OnClick = ClearMessagesButtonClick
+      Viewport.Width = 367.000000000000000000
+      Viewport.Height = 148.000000000000000000
     end
   end
 end
