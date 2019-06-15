@@ -49,7 +49,6 @@ type
   TPlatformNotifications = class(TCustomPlatformNotifications)
   private
     class var FNotificationCenterDelegate: TUserNotificationCenterDelegate;
-    class constructor CreateClass;
     class destructor DestroyClass;
   private
     procedure AddNotificationRequestCompletionHandler(error: NSError);
@@ -63,6 +62,8 @@ type
     procedure CancelNotification(const AName: string); override;
     procedure PresentNotification(const ANotification: TNotification); override;
     procedure ScheduleNotification(const ANotification: TNotification); override;
+  public
+    class procedure UpdateDelegate;
   public
     constructor Create(const ANotifications: TNotifications); override;
     destructor Destroy; override;
@@ -159,7 +160,7 @@ end;
 
 { TPlatformNotifications }
 
-class constructor TPlatformNotifications.CreateClass;
+class procedure TPlatformNotifications.UpdateDelegate;
 begin
   FNotificationCenterDelegate := TUserNotificationCenterDelegate.Create;
   NotificationCenter.setDelegate(FNotificationCenterDelegate.GetObjectID);
