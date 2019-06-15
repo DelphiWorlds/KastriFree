@@ -20,7 +20,7 @@ uses
   // iOS
   iOSapi.Foundation,
   // DW
-  DW.Firebase.Messaging, DW.iOSapi.UserNotifications, DW.iOSapi.Firebase, DW.Notifications;
+  DW.Firebase.Messaging, DW.iOSapi.UserNotifications, DW.iOSapi.Firebase; // , DW.Notifications;
 
 type
   TPlatformFirebaseMessaging = class;
@@ -44,6 +44,7 @@ type
   private
     FAuthOptions: UNAuthorizationOptions;
     FFIRMessagingDelegate: TFIRMessagingDelegate;
+    FMessaging: FIRMessaging;
     procedure CheckNotificationsAuthorizationHandler(settings: UNNotificationSettings);
     procedure FIRMessagingConnectCompletionHandler(error: NSError);
     function GetUserDefaultsTokenKey: NSString;
@@ -75,7 +76,7 @@ implementation
 
 uses
   // RTL
-  System.SysUtils, System.Classes,
+  System.SysUtils, System.Classes, System.IOUtils,
   // Mac
   Macapi.Helpers, Macapi.ObjCRuntime,
   // iOS
@@ -83,7 +84,7 @@ uses
   // FMX
   FMX.Platform,
   // DW
-  DW.OSLog, DW.Macapi.ObjCRuntime, DW.iOSapi.Helpers, DW.Notifications.iOS;
+  DW.OSLog, DW.Macapi.ObjCRuntime, DW.iOSapi.Helpers, DW.Notifications.iOS, DW.Macapi.Helpers;
 
 function StringToNSData(const AString: string): NSData;
 begin
@@ -128,11 +129,9 @@ end;
 constructor TPlatformFirebaseMessaging.Create(const AFirebaseMessaging: TFirebaseMessaging);
 begin
   inherited;
+  TPlatformNotifications.UpdateDelegate;
   TMessageManager.DefaultManager.SubscribeToMessage(TPushStartupNotificationMessage, PushStartupNotificationMessageMessageHandler);
   TMessageManager.DefaultManager.SubscribeToMessage(TPushDeviceTokenMessage, PushDeviceTokenMessageHandler);
-  FFIRMessagingDelegate := TFIRMessagingDelegate.Create(self);
-  Messaging.setDelegate(FFIRMessagingDelegate.GetObjectID);
-  Start;
 end;
 
 destructor TPlatformFirebaseMessaging.Destroy;
@@ -144,14 +143,18 @@ end;
 
 function TPlatformFirebaseMessaging.Start: Boolean;
 begin
+  TOSLog.d('+TPlatformFirebaseMessaging.Start');
   Result := False;
   try
     TFIRApp.OCClass.configure;
+    FFIRMessagingDelegate := TFIRMessagingDelegate.Create(self);
+    Messaging.setDelegate(FFIRMessagingDelegate.GetObjectID);
     Result := True;
   except
     on E: Exception do
       DoException(E);
   end;
+  TOSLog.d('-TPlatformFirebaseMessaging.Start');
 end;
 
 function TPlatformFirebaseMessaging.GetDeviceToken: string;
@@ -180,13 +183,16 @@ end;
 
 procedure TPlatformFirebaseMessaging.Connect;
 begin
-  Disconnect;
-  Messaging.connectWithCompletion(FIRMessagingConnectCompletionHandler);
+//  Apparently, Connect and Disconnect have been deprecated for some time, and have now been removed from 6.0.0
+//  Disconnect;
+//  Messaging.connectWithCompletion(FIRMessagingConnectCompletionHandler);
+  IsConnected := True;
 end;
 
 procedure TPlatformFirebaseMessaging.Disconnect;
 begin
-  Messaging.disconnect;
+//  if IsConnected then
+//    Messaging.disconnect;
   IsConnected := False;
 end;
 
@@ -205,10 +211,6 @@ end;
 procedure TPlatformFirebaseMessaging.FIRMessagingConnectCompletionHandler(error: NSError);
 begin
   IsConnected := error = nil;
-  if IsConnected then
-    TOSLog.d('Connected')
-  else
-    TOSLog.d('Not Connected!!: %s', [NSStrToStr(error.localizedDescription)]);
 end;
 
 procedure TPlatformFirebaseMessaging.TokenReceived(const AToken: string);
@@ -283,7 +285,9 @@ end;
 
 function TPlatformFirebaseMessaging.Messaging: FIRMessaging;
 begin
-  Result := TFIRMessaging.Wrap(TFIRMessaging.OCClass.messaging);
+  if FMessaging = nil then
+    FMessaging := TFIRMessaging.Wrap(TFIRMessaging.OCClass.messaging);
+  Result := FMessaging;
 end;
 
 procedure TPlatformFirebaseMessaging.SubscribeToTopic(const ATopicName: string);
