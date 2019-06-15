@@ -203,6 +203,8 @@ end;
 
 procedure TFirebaseMessaging.DoAuthorizationResult(const AGranted: Boolean);
 begin
+  if AGranted then
+    Start;
   if Assigned(FOnAuthorizationResult) then
     FOnAuthorizationResult(Self, AGranted);
 end;
