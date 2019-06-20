@@ -132,6 +132,7 @@ begin
   TPlatformNotifications.UpdateDelegate;
   TMessageManager.DefaultManager.SubscribeToMessage(TPushStartupNotificationMessage, PushStartupNotificationMessageMessageHandler);
   TMessageManager.DefaultManager.SubscribeToMessage(TPushDeviceTokenMessage, PushDeviceTokenMessageHandler);
+  Start;
 end;
 
 destructor TPlatformFirebaseMessaging.Destroy;
