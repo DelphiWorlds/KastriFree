@@ -53,9 +53,11 @@ implementation
 {$R *.fmx}
 
 uses
-  System.IOUtils,
+  {$IF Defined(ANDROID)}
   Androidapi.JNI.GraphicsContentViewText, Androidapi.Helpers, Androidapi.JNI.Net,
-  DW.Android.Helpers;
+  DW.Android.Helpers,
+  {$ENDIF}
+  System.IOUtils;
 
 const
   cPermissionReadExternalStorage = 'android.permission.READ_EXTERNAL_STORAGE';
@@ -135,6 +137,7 @@ begin
 end;
 
 procedure TForm1.OpenPDFButtonClick(Sender: TObject);
+{$IF Defined(ANDROID)}
 var
   LIntent: JIntent;
   LFileName: string;
@@ -146,6 +149,11 @@ begin
   LIntent.setFlags(TJIntent.JavaClass.FLAG_GRANT_READ_URI_PERMISSION);
   TAndroidHelper.Activity.startActivity(LIntent);
 end;
+{$ELSE}
+begin
+
+end;
+{$ENDIF}
 
 procedure TForm1.CancelScheduledClick(Sender: TObject);
 begin
