@@ -20,6 +20,8 @@ type
   JHandlerThread = interface;
   JEnvironment = interface;
   JStatFs = interface;
+  JAsyncTask = interface;
+  JAsyncTask_Status = interface;
 
   JHandlerThreadClass = interface(JThreadClass)
     ['{FAAD33B5-6400-4F38-B3F9-EE8C85500F15}']
@@ -130,6 +132,45 @@ type
     procedure restat(path: JString); cdecl;
   end;
   TJStatFs = class(TJavaGenericImport<JStatFsClass, JStatFs>) end;
+
+  JAsyncTask_StatusClass = interface(JEnumClass)
+    ['{9FCA442E-277F-4601-8D8E-241B24F15615}']
+    {class} function _GetFINISHED: JAsyncTask_Status; cdecl;
+    {class} function _GetPENDING: JAsyncTask_Status; cdecl;
+    {class} function _GetRUNNING: JAsyncTask_Status; cdecl;
+    {class} function valueOf(name: JString): JAsyncTask_Status; cdecl;
+    {class} function values: TJavaObjectArray<JAsyncTask_Status>; cdecl;
+    {class} property FINISHED: JAsyncTask_Status read _GetFINISHED;
+    {class} property PENDING: JAsyncTask_Status read _GetPENDING;
+    {class} property RUNNING: JAsyncTask_Status read _GetRUNNING;
+  end;
+
+  [JavaSignature('android/os/AsyncTask$Status')]
+  JAsyncTask_Status = interface(JEnum)
+    ['{DA6490CB-4B27-4CAF-9961-D9129CD65CE9}']
+  end;
+  TJAsyncTask_Status = class(TJavaGenericImport<JAsyncTask_StatusClass, JAsyncTask_Status>) end;
+
+  JAsyncTaskClass = interface(JObjectClass)
+    ['{C42EC518-9EB8-4F81-943F-8B699D7E81A3}']
+    {class} function _GetSERIAL_EXECUTOR: JExecutor; cdecl;
+    {class} function _GetTHREAD_POOL_EXECUTOR: JExecutor; cdecl;
+    {class} function init: JAsyncTask; cdecl;
+    {class} property SERIAL_EXECUTOR: JExecutor read _GetSERIAL_EXECUTOR;
+    {class} property THREAD_POOL_EXECUTOR: JExecutor read _GetTHREAD_POOL_EXECUTOR;
+  end;
+
+  [JavaSignature('android/os/AsyncTask')]
+  JAsyncTask = interface(JObject)
+    ['{A87FEC05-8A98-4957-BABD-D11BA361F045}']
+    function cancel(mayInterruptIfRunning: Boolean): Boolean; cdecl;
+    procedure execute(runnable: JRunnable); cdecl; overload;
+    function get: JObject; cdecl; overload;
+    function get(timeout: Int64; &unit: JTimeUnit): JObject; cdecl; overload;
+    function getStatus: JAsyncTask_Status; cdecl;
+    function isCancelled: Boolean; cdecl;
+  end;
+  TJAsyncTask = class(TJavaGenericImport<JAsyncTaskClass, JAsyncTask>) end;
 
 implementation
 
