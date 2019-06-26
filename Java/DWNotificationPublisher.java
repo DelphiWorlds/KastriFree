@@ -75,10 +75,16 @@ public class DWNotificationPublisher {
     if (intent.hasExtra("notification_color")) { 
       builder = builder.setColor(Integer.parseInt(intent.getStringExtra("notification_color")));
     }
+    String text = null;
     if (intent.hasExtra("notification_text")) { 
-      builder = builder.setContentText(intent.getStringExtra("notification_text"));
+      text = intent.getStringExtra("notification_text");
     } else if (intent.hasExtra("body")) {
-      builder = builder.setContentText(intent.getStringExtra("body"));      
+      text = intent.getStringExtra("body");      
+    }
+    builder = builder.setContentText(text);
+    if (intent.hasExtra("big_text") && (Integer.parseInt(intent.getStringExtra("big_text")) == 1)) {
+      Log.v(TAG, "Notification has big text flag");
+      builder = builder.setStyle(new NotificationCompat.BigTextStyle().bigText(text));
     }
     if (intent.hasExtra("notification_title")) { 
       builder = builder.setContentTitle(intent.getStringExtra("notification_title"));
