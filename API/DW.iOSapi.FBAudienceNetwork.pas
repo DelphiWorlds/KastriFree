@@ -188,7 +188,8 @@ type
   FBMediaViewVideoRenderer = interface(UIView)
     ['{5BB9535D-BD91-442F-808B-225A8B49DC16}']
     [MethodName('addPeriodicTimeObserverForInterval:queue:usingBlock:')]
-    function addPeriodicTimeObserverForInterval(interval: CMTime; queue: dispatch_queue_t; block: TFBMediaViewVideoRendererBlockMethod1): Pointer; cdecl;
+    function addPeriodicTimeObserverForInterval(interval: CMTime; queue: dispatch_queue_t;
+      block: TFBMediaViewVideoRendererBlockMethod1): Pointer; cdecl;
     function aspectRatio: CGFloat; cdecl;
     function currentTime: CMTime; cdecl;
     procedure disengageVideoSeek; cdecl;
@@ -333,7 +334,8 @@ type
     [MethodName('initWithPlacementID:adSize:rootViewController:')]
     function initWithPlacementID(placementID: NSString; adSize: FBAdSize; rootViewController: UIViewController): Pointer; overload; cdecl;
     [MethodName('initWithPlacementID:bidPayload:rootViewController:error:')]
-    function initWithPlacementID(placementID: NSString; bidPayload: NSString; rootViewController: UIViewController; error: PNSError): Pointer; overload; cdecl;
+    function initWithPlacementID(placementID: NSString; bidPayload: NSString; rootViewController: UIViewController;
+      error: PNSError): Pointer; overload; cdecl;
     function isAdValid: Boolean; cdecl;
     procedure loadAd; cdecl;
     procedure loadAdWithBidPayload(bidPayload: NSString); cdecl;
@@ -498,13 +500,17 @@ type
     procedure downloadMedia; cdecl;
     function initWithPlacementID(placementID: NSString): Pointer; cdecl;
     [MethodName('registerViewForInteraction:mediaView:iconImageView:viewController:clickableViews:')]
-    procedure registerViewForInteraction(view: UIView; mediaView: FBMediaView; iconImageView: UIImageView; viewController: UIViewController; clickableViews: NSArray); overload; cdecl;
+    procedure registerViewForInteraction(view: UIView; mediaView: FBMediaView; iconImageView: UIImageView;
+      viewController: UIViewController; clickableViews: NSArray); overload; cdecl;
     [MethodName('registerViewForInteraction:mediaView:iconView:viewController:')]
-    procedure registerViewForInteraction(view: UIView; mediaView: FBMediaView; iconView: FBMediaView; viewController: UIViewController); overload; cdecl;
+    procedure registerViewForInteraction(view: UIView; mediaView: FBMediaView; iconView: FBMediaView;
+      viewController: UIViewController); overload; cdecl;
     [MethodName('registerViewForInteraction:mediaView:iconView:viewController:clickableViews:')]
-    procedure registerViewForInteraction(view: UIView; mediaView: FBMediaView; iconView: FBMediaView; viewController: UIViewController; clickableViews: NSArray); overload; cdecl;
+    procedure registerViewForInteraction(view: UIView; mediaView: FBMediaView; iconView: FBMediaView;
+      viewController: UIViewController; clickableViews: NSArray); overload; cdecl;
     [MethodName('registerViewForInteraction:mediaView:iconImageView:viewController:')]
-    procedure registerViewForInteraction(view: UIView; mediaView: FBMediaView; iconImageView: UIImageView; viewController: UIViewController); overload; cdecl;
+    procedure registerViewForInteraction(view: UIView; mediaView: FBMediaView; iconImageView: UIImageView;
+      viewController: UIViewController); overload; cdecl;
     procedure setDelegate(delegate: Pointer); cdecl;
   end;
   TFBNativeAd = class(TOCGenericImport<FBNativeAdClass, FBNativeAd>) end;
@@ -620,7 +626,8 @@ type
   FBNativeAdViewClass = interface(FBNativeAdBaseViewClass)
     ['{1A6C3280-C1E2-4536-8566-EF39BC2DDDB5}']
     [MethodName('nativeAdViewWithNativeAd:withType:withAttributes:')]
-    {class} function nativeAdViewWithNativeAd(nativeAd: FBNativeAd; &type: FBNativeAdViewType; attributes: FBNativeAdViewAttributes): Pointer; overload; cdecl;
+    {class} function nativeAdViewWithNativeAd(nativeAd: FBNativeAd; &type: FBNativeAdViewType;
+      attributes: FBNativeAdViewAttributes): Pointer; overload; cdecl;
     [MethodName('nativeAdViewWithNativeAd:withType:')]
     {class} function nativeAdViewWithNativeAd(nativeAd: FBNativeAd; &type: FBNativeAdViewType): Pointer; overload; cdecl;
     [MethodName('nativeAdViewWithNativeAd:withAttributes:')]
@@ -661,13 +668,16 @@ type
     [MethodName('initWithNativeAdsManager:withViewProvider:')]
     function initWithNativeAdsManager(manager: FBNativeAdsManager; childViewProvider: TFBNativeAdScrollViewBlockMethod1): Pointer; overload; cdecl;
     [MethodName('initWithNativeAdsManager:withViewProvider:withMaximum:')]
-    function initWithNativeAdsManager(manager: FBNativeAdsManager; childViewProvider: TFBNativeAdScrollViewBlockMethod1; maximumNativeAdCount: NSUInteger): Pointer; overload; cdecl;
+    function initWithNativeAdsManager(manager: FBNativeAdsManager; childViewProvider: TFBNativeAdScrollViewBlockMethod1;
+      maximumNativeAdCount: NSUInteger): Pointer; overload; cdecl;
     [MethodName('initWithNativeAdsManager:withType:')]
     function initWithNativeAdsManager(manager: FBNativeAdsManager; &type: FBNativeAdViewType): Pointer; overload; cdecl;
     [MethodName('initWithNativeAdsManager:withType:withAttributes:')]
-    function initWithNativeAdsManager(manager: FBNativeAdsManager; &type: FBNativeAdViewType; attributes: FBNativeAdViewAttributes): Pointer; overload; cdecl;
+    function initWithNativeAdsManager(manager: FBNativeAdsManager; &type: FBNativeAdViewType;
+      attributes: FBNativeAdViewAttributes): Pointer; overload; cdecl;
     [MethodName('initWithNativeAdsManager:withType:withAttributes:withMaximum:')]
-    function initWithNativeAdsManager(manager: FBNativeAdsManager; &type: FBNativeAdViewType; attributes: FBNativeAdViewAttributes; maximumNativeAdCount: NSUInteger): Pointer; overload; cdecl;
+    function initWithNativeAdsManager(manager: FBNativeAdsManager; &type: FBNativeAdViewType;
+      attributes: FBNativeAdViewAttributes; maximumNativeAdCount: NSUInteger): Pointer; overload; cdecl;
     function isAdPersistenceEnabled: Boolean; cdecl;
     function isAnimationEnabled: Boolean; cdecl;
     function maximumNativeAdCount: NSUInteger; cdecl;
@@ -734,7 +744,8 @@ type
     [MethodName('registerViewForInteraction:iconView:viewController:')]
     procedure registerViewForInteraction(view: UIView; iconView: FBMediaView; viewController: UIViewController); overload; cdecl;
     [MethodName('registerViewForInteraction:iconView:viewController:clickableViews:')]
-    procedure registerViewForInteraction(view: UIView; iconView: FBMediaView; viewController: UIViewController; clickableViews: NSArray); overload; cdecl;
+    procedure registerViewForInteraction(view: UIView; iconView: FBMediaView; viewController: UIViewController;
+      clickableViews: NSArray); overload; cdecl;
     procedure setDelegate(delegate: Pointer); cdecl;
   end;
   TFBNativeBannerAd = class(TOCGenericImport<FBNativeBannerAdClass, FBNativeBannerAd>) end;
@@ -755,7 +766,8 @@ type
     [MethodName('nativeBannerAdViewWithNativeBannerAd:withType:')]
     {class} function nativeBannerAdViewWithNativeBannerAd(nativeBannerAd: FBNativeBannerAd; &type: FBNativeBannerAdViewType): Pointer; overload; cdecl;
     [MethodName('nativeBannerAdViewWithNativeBannerAd:withType:withAttributes:')]
-    {class} function nativeBannerAdViewWithNativeBannerAd(nativeBannerAd: FBNativeBannerAd; &type: FBNativeBannerAdViewType; attributes: FBNativeAdViewAttributes): Pointer; overload; cdecl;
+    {class} function nativeBannerAdViewWithNativeBannerAd(nativeBannerAd: FBNativeBannerAd; &type: FBNativeBannerAdViewType;
+      attributes: FBNativeAdViewAttributes): Pointer; overload; cdecl;
   end;
 
   FBNativeBannerAdView = interface(FBNativeAdBaseView)
