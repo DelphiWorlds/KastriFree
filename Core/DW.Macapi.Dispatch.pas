@@ -22,13 +22,14 @@ uses
 type
   dispatch_work_t = reference to procedure;
   dispatch_block_t = Pointer; // dispatch_work_t;
+  dispatch_source_t = Pointer;
   dispatch_function_t = procedure(context: Pointer); cdecl;
 
   TGrandCentral = record
   private
     class var FMainQueue: dispatch_queue_t;
-    class function GetMainQueue: dispatch_queue_t; static;
   public
+    class function GetMainQueue: dispatch_queue_t; static;
     class procedure DispatchAsync(const AProc: dispatch_work_t; const AQueue: dispatch_queue_t = 0); static;
   end;
 
