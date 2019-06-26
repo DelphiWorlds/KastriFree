@@ -26,6 +26,10 @@ type
   TDo = record
   public
     /// <summary>
+    ///   Determines whether the current execution is in the main thread
+    /// </summary>
+    class function IsMainThread: Boolean; static;
+    /// <summary>
     ///   Queues a method for execution after an optional delay
     /// </summary>
     class procedure Queue(const AProc: TThreadProcedure; const ADelay: Integer = 0); static;
@@ -64,6 +68,11 @@ uses
 
 { TDo }
 
+class function TDo.IsMainThread: Boolean;
+begin
+  Result := TThread.CurrentThread.ThreadID = MainThreadID;
+end;
+
 class procedure TDo.Queue(const AProc: TThreadProcedure; const ADelay: Integer = 0);
 begin
   TThread.CreateAnonymousThread(
@@ -88,7 +97,7 @@ end;
 
 class procedure TDo.SyncMain(const ARunProc: TThreadProcedure);
 begin
-  if TThread.CurrentThread.ThreadID <> MainThreadID then
+  if not IsMainThread then
     TThread.Synchronize(nil, ARunProc)
   else
     ARunProc;
