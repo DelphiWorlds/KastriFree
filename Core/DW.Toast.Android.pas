@@ -20,7 +20,7 @@ type
   TToast = class(TJavaLocal, JRunnable)
   private
     class var FToast: TToast;
-    class destructor DestroyToast;
+    class destructor DestroyClass;
   private
     FHandler: JHandler;
     FMsg: string;
@@ -57,7 +57,7 @@ begin
   FHandler := TJHandler.JavaClass.init(TJLooper.JavaClass.getMainLooper);
 end;
 
-class destructor TToast.DestroyToast;
+class destructor TToast.DestroyClass;
 begin
   FToast.Free;
 end;
