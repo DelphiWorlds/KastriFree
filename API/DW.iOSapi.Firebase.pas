@@ -67,7 +67,6 @@ const
   // Production token type.
   FIRMessasingAPNSTokenTypeProd = 2;
 
-
 type
   FIRInstanceIDAPNSTokenType = NSInteger;
   FIRMessagingAPNSTokenType = NSInteger;
