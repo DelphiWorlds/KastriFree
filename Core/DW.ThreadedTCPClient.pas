@@ -79,7 +79,7 @@ type
     destructor Destroy; override;
     procedure Connect;
     procedure Disconnect;
-    procedure SendCmd(const ACmd: string);
+    procedure SendCmd(const ACmd: string); virtual;
     property ClientState: TClientState read FClientState;
     property ConnectTimeout: Integer read GetConnectTimeout write SetConnectTimeout;
     property Host: string read GetHost write SetHost;
