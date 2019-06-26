@@ -61,7 +61,7 @@ function CocoaDoubleConst(const AFwk: string; const AConstStr: string): Double;
 /// <summary>
 ///   Puts string values from an array into an NSArray
 /// </summary>
-function StringArrayToNSArray(const AArray: array of string): NSArray;
+function StringArrayToNSArray(const AArray: array of string; const ADequote: Boolean = False): NSArray;
 /// <summary>
 ///   Converts a string directly into an NSString reference (ID)
 /// </summary>
@@ -81,7 +81,7 @@ implementation
 
 uses
   // RTL
-  System.DateUtils,
+  System.DateUtils, System.SysUtils,
   // Mac
   Macapi.ObjectiveC, Macapi.Helpers;
 
@@ -180,14 +180,20 @@ begin
     Result := 0;
 end;
 
-function StringArrayToNSArray(const AArray: array of string): NSArray;
+function StringArrayToNSArray(const AArray: array of string; const ADequote: Boolean = False): NSArray;
 var
   LArray: array of Pointer;
   I: Integer;
+  LString: string;
 begin
   SetLength(LArray, Length(AArray));
   for I := 0 to Length(AArray) - 1 do
-    LArray[I] := NSObjectToID(StrToNSStr(AArray[I]));
+  begin
+    LString := AArray[I];
+    if ADequote then
+      LString := AnsiDequotedStr(LString, '"');
+    LArray[I] := NSObjectToID(StrToNSStr(LString));
+  end;
   Result := TNSArray.Wrap(TNSArray.OCClass.arrayWithObjects(@LArray[0], Length(LArray)));
 end;
 
