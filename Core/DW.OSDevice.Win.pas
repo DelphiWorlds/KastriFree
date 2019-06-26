@@ -31,17 +31,19 @@ type
     class function GetPackageID: string; static;
     class function GetPackageVersion: string; static;
     class function GetUniqueDeviceID: string; static;
+    class function GetUsername: string; static;
     class function IsBeta: Boolean; static;
     class function IsTouchDevice: Boolean; static;
+    class procedure ShowFilesInFolder(const AFileNames: array of string); static;
   end;
 
 implementation
 
 uses
   // RTL
-  System.SysUtils, System.Win.Registry,
+  System.SysUtils, System.Win.Registry, System.IOUtils,
   // Windows
-  Winapi.Windows;
+  Winapi.Windows, Winapi.ShlObj;
 
 const
   cMicrosoftCryptographyKey = 'SOFTWARE\Microsoft\Cryptography';
@@ -114,6 +116,20 @@ begin
   end;
 end;
 
+class function TPlatformOSDevice.GetUsername: string;
+var
+  LLen: DWord;
+begin
+  LLen := 1024;
+  SetLength(Result, LLen);
+  if Winapi.Windows.GetUserName(PChar(Result), LLen) then
+  begin
+    SetLength(Result, LLen - 1)
+  end
+  else
+    Result := '';
+end;
+
 class function TPlatformOSDevice.IsBeta: Boolean;
 begin
   Result := TFileFlag.PreRelease in GetFileVersionInfo.FileFlags;
@@ -125,6 +141,37 @@ var
 begin
   LValue := GetSystemMetrics(SM_DIGITIZER);
   Result := ((LValue and NID_READY) = NID_READY) and (((LValue and NID_MULTI_INPUT) = NID_MULTI_INPUT));
+end;
+
+class procedure TPlatformOSDevice.ShowFilesInFolder(const AFileNames: array of string);
+var
+  LPIDLList: array of PItemIDList;
+  LBasePIDL: PItemIDList;
+  I: Integer;
+  LFolder: string;
+begin
+  LFolder := '';
+  for I := Low(AFileNames) to High(AFileNames) do
+  begin
+    if LFolder.IsEmpty then
+      LFolder := TPath.GetDirectoryName(AFileNames[I]);
+    if LFolder.Equals(TPath.GetDirectoryName(AFileNames[I])) then
+    begin
+      SetLength(LPIDLList, Length(LPIDLList) + 1);
+      LPIDLList[Length(LPIDLList) - 1] := ILCreateFromPath(PChar(AFileNames[I]));
+    end;
+  end;
+  if not LFolder.IsEmpty and (Length(LPIDLList) > 0) then
+  begin
+    LBasePIDL := ILCreateFromPath(PChar(LFolder));
+    try
+      SHOpenFolderAndSelectItems(LBasePIDL, Length(LPIDLList), @LPIDLList[0], 0);
+    finally
+      ILFree(LBasePIDL);
+      for I := 0 to Length(LPIDLList) - 1 do
+        ILFree(LPIDLList[I]);
+    end;
+  end;
 end;
 
 end.

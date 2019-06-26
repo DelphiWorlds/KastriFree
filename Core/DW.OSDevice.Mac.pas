@@ -22,7 +22,9 @@ type
     class function GetPackageID: string; static;
     class function GetPackageVersion: string; static;
     class function GetUniqueDeviceID: string; static;
+    class function GetUsername: string; static;
     class function IsTouchDevice: Boolean; static;
+    class procedure ShowFilesInFolder(const AFileNames: array of string); static;
   end;
 
 implementation
@@ -31,7 +33,7 @@ uses
   // RTL
   System.SysUtils,
   // Mac
-  Macapi.CoreFoundation, Macapi.Foundation, Macapi.Helpers, Macapi.IOKit,
+  Macapi.CoreFoundation, Macapi.Foundation, Macapi.Helpers, Macapi.IOKit, Macapi.AppKit,
   // DW
   DW.Macapi.IOKit, DW.Macapi.Helpers;
 
@@ -59,6 +61,11 @@ begin
   end;
 end;
 
+class function TPlatformOSDevice.GetUsername: string;
+begin
+  Result := NSStrToStr(TNSString.Wrap(NSUserName));
+end;
+
 class function TPlatformOSDevice.IsTouchDevice: Boolean;
 begin
   Result := False;
@@ -72,6 +79,19 @@ end;
 class function TPlatformOSDevice.GetPackageVersion: string;
 begin
   Result := GetBundleValue('CFBundleVersion');
+end;
+
+class procedure TPlatformOSDevice.ShowFilesInFolder(const AFileNames: array of string);
+var
+  LArray: array of Pointer;
+  LNSArray: NSArray;
+  I: Integer;
+begin
+  SetLength(LArray, Length(AFileNames));
+  for I := 0 to Length(AFileNames) - 1 do
+    LArray[I] := TNSURL.OCClass.fileURLWithPath(StrToNSStr(AFileNames[I]));
+  LNSArray := TNSArray.Wrap(TNSArray.OCClass.arrayWithObjects(@LArray[0], Length(LArray)));
+  TNSWorkspace.wrap(TNSWorkspace.OCClass.sharedWorkspace).activateFileViewerSelectingURLs(LNSArray);
 end;
 
 end.

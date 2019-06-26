@@ -56,6 +56,7 @@ type
     ///   Returns the unique id for the device, if any exists
     /// </summary>
     class function GetUniqueDeviceID: string; static;
+    class function GetUsername: string; static;
     /// <summary>
     ///   Returns whether the device is a mobile device
     /// </summary>
@@ -64,6 +65,7 @@ type
     ///   Returns whether the device has touch capability
     /// </summary>
     class function IsTouchDevice: Boolean; static;
+    class procedure ShowFilesInFolder(const AFileNames: array of string); static;
   end;
 
 implementation
@@ -151,6 +153,15 @@ begin
   Result := TPlatformOSDevice.GetUniqueDeviceID;
 end;
 
+class function TOSDevice.GetUsername: string;
+begin
+  {$IF Defined(MSWINDOWS) or Defined(OSX)}
+  Result := TPlatformOSDevice.GetUsername;
+  {$ELSE}
+  Result := '';
+  {$ENDIF}
+end;
+
 class function TOSDevice.IsMobile: Boolean;
 begin
   Result := TOSVersion.Platform in [TOSVersion.TPlatform.pfiOS, TOSVersion.TPlatform.pfAndroid];
@@ -159,6 +170,13 @@ end;
 class function TOSDevice.IsTouchDevice: Boolean;
 begin
   Result := TPlatformOSDevice.IsTouchDevice;
+end;
+
+class procedure TOSDevice.ShowFilesInFolder(const AFileNames: array of string);
+begin
+  {$IF Defined(MSWINDOWS) or Defined(OSX)}
+  TPlatformOSDevice.ShowFilesInFolder(AFileNames);
+  {$ENDIF}
 end;
 
 end.
