@@ -1,0 +1,21 @@
+diff -r S:\DelphiWorlds\Patches\Delphi\20.0\FMX.Grid.Style.pas C:\Program Files (x86)\Embarcadero\Studio\20.0\source\fmx\FMX.Grid.Style.pas
+3179,3181d3178
+<     // https://quality.embarcadero.com/browse/RSP-17989: Moved these 2 lines from lines 3188-3189 in the original
+<     LCol := TSelectTimer(Sender).FCoord.Col;
+<     LRow := TSelectTimer(Sender).FCoord.Row;
+3184,3186d3180
+<       // https://quality.embarcadero.com/browse/RSP-17989: Moved these 2 lines from lines 3195-3196 in the original
+<       if TSelectTimer.TTimerAction.SelectCell in TSelectTimer(Sender).FTimerActions then
+<         Model.SelectCell(LCol, LRow);
+3193a3188,3189
+>       LCol := TSelectTimer(Sender).FCoord.Col;
+>       LRow := TSelectTimer(Sender).FCoord.Row;
+3198a3195,3196
+>           if TSelectTimer.TTimerAction.SelectCell in TSelectTimer(Sender).FTimerActions then
+>             Model.SelectCell(LCol, LRow);
+3250,3252c3248
+<       // https://quality.embarcadero.com/browse/RSP-17989: Added the following line (original has no if statement)
+<       if TGridOption.AlwaysShowEditor in Model.Options then
+<         FUpdating := FUpdating + [TGridPart.EditorShowing];
+---
+>       FUpdating := FUpdating + [TGridPart.EditorShowing];
