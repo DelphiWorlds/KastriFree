@@ -119,7 +119,7 @@ begin
   if M is TMessageResultNotification then
   begin
     LResult := TMessageResultNotification(M);
-    if LResult.ResultCode = TJActivity.JavaClass.RESULT_OK then
+    if (LResult.ResultCode = TJActivity.JavaClass.RESULT_OK) and (LResult.RequestCode = ACTION_TAKE_IMAGE_FROM_CAMERA) then
     begin
       {$IF CompilerVersion > 31}
       HandleReceivedImage;
