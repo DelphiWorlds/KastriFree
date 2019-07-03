@@ -42,7 +42,7 @@ uses
   // RTL
   System.SysUtils,
   // Android
-  Androidapi.JNI.Provider, Androidapi.JNI.App, Androidapi.Helpers, Androidapi.JNI.Os, Androidapi.JNIBridge,
+  Androidapi.JNI.Provider, Androidapi.JNI.App, Androidapi.JNI.Media, Androidapi.Helpers, Androidapi.JNI.Os, Androidapi.JNIBridge,
   // FMX
   FMX.Graphics, FMX.Platform,
   // DW
@@ -102,10 +102,19 @@ procedure TPlatformMediaLibrary.HandleReceivedImage;
 var
   LBitmap: TBitmap;
   LImagePath: string;
+  LEXIF: JExifInterface;
 begin
   LImagePath := JStringToString(FImageFile.getAbsolutePath);
   LBitmap := TBitmap.CreateFromFile(LImagePath);
   try
+    // Check EXIF data for orientation and rotate bitmap if necessary
+    LEXIF := TJExifInterface.JavaClass.init(StringToJString(LImagePath));
+    if LEXIF.getAttributeInt(TJExifInterface.JavaClass.TAG_ORIENTATION, -1) = TJExifInterface.JavaClass.ORIENTATION_ROTATE_90 then
+      LBitmap.Rotate(90)
+    else if LEXIF.getAttributeInt(TJExifInterface.JavaClass.TAG_ORIENTATION, -1) = TJExifInterface.JavaClass.ORIENTATION_ROTATE_180 then
+      LBitmap.Rotate(180)
+    else if LEXIF.getAttributeInt(TJExifInterface.JavaClass.TAG_ORIENTATION, -1) = TJExifInterface.JavaClass.ORIENTATION_ROTATE_270 then
+      LBitmap.Rotate(270);
     DoReceivedImage(LImagePath, LBitmap);
   finally
     LBitmap.Free;
