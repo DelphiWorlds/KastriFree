@@ -58,6 +58,10 @@ type
     class function GetUniqueDeviceID: string; static;
     class function GetUsername: string; static;
     /// <summary>
+    ///   Returns whether the application is a beta version
+    /// </summary>
+    class function IsBeta: Boolean; static;
+    /// <summary>
     ///   Returns whether the device is a mobile device
     /// </summary>
     class function IsMobile: Boolean; static;
@@ -159,6 +163,15 @@ begin
   Result := TPlatformOSDevice.GetUsername;
   {$ELSE}
   Result := '';
+  {$ENDIF}
+end;
+
+class function TOSDevice.IsBeta: Boolean;
+begin
+  {$IF Defined(MSWINDOWS)}
+  Result := TPlatformOSDevice.IsBeta;
+  {$ELSE}
+  Result := False;
   {$ENDIF}
 end;
 
