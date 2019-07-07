@@ -89,6 +89,26 @@ uses
   // FMX
   FMX.Helpers.Mac, FMX.Graphics;
 
+type
+  TPopupMenuHelper = class helper for TPopupMenu
+  public
+    function VisibleItemCount: Integer;
+  end;
+
+{ TPopupMenuHelper }
+
+function TPopupMenuHelper.VisibleItemCount: Integer;
+var
+  I: Integer;
+begin
+  Result := 0;
+  for I := 0 to ItemsCount - 1 do
+  begin
+    if Items[I].Visible then
+      Inc(Result);
+  end;
+end;
+
 function SharedApplication: NSApplication;
 begin
   Result := TNSApplication.Wrap(TNSApplication.OCClass.sharedApplication);
@@ -269,7 +289,7 @@ var
   I: Integer;
 begin
   ClearMenuItems;
-  if (FPopupMenu <> nil) and (FPopupMenu.ItemsCount > 0) then
+  if (FPopupMenu <> nil) and (FPopupMenu.VisibleItemCount > 0) then
   begin
     UpdateNSStatusItemImage(FStatusItem, FPopupMenu.Items[0]);
     for I := 1 to FPopupMenu.ItemsCount - 1 do
@@ -282,6 +302,8 @@ var
   I: Integer;
   LMacOSMenuItem: TMacOSMenuItem;
 begin
+  if not AItem.Visible then
+    Exit; // <======
   AItem.FreeNotification(Self);
   LMacOSMenuItem := TMacOSMenuItem.Create(Self, AItem);
   for I := 0 to AItem.ItemsCount - 1 do
@@ -293,6 +315,8 @@ var
   I: Integer;
   LSubItem: TMacOSMenuItem;
 begin
+  if not AItem.Visible then
+    Exit; // <======
   AItem.FreeNotification(Self);
   LSubItem := TMacOSMenuItem.Create(AMacOSMenuItem, AItem);
   for I := 0 to AItem.ItemsCount - 1 do
