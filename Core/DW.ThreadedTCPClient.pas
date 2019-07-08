@@ -77,6 +77,7 @@ type
   public
     constructor Create;
     destructor Destroy; override;
+    function CanConnect: Boolean;
     procedure Connect;
     procedure Disconnect;
     procedure SendCmd(const ACmd: string); virtual;
@@ -122,8 +123,6 @@ end;
 
 destructor TCustomThreadedTCPClient.Destroy;
 begin
-  Terminate;
-  WaitFor;
   FTCPClient.Free;
   FConnectEvent.Free;
   FDisconnectEvent.Free;
@@ -342,6 +341,11 @@ begin
     if not Terminated and FTCPClient.Connected then
       ReadData;
   end;
+end;
+
+function TCustomThreadedTCPClient.CanConnect: Boolean;
+begin
+  Result := not Host.IsEmpty and (Port > 0);
 end;
 
 procedure TCustomThreadedTCPClient.Connect;
