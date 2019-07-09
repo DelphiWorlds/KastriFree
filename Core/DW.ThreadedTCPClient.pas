@@ -38,6 +38,8 @@ type
     FData: TBytes;
     FDisconnectEvent: TEvent;
     FEvents: THandleObjectArray;
+    FIsConnected: Boolean;
+    FIsSynchronized: Boolean;
     FSendCmdEvent: TEvent;
     FTCPClient: TIdTCPClient;
     FOnConnected: TNotifyEvent;
@@ -45,7 +47,8 @@ type
     FOnException: TExceptionEvent;
     FOnReceiveData: TReceiveDataEvent;
     FOnResponse: TResponseEvent;
-    function ConnectClient: Boolean;
+    procedure ConnectClient;
+    procedure DisconnectClient;
     function GetConnectTimeout: Integer;
     function GetHost: string;
     function GetIsConnected: Boolean;
@@ -54,12 +57,20 @@ type
     procedure HandleException(const AException: Exception);
     function InternalConnect: Boolean;
     procedure InternalDisconnect;
+    procedure InternalDoConnected;
+    procedure InternalDoDisconnected;
+    procedure InternalDoException(const AException: Exception);
+    procedure InternalDoReceiveData;
+    procedure InternalDoResponse(const ACode: Integer; const AResponse: string);
     procedure InternalSendCmd;
     procedure ReadData;
+    procedure ReadDataFromBuffer;
+    procedure SendCmdFromClient;
     procedure SetConnectTimeout(const Value: Integer);
     procedure SetPort(const Value: Integer);
     procedure SetReadTimeout(const Value: Integer);
     procedure SetHost(const Value: string);
+    procedure TCPClientConnectedHandler(Sender: TObject);
     procedure TCPClientDisconnectedHandler(Sender: TObject);
   protected
     procedure DoConnected; virtual;
@@ -85,6 +96,7 @@ type
     property ConnectTimeout: Integer read GetConnectTimeout write SetConnectTimeout;
     property Host: string read GetHost write SetHost;
     property IsConnected: Boolean read GetIsConnected;
+    property IsSynchronized: Boolean read FIsSynchronized write FIsSynchronized;
     property Port: Integer read GetPort write SetPort;
     property ReadTimeout: Integer read GetReadTimeout write SetReadTimeout;
   end;
@@ -111,9 +123,11 @@ uses
 constructor TCustomThreadedTCPClient.Create;
 begin
   inherited Create;
+  // FIsSynchronized := True;
   FTCPClient := TIdTCPClient.Create(nil);
   FTCPClient.ConnectTimeout := 5000;
   FTCPClient.ReadTimeout := 5000;
+  FTCPClient.OnConnected := TCPClientConnectedHandler;
   FTCPClient.OnDisconnected := TCPClientDisconnectedHandler;
   FConnectEvent := TEvent.Create(nil, True, False, '');
   FDisconnectEvent := TEvent.Create(nil, True, False, '');
@@ -142,7 +156,7 @@ end;
 
 function TCustomThreadedTCPClient.GetIsConnected: Boolean;
 begin
-  Result := FTCPClient.Connected;
+  Result := FIsConnected;
 end;
 
 function TCustomThreadedTCPClient.GetPort: Integer;
@@ -175,33 +189,55 @@ begin
   FTCPClient.ReadTimeout := Value;
 end;
 
+procedure TCustomThreadedTCPClient.TCPClientConnectedHandler(Sender: TObject);
+begin
+  FIsConnected := True;
+  DoConnected;
+end;
+
 procedure TCustomThreadedTCPClient.TCPClientDisconnectedHandler(Sender: TObject);
 begin
+  TOSLog.d('TCustomThreadedTCPClient.TCPClientDisconnectedHandler');
+  FIsConnected := False;
   DoDisconnected;
 end;
 
 function TCustomThreadedTCPClient.InternalConnect: Boolean;
-var
-  LIsConnected: Boolean;
 begin
-  LIsConnected := FTCPClient.Connected;
   FConnectEvent.ResetEvent;
-  Result := ConnectClient;
-  if not LIsConnected and Result then
-    DoConnected;
+  Result := FIsConnected;
+  if not Result then
+  begin
+    FClientState := TClientState.Connecting;
+    try
+      ConnectClient;
+      Result := FIsConnected;
+    finally
+      FClientState := TClientState.None;
+    end;
+  end;
 end;
 
-function TCustomThreadedTCPClient.ConnectClient: Boolean;
+procedure TCustomThreadedTCPClient.DoConnected;
 begin
-  Result := False;
+  if Assigned(FOnConnected) then
+  begin
+    if FIsSynchronized then
+      Synchronize(InternalDoConnected)
+    else
+      InternalDoConnected;
+  end;
+end;
+
+procedure TCustomThreadedTCPClient.InternalDoConnected;
+begin
+  FOnConnected(Self);
+end;
+
+procedure TCustomThreadedTCPClient.ConnectClient;
+begin
   try
-    if not FTCPClient.Connected then
-    begin
-      FClientState := TClientState.Connecting;
-      FTCPClient.Connect;
-    end;
-    Result := FTCPClient.Connected;
-    FClientState := TClientState.None;
+    FTCPClient.Connect;
   except
     on E: Exception do
       HandleException(E);
@@ -213,12 +249,36 @@ begin
   FDisconnectEvent.ResetEvent;
   FClientState := TClientState.Disconnecting;
   try
-    FTCPClient.Disconnect;
+    DisconnectClient;
+  finally
     FClientState := TClientState.None;
+  end;
+end;
+
+procedure TCustomThreadedTCPClient.DisconnectClient;
+begin
+  try
+    FTCPClient.Disconnect;
   except
     on E: Exception do
       HandleException(E);
   end;
+end;
+
+procedure TCustomThreadedTCPClient.DoDisconnected;
+begin
+  if Assigned(FOnDisconnected) then
+  begin
+    if FIsSynchronized then
+      Synchronize(InternalDoDisconnected)
+    else
+      InternalDoDisconnected;
+  end;
+end;
+
+procedure TCustomThreadedTCPClient.InternalDoDisconnected;
+begin
+  FOnDisconnected(Self);
 end;
 
 procedure TCustomThreadedTCPClient.InternalSendCmd;
@@ -226,102 +286,126 @@ begin
   FSendCmdEvent.ResetEvent;
   if InternalConnect then
   begin
-    TOSLog.d('FTCPClient.SendCmd(%s)', [FCommand]);
     FClientState := TClientState.Sending;
     try
-      FTCPClient.SendCmd(FCommand);
+      SendCmdFromClient;
+    finally
       FClientState := TClientState.None;
-    except
-      on E: Exception do
-        HandleException(E);
     end;
-    if not Terminated then
-      DoResponse(FTCPClient.LastCmdResult.NumericCode, FTCPClient.LastCmdResult.Text.Text);
   end;
 end;
 
-procedure TCustomThreadedTCPClient.ReadData;
+procedure TCustomThreadedTCPClient.SendCmdFromClient;
 begin
-  SetLength(FData, 0);
-  FClientState := TClientState.Receiving;
   try
-    FTCPClient.IOHandler.ReadBytes(TIdBytes(FData), -1);
-    FClientState := TClientState.None;
-    if not Terminated and (Length(FData) > 0) then
-      DoReceiveData;
+    FTCPClient.SendCmd(FCommand);
+    if not Terminated then
+      DoResponse(FTCPClient.LastCmdResult.NumericCode, FTCPClient.LastCmdResult.Text.Text);
   except
     on E: Exception do
       HandleException(E);
   end;
 end;
 
-procedure TCustomThreadedTCPClient.DoConnected;
+procedure TCustomThreadedTCPClient.ReadData;
 begin
-  if not Assigned(FOnConnected) then
-    Exit; // <=======
-  Queue(Self,
-    procedure
-    begin
-      FOnConnected(Self);
-    end
-  );
+  if FTCPClient.IOHandler <> nil then
+  try
+    ReadDataFromBuffer;
+  except
+    on E: Exception do
+      HandleException(E);
+  end;
 end;
 
-procedure TCustomThreadedTCPClient.DoDisconnected;
+procedure TCustomThreadedTCPClient.ReadDataFromBuffer;
 begin
-  if not Assigned(FOnDisconnected) then
-    Exit; // <=======
-  Queue(Self,
-    procedure
-    begin
-      FOnDisconnected(Self);
-    end
-  );
+  if FTCPClient.IOHandler.CheckForDataOnSource(10) then
+  begin
+    // TOSLog.d('TCustomThreadedTCPClient.ReadDataFromBuffer - has data');
+    SetLength(FData, 0);
+    FClientState := TClientState.Receiving;
+    try
+      FTCPClient.IOHandler.InputBuffer.ExtractToBytes(TIdBytes(FData));
+    finally
+      FClientState := TClientState.None;
+    end;
+    if not Terminated and (Length(FData) > 0) then
+      DoReceiveData
+    else if not Terminated then
+      TOSLog.d('TCustomThreadedTCPClient.ReadDataFromBuffer - had data, but nothing there!');
+  end;
 end;
 
 procedure TCustomThreadedTCPClient.HandleException(const AException: Exception);
 begin
-  try
-    DoException(AException);
-  finally
-    FClientState := TClientState.None;
-  end;
+  TOSLog.d('TCustomThreadedTCPClient.HandleException: %s - %s', [AException.ClassName, AException.Message]);
+  if not FTCPClient.Connected then
+    FIsConnected := False;
+  DoException(AException);
 end;
 
 procedure TCustomThreadedTCPClient.DoException(const AException: Exception);
 begin
-  if not Assigned(FOnException) then
-    Exit; // <=======
-  Synchronize(Self,
-    procedure
+  if Assigned(FOnException) then
+  begin
+    if FIsSynchronized then
     begin
-      FOnException(Self, AException);
+      Synchronize(
+        procedure
+        begin
+          InternalDoException(AException);
+        end
+      );
     end
-  );
+    else
+      InternalDoException(AException);
+  end;
 end;
 
-procedure TCustomThreadedTCPClient.DoReceiveData;
+
+procedure TCustomThreadedTCPClient.InternalDoException(const AException: Exception);
 begin
-  if not Assigned(FOnReceiveData) then
-    Exit; // <=======
-  Queue(Self,
-    procedure
-    begin
-      FOnReceiveData(Self, FData);
-    end
-  );
+  FOnException(Self, AException);
 end;
 
 procedure TCustomThreadedTCPClient.DoResponse(const ACode: Integer; const AResponse: string);
 begin
-  if not Assigned(FOnResponse) then
-    Exit; // <=======
-  Queue(Self,
-    procedure
+  if Assigned(FOnResponse) then
+  begin
+    if FIsSynchronized then
     begin
-      FOnResponse(Self, ACode, AResponse);
+      Synchronize(
+        procedure
+        begin
+          InternalDoResponse(ACode, AResponse);
+        end
+      );
     end
-  );
+    else
+      InternalDoResponse(ACode, AResponse);
+  end;
+end;
+
+procedure TCustomThreadedTCPClient.InternalDoResponse(const ACode: Integer; const AResponse: string);
+begin
+  FOnResponse(Self, ACode, AResponse);
+end;
+
+procedure TCustomThreadedTCPClient.DoReceiveData;
+begin
+  if Assigned(FOnReceiveData) then
+  begin
+    if FIsSynchronized then
+      Synchronize(InternalDoReceiveData)
+    else
+      InternalDoReceiveData;
+  end;
+end;
+
+procedure TCustomThreadedTCPClient.InternalDoReceiveData;
+begin
+  FOnReceiveData(Self, FData);
 end;
 
 procedure TCustomThreadedTCPClient.Execute;
@@ -337,8 +421,9 @@ begin
     else if LSignaledEvent = FConnectEvent then
       InternalConnect
     else if LSignaledEvent = FSendCmdEvent then
-      InternalSendCmd;
-    if not Terminated and FTCPClient.Connected then
+      InternalSendCmd
+    //!!!!! Added else
+    else if not Terminated and FIsConnected then
       ReadData;
   end;
 end;
