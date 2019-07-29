@@ -16,7 +16,7 @@ unit DW.Macapi.Dispatch;
 interface
 
 uses
-  System.SysUtils,
+  // Mac
   Macapi.Dispatch;
 
 type
@@ -35,6 +35,10 @@ type
 
 implementation
 
+uses
+  // RTL
+  System.SysUtils;
+
 const
 {$IF Defined(IOS)}
   libdispatch = '/usr/lib/libSystem.dylib';
@@ -45,36 +49,28 @@ const
 procedure dispatch_sync_f(queue: dispatch_queue_t; context: Pointer; work: dispatch_function_t); cdecl;
   external libdispatch name _PU + 'dispatch_sync_f';
 
-//procedure dispatch_async(queue: dispatch_queue_t; work: dispatch_work_t);
-//procedure dispatch_sync(queue: dispatch_queue_t; work: dispatch_work_t);
-//function dispatch_get_main_queue: dispatch_queue_t;
-
-//implementation
-
-//uses
-//  System.SysUtils;
-
 { Grand Central Dispatch implementation }
 
 function dispatch_get_main_queue: dispatch_queue_t;
 var
-  FwkMod: HMODULE;
+  LModule: HMODULE;
 begin
   Result := 0;
-  FwkMod := LoadLibrary(PWideChar(libdispatch));
-  if FwkMod <> 0 then
-  begin
-    Result := dispatch_queue_t(GetProcAddress(FwkMod, PWideChar('_dispatch_main_q')));
-    FreeLibrary(FwkMod);
+  LModule := LoadLibrary(PWideChar(libdispatch));
+  if LModule <> 0 then
+  try
+    Result := dispatch_queue_t(GetProcAddress(LModule, PWideChar('_dispatch_main_q')));
+  finally
+    FreeLibrary(LModule);
   end;
 end;
 
 procedure DispatchCallback(context: Pointer); cdecl;
 var
-  CallbackProc: dispatch_work_t absolute context;
+  LCallbackProc: dispatch_work_t absolute context;
 begin
   try
-    CallbackProc;
+    LCallbackProc;
   finally
     IInterface(context)._Release;
   end;
@@ -82,24 +78,24 @@ end;
 
 procedure dispatch_async(queue: dispatch_queue_t; work: dispatch_work_t);
 var
-  callback: Pointer absolute work;
+  LCallback: Pointer absolute work;
 begin
-  IInterface(callback)._AddRef;
-  dispatch_async_f(queue, callback, DispatchCallback);
+  IInterface(LCallback)._AddRef;
+  dispatch_async_f(queue, LCallback, DispatchCallback);
 end;
 
 procedure dispatch_sync(queue: dispatch_queue_t; work: dispatch_work_t);
 var
-  callback: Pointer absolute work;
+  LCallback: Pointer absolute work;
 begin
-  IInterface(callback)._AddRef;
-  dispatch_sync_f(queue, callback, DispatchCallback);
+  IInterface(LCallback)._AddRef;
+  dispatch_sync_f(queue, LCallback, DispatchCallback);
 end;
 
-{ TDispatch }
+{ TGrandCentral }
 
-class procedure TGrandCentral.DispatchAsync(const AProc: dispatch_work_t; const AQueue: dispatch_queue_t = 0);
-begin
+class procedure TGrandCentral.DispatchAsync(const AProc: dispatch_work_t; const AQueue: dispatch_queue_t = 0);
+begin
   if AQueue = 0 then
     dispatch_async(GetMainQueue, AProc)
   else
