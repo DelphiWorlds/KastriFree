@@ -28,7 +28,7 @@ type
   TResponseEvent = procedure(Sender: TObject; const Code: Integer; const Response: string) of object;
   TReceiveDataEvent = procedure(Sender: TObject; const Data: TBytes) of object;
 
-  TClientState = (None, Connecting, Disconnecting, Sending, Receiving);
+  TClientState = (None, Connecting, Disconnecting, Sending, Receiving, ConnectError);
 
   TSendQueue = class(TThreadList<string>)
   protected
@@ -67,7 +67,7 @@ type
     procedure HandleException(const AException: Exception);
     function InternalConnect: Boolean;
     procedure InternalDisconnect;
-    // procedure InternalSendCmd;
+    procedure InternalSendCmd;
     function IsMainThread: Boolean;
     procedure ReadData;
     procedure ReadDataFromBuffer;
@@ -119,7 +119,7 @@ implementation
 
 uses
   // Indy
-  IdGlobal,
+  IdGlobal, IdExceptionCore,
   // DW
   DW.OSLog;
 
@@ -326,20 +326,21 @@ begin
     FOnDisconnected(Self);
 end;
 
-{
 procedure TCustomThreadedTCPClient.InternalSendCmd;
+var
+  LCmd: string;
 begin
+  LCmd := FSendQueue.Pop;
   if InternalConnect then
   begin
     FClientState := TClientState.Sending;
     try
-      SendCmdFromClient;
+      SendCmdFromClient(LCmd);
     finally
       FClientState := TClientState.None;
     end;
   end;
 end;
-}
 
 procedure TCustomThreadedTCPClient.SendCmdFromClient(const ACmd: string);
 begin
@@ -394,6 +395,8 @@ end;
 procedure TCustomThreadedTCPClient.HandleException(const AException: Exception);
 begin
   TOSLog.d('TCustomThreadedTCPClient.HandleException: %s - %s', [AException.ClassName, AException.Message]);
+  if AException.InheritsFrom(EIdSocksServerConnectionRefusedError) then
+    FClientState := TClientState.ConnectError;
   DoException(AException);
 end;
 
@@ -474,8 +477,8 @@ begin
     begin
       if FIsConnected then
         ReadData;
-      if (FSendQueue.Count > 0) and InternalConnect then
-        SendCmdFromClient(FSendQueue.Pop);
+      if FSendQueue.Count > 0 then
+        InternalSendCmd;
     end;
   end;
 end;
