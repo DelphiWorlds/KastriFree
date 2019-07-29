@@ -8,12 +8,10 @@ unit DW.VKVertScrollbox;
 {                                                       }
 {*******************************************************}
 
-// ***** NOTE: For Android, this unit should be used only in conjunction with the workaround described here:
-//   https://https://github.com/DelphiWorlds/KastriFree/blob/master/Workarounds/RSP-17917.txt
+{$I DW.GlobalDefines.inc}
+
 // For an example of how to use this unit, please refer to the demo, here:
 //   https://github.com/DelphiWorlds/KastriFree/tree/master/Demos/VKVertScrollbox
-
-{$I DW.GlobalDefines.inc}
 
 interface
 
@@ -27,11 +25,12 @@ type
   TVertScrollBox = class(FMX.Layouts.TVertScrollBox)
   private
     FCaretPos: TPointF;
-    FFocusChanged: Boolean;
-    FFocusedControl: TControl;
     FControlsLayout: TControl;
+    FFocusedControl: TControl;
+    FNeedsIsElasticUpdate: Boolean;
     FRestoreViewport: Boolean;
     FStoredHeight: Single;
+    FStoredIsElastic: Boolean;
     FVKRect: TRect;
     function IsFocusedObject: Boolean;
     function HasCaretPosChanged: Boolean;
@@ -71,14 +70,14 @@ implementation
 uses
   // RTL
   System.SysUtils,
-{$IF Defined(IOS)}
   // iOS
+{$IF Defined(IOS)}
   iOSapi.Helpers,
 {$ENDIF}
   // FMX
   FMX.Forms, FMX.Types, FMX.Edit, FMX.Memo,
   // DW
-  DW.VirtualKeyboard.Helpers;
+  DW.VirtualKeyboard.Helpers, DW.ElasticLayout;
 
 function GetStatusBarHeight: Single;
 begin
@@ -94,6 +93,8 @@ end;
 constructor TVertScrollBox.Create(AOwner: TComponent);
 begin
   inherited;
+  FNeedsIsElasticUpdate := True;
+  FVKRect := TRect.Empty;
   TMessageManager.DefaultManager.SubscribeToMessage(TOrientationChangedMessage, OrientationChangedMessageHandler);
   TMessageManager.DefaultManager.SubscribeToMessage(TVKStateChangeMessage, VKStateChangeMessageHandler);
   TMessageManager.DefaultManager.SubscribeToMessage(TIdleMessage, IdleMessageHandler);
@@ -120,16 +121,20 @@ begin
   if FControlsLayout <> nil then
     FControlsLayout.RemoveFreeNotification(Self);
   FControlsLayout := Value;
-  FControlsLayout.FreeNotification(Self);
+  if FControlsLayout <> nil then
+    FControlsLayout.FreeNotification(Self);
+  FNeedsIsElasticUpdate := True;
 end;
 
 procedure TVertScrollBox.VKStateChangeMessageHandler(const Sender: TObject; const M: TMessage);
 begin
   if FControlsLayout = nil then
     Exit; // <=======
-  FVKRect := TVKStateChangeMessage(M).KeyboardBounds;
   if TVKStateChangeMessage(M).KeyboardVisible then
-    MoveControls
+  begin
+    FVKRect := TVKStateChangeMessage(M).KeyboardBounds;
+    MoveControls;
+  end
   else
     RestoreControls;
 end;
@@ -142,10 +147,10 @@ begin
   if FFocusedControl is TCustomMemo then
   begin
     LMemo := TCustomMemo(FFocusedControl);
-    if LMemo.Caret.Pos.Y <> FCaretPos.Y then
+    if Trunc(LMemo.Caret.Pos.Y) <> Trunc(FCaretPos.Y) then
     begin
+      FCaretPos.Y := Trunc(LMemo.Caret.Pos.Y);
       Result := True;
-      FCaretPos.Y := LMemo.Caret.Pos.Y;
     end;
   end
   else
@@ -155,13 +160,8 @@ end;
 procedure TVertScrollBox.IdleMessageHandler(const Sender: TObject; const M: TMessage);
 begin
   // TIdleMessage is being used to check if the focused control has changed, or a caret position has changed. This may happen without the VK hiding/showing
-  if not FVKRect.IsEmpty and (HasCaretPosChanged or not IsFocusedObject) then
-  begin
+  if TVirtualKeyboard.IsVisible and (HasCaretPosChanged or not IsFocusedObject) then
     MoveControls;
-    FFocusChanged := True;
-  end
-  else
-    FFocusChanged := False;
 end;
 
 function TVertScrollBox.IsFocusedObject: Boolean;
@@ -181,6 +181,12 @@ begin
     Exit; // <======
   if FStoredHeight = 0 then
     FStoredHeight := FControlsLayout.Height;
+  if FNeedsIsElasticUpdate and (FControlsLayout is DW.ElasticLayout.TFlowLayout) then
+  begin
+    FStoredIsElastic := DW.ElasticLayout.TFlowLayout(FControlsLayout).IsElastic;
+    FNeedsIsElasticUpdate := False;
+    DW.ElasticLayout.TFlowLayout(FControlsLayout).IsElastic := False;
+  end;
   FControlsLayout.Height := Height + FVKRect.Height + ViewportPosition.Y;
   FFocusedControl := TControl(Root.Focused.GetObject);
   // Find control position relative to the layout
@@ -194,11 +200,11 @@ begin
   else if FFocusedControl is TCustomMemo then
   begin
     LMemo := TCustomMemo(FFocusedControl);
-    LControlBottom := LControlPosition.Y + (LMemo.Caret.Pos.Y - LMemo.ViewportPosition.Y) + LMemo.Caret.size.Height + 4;
+    LControlBottom := LControlPosition.Y + (LMemo.Caret.Pos.Y - LMemo.ViewportPosition.Y) + (LMemo.Caret.size.Height * 2) + 6;
   end;
   // + 2 = to give a tiny bit of clearance between the control "bottom" and the VK
   LOffset := (LControlBottom + 2 + GetStatusBarHeight - FVKRect.Top) / Scale.Y;
-  if LOffset > 0 then
+  if Trunc(LOffset) > 0 then
     ViewportPosition := PointF(0, LOffset);
 end;
 
@@ -211,7 +217,6 @@ end;
 
 procedure TVertScrollBox.OrientationChangedMessageHandler(const Sender: TObject; const M: TMessage);
 begin
-  Restore(True);
   if not TVirtualKeyboard.GetBounds.IsEmpty then
   begin
     FVKRect := TVirtualKeyboard.GetBounds;
@@ -222,7 +227,7 @@ end;
 procedure TVertScrollBox.RestoreControls;
 begin
   FVKRect := TRect.Empty;
-  if (FControlsLayout = nil) or FFocusChanged then
+  if FControlsLayout = nil then
     Exit; // <======
   Restore(False);
 end;
@@ -234,6 +239,11 @@ begin
   FStoredHeight := 0;
   if FRestoreViewport or AIgnoreRestoreViewport then
     ViewportPosition := PointF(0, 0);
+  if FControlsLayout is DW.ElasticLayout.TFlowLayout then
+  begin
+    DW.ElasticLayout.TFlowLayout(FControlsLayout).IsElastic := FStoredIsElastic;
+    FNeedsIsElasticUpdate := True;
+  end;
 end;
 
 end.
