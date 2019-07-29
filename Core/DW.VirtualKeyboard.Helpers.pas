@@ -24,6 +24,7 @@ type
     class procedure EnableToolbar(const AEnable: Boolean); static;
     class function GetBounds: TRect; static;
     class procedure Hide; static;
+    class function IsVisible: Boolean; static;
     class procedure Show(const AObject: TFmxObject); static;
   end;
 
@@ -54,6 +55,15 @@ var
 begin
   if TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardService, LService) then
     LService.HideVirtualKeyboard;
+end;
+
+class function TVirtualKeyboard.IsVisible: Boolean;
+var
+  LService: IFMXVirtualKeyboardService;
+begin
+  Result := False;
+  if TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardService, LService) then
+    Result := TVirtualKeyboardState.Visible in LService.VirtualKeyboardState;
 end;
 
 class procedure TVirtualKeyboard.Show(const AObject: TFmxObject);
