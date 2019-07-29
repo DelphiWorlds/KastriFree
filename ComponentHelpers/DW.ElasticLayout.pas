@@ -8,8 +8,6 @@ unit DW.ElasticLayout;
 {                                                       }
 {*******************************************************}
 
-{$I DW.GlobalDefines.inc}
-
 interface
 
 uses
@@ -28,7 +26,7 @@ type
   TLayout = class(FMX.Layouts.TLayout)
   private
     FIsElastic: Boolean;
-    function GetChildrenOnlyRect: TRectF;
+    // function GetChildrenOnlyRect: TRectF;
     procedure SetIsElastic(const Value: Boolean);
   protected
     procedure DoRealign; override;
@@ -39,18 +37,36 @@ type
     property IsElastic: Boolean read FIsElastic write SetIsElastic;
   end;
 
+  TFlowLayout = class(FMX.Layouts.TFlowLayout)
+  private
+    FIsElastic: Boolean;
+    procedure SetIsElastic(const Value: Boolean);
+  protected
+    procedure DoRealign; override;
+  public
+    property IsElastic: Boolean read FIsElastic write SetIsElastic;
+  end;
+
 implementation
 
-{ TLayout }
+type
+  TElasticLayoutHelper = class helper for TControl
+  private
+    function GetChildrenOnlyRect: TRectF;
+  protected
+    procedure ElasticRealign;
+  end;
 
-function TLayout.GetChildrenOnlyRect: TRectF;
+{ TElasticLayoutHelper }
+
+function TElasticLayoutHelper.GetChildrenOnlyRect: TRectF;
 var
   I: Integer;
   Control: TControl;
   LChildrenRect: TRectF;
 begin
   Result := TRectF.Empty;
-  if not (ClipChildren or SmallSizeControl) and (Controls <> nil) then
+  if not ClipChildren and (Controls <> nil) then
   begin
     for I := GetFirstVisibleObjectIndex to GetLastVisibleObjectIndex - 1 do
     begin
@@ -71,25 +87,49 @@ begin
   end;
 end;
 
-procedure TLayout.DoRealign;
+procedure TElasticLayoutHelper.ElasticRealign;
 var
   LRect: TRectF;
 begin
-  if FIsElastic then
-  begin
-    LRect := GetChildrenOnlyRect;
-    FDisableAlign := True;
-    try
+  LRect := GetChildrenOnlyRect;
+  FDisableAlign := True;
+  try
+    if not (Align in [TAlignLayout.Top, TAlignLayout.MostTop, TAlignLayout.Bottom, TAlignLayout.MostBottom]) then
       Width := LRect.Width;
+    if not (Align in [TAlignLayout.Left, TAlignLayout.MostLeft, TAlignLayout.Right, TAlignLayout.MostRight]) then
       Height := LRect.Height;
-    finally
-      FDisableAlign := False;
-    end;
+  finally
+    FDisableAlign := False;
   end;
+end;
+
+{ TLayout }
+
+procedure TLayout.DoRealign;
+begin
   inherited;
+  if FIsElastic then
+    ElasticRealign;
 end;
 
 procedure TLayout.SetIsElastic(const Value: Boolean);
+begin
+  if Value = FIsElastic then
+    Exit; // <======
+  FIsElastic := Value;
+  Realign;
+end;
+
+{ TFlowLayout }
+
+procedure TFlowLayout.DoRealign;
+begin
+  inherited;
+  if FIsElastic then
+    ElasticRealign;
+end;
+
+procedure TFlowLayout.SetIsElastic(const Value: Boolean);
 begin
   if Value = FIsElastic then
     Exit; // <======
