@@ -10,17 +10,19 @@ uses
 type
   TForm1 = class(TForm)
     ImmediateButton: TButton;
-    Schedule10SecondsButton: TButton;
+    ScheduleButton: TButton;
     CancelScheduled: TButton;
     LogMemo: TMemo;
+    ScheduleRepeatingButton: TButton;
     procedure ImmediateButtonClick(Sender: TObject);
-    procedure Schedule10SecondsButtonClick(Sender: TObject);
+    procedure ScheduleButtonClick(Sender: TObject);
     procedure CancelScheduledClick(Sender: TObject);
+    procedure ScheduleRepeatingButtonClick(Sender: TObject);
   private
     FNotifications: TNotifications;
     procedure ImmediateNotification;
     procedure NotificationReceivedHandler(Sender: TObject; const ANotification: TNotification);
-    procedure ScheduleNotification;
+    procedure ScheduleNotification(const ASeconds: Integer; const ARepeating: Boolean);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -64,12 +66,12 @@ begin
   FNotifications.PresentNotification(LNotification);
 end;
 
-procedure TForm1.Schedule10SecondsButtonClick(Sender: TObject);
+procedure TForm1.ScheduleButtonClick(Sender: TObject);
 begin
-  ScheduleNotification;
+  ScheduleNotification(10, False);
 end;
 
-procedure TForm1.ScheduleNotification;
+procedure TForm1.ScheduleNotification(const ASeconds: Integer; const ARepeating: Boolean);
 var
   LNotification: TNotification;
 begin
@@ -78,8 +80,15 @@ begin
   LNotification.Subtitle := 'Io non parlo italiano';
   LNotification.EnableSound := False;
   LNotification.AlertBody := 'This notification was scheduled - so there';
-  LNotification.FireDate := Now + EncodeTime(0, 0, 10, 0);
+  LNotification.FireDate := Now + EncodeTime(0, 0, ASeconds, 0);
+  if ARepeating then
+    LNotification.RepeatInterval := TRepeatInterval.Minute;
   FNotifications.ScheduleNotification(LNotification);
+end;
+
+procedure TForm1.ScheduleRepeatingButtonClick(Sender: TObject);
+begin
+  ScheduleNotification(10, True);
 end;
 
 procedure TForm1.CancelScheduledClick(Sender: TObject);

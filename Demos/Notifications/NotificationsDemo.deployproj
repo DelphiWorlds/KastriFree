@@ -6,8 +6,8 @@
     <PropertyGroup>
         <DeviceId Condition="'$(Platform)'=='Android'">01eaba1eaeaa92b1</DeviceId>
         <DeviceId Condition="'$(Platform)'=='iOSDevice32'"/>
-        <DeviceId Condition="'$(Platform)'=='iOSDevice64'">dbc075e70feebd228254aeefb34f3fb6cf735b8f</DeviceId>
-        <DeviceId Condition="'$(Platform)'=='iOSSimulator'">2833DBFA-6D72-4331-8F19-3ED1B9DB6342</DeviceId>
+        <DeviceId Condition="'$(Platform)'=='iOSDevice64'"/>
+        <DeviceId Condition="'$(Platform)'=='iOSSimulator'">iPhone5</DeviceId>
     </PropertyGroup>
     <ItemGroup Condition="'$(Platform)'=='iOSDevice64'">
         <DeployFile Include="$(BDS)\bin\Artwork\iOS\iPhone\FM_LaunchImage_640x1136.png" Condition="'$(Config)'=='Debug'">
@@ -50,7 +50,7 @@
             <RemoteDir>NotificationsDemo.app\</RemoteDir>
             <RemoteName>Default-667h@2x.png</RemoteName>
             <DeployClass>iPhone_Launch750</DeployClass>
-            <Operation>0</Operation>
+            <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -140,7 +140,7 @@
             <RemoteDir>NotificationsDemo.app\</RemoteDir>
             <RemoteName>Default-736h@3x.png</RemoteName>
             <DeployClass>iPhone_Launch1242</DeployClass>
-            <Operation>0</Operation>
+            <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -212,7 +212,7 @@
             <RemoteDir>NotificationsDemo.app\</RemoteDir>
             <RemoteName>Default-Portrait@2x~ipad.png</RemoteName>
             <DeployClass>iPad_Launch1536x2048</DeployClass>
-            <Operation>0</Operation>
+            <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -248,7 +248,7 @@
             <RemoteDir>NotificationsDemo.app\</RemoteDir>
             <RemoteName>Default-Landscape-812h@3x.png</RemoteName>
             <DeployClass>iPhone_Launch2436</DeployClass>
-            <Operation>0</Operation>
+            <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -257,7 +257,7 @@
             <RemoteDir>NotificationsDemo.app\</RemoteDir>
             <RemoteName>Default-Portrait~ipad.png</RemoteName>
             <DeployClass>iPad_Launch768x1024</DeployClass>
-            <Operation>0</Operation>
+            <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -294,7 +294,7 @@
             <RemoteDir>NotificationsDemo.app\</RemoteDir>
             <RemoteName>Default-Landscape-736h@3x.png</RemoteName>
             <DeployClass>iPhone_Launch2208</DeployClass>
-            <Operation>0</Operation>
+            <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -303,7 +303,7 @@
             <RemoteDir>NotificationsDemo.app\</RemoteDir>
             <RemoteName>Default-812h@3x.png</RemoteName>
             <DeployClass>iPhone_Launch1125</DeployClass>
-            <Operation>0</Operation>
+            <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -366,7 +366,7 @@
             <RemoteDir>NotificationsDemo.app\</RemoteDir>
             <RemoteName>Default-Landscape@2x~ipad.png</RemoteName>
             <DeployClass>iPad_Launch2048x1536</DeployClass>
-            <Operation>0</Operation>
+            <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -375,7 +375,7 @@
             <RemoteDir>NotificationsDemo.app\</RemoteDir>
             <RemoteName>Default-Landscape~ipad.png</RemoteName>
             <DeployClass>iPad_Launch1024x768</DeployClass>
-            <Operation>0</Operation>
+            <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -426,10 +426,73 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_36x36.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>NotificationsDemo\res\drawable-hdpi\</RemoteDir>
+            <RemoteName>ic_notification.png</RemoteName>
+            <DeployClass>Android_NotificationIcon36</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="Android\Debug\splash_image_def.xml" Condition="'$(Config)'=='Debug'">
             <RemoteDir>NotificationsDemo\res\drawable\</RemoteDir>
             <RemoteName>splash_image_def.xml</RemoteName>
             <DeployClass>AndroidSplashImageDef</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_96x96.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>NotificationsDemo\res\drawable-xxxhdpi\</RemoteDir>
+            <RemoteName>ic_notification.png</RemoteName>
+            <DeployClass>Android_NotificationIcon96</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_24x24.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>NotificationsDemo\res\drawable-mdpi\</RemoteDir>
+            <RemoteName>ic_notification.png</RemoteName>
+            <DeployClass>Android_NotificationIcon24</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="Android\Debug\colors.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>NotificationsDemo\res\values\</RemoteDir>
+            <RemoteName>colors.xml</RemoteName>
+            <DeployClass>Android_Colors</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_48x48.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>NotificationsDemo\res\drawable-xhdpi\</RemoteDir>
+            <RemoteName>ic_notification.png</RemoteName>
+            <DeployClass>Android_NotificationIcon48</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="Android\Debug\strings.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>NotificationsDemo\res\values\</RemoteDir>
+            <RemoteName>strings.xml</RemoteName>
+            <DeployClass>Android_Strings</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_72x72.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>NotificationsDemo\res\drawable-xxhdpi\</RemoteDir>
+            <RemoteName>ic_notification.png</RemoteName>
+            <DeployClass>Android_NotificationIcon72</DeployClass>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
@@ -466,6 +529,15 @@
             <RemoteDir>NotificationsDemo\classes\</RemoteDir>
             <RemoteName>classes.dex</RemoteName>
             <DeployClass>AndroidClassesDexFile</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="Android\Debug\styles-v21.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>NotificationsDemo\res\values-v21\</RemoteDir>
+            <RemoteName>styles.xml</RemoteName>
+            <DeployClass>AndroidSplashStylesV21</DeployClass>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
@@ -572,6 +644,17 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
     </ItemGroup>
+    <ItemGroup Condition="'$(Platform)'=='OSX64'">
+        <DeployFile Include="$(BDS)\Redist\osx64\libcgsqlite3.dylib">
+            <RemoteDir>NotificationsDemo.app\Contents\MacOS\</RemoteDir>
+            <RemoteName>libcgsqlite3.dylib</RemoteName>
+            <DeployClass>DependencyModule</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+    </ItemGroup>
     <ItemGroup Condition="'$(Platform)'=='iOSSimulator'">
         <DeployFile Include="$(BDS)\bin\Artwork\iOS\iPad\FM_ApplicationIcon_144x144.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>NotificationsDemo.app\</RemoteDir>
@@ -622,7 +705,7 @@
             <RemoteDir>NotificationsDemo.app\</RemoteDir>
             <RemoteName>Default-667h@2x.png</RemoteName>
             <DeployClass>iPhone_Launch750</DeployClass>
-            <Operation>0</Operation>
+            <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -649,7 +732,7 @@
             <RemoteDir>NotificationsDemo.app\</RemoteDir>
             <RemoteName>Default-Portrait~ipad.png</RemoteName>
             <DeployClass>iPad_Launch768x1024</DeployClass>
-            <Operation>0</Operation>
+            <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -676,7 +759,7 @@
             <RemoteDir>NotificationsDemo.app\</RemoteDir>
             <RemoteName>Default-Landscape-812h@3x.png</RemoteName>
             <DeployClass>iPhone_Launch2436</DeployClass>
-            <Operation>0</Operation>
+            <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -748,7 +831,7 @@
             <RemoteDir>NotificationsDemo.app\</RemoteDir>
             <RemoteName>Default-Portrait@2x~ipad.png</RemoteName>
             <DeployClass>iPad_Launch1536x2048</DeployClass>
-            <Operation>0</Operation>
+            <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -802,7 +885,7 @@
             <RemoteDir>NotificationsDemo.app\</RemoteDir>
             <RemoteName>Default-812h@3x.png</RemoteName>
             <DeployClass>iPhone_Launch1125</DeployClass>
-            <Operation>0</Operation>
+            <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -838,7 +921,7 @@
             <RemoteDir>NotificationsDemo.app\</RemoteDir>
             <RemoteName>Default-736h@3x.png</RemoteName>
             <DeployClass>iPhone_Launch1242</DeployClass>
-            <Operation>0</Operation>
+            <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -866,7 +949,7 @@
             <RemoteDir>NotificationsDemo.app\</RemoteDir>
             <RemoteName>Default-Landscape@2x~ipad.png</RemoteName>
             <DeployClass>iPad_Launch2048x1536</DeployClass>
-            <Operation>0</Operation>
+            <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -875,7 +958,7 @@
             <RemoteDir>NotificationsDemo.app\</RemoteDir>
             <RemoteName>Default-Landscape~ipad.png</RemoteName>
             <DeployClass>iPad_Launch1024x768</DeployClass>
-            <Operation>0</Operation>
+            <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -902,7 +985,7 @@
             <RemoteDir>NotificationsDemo.app\</RemoteDir>
             <RemoteName>Default-Landscape-736h@3x.png</RemoteName>
             <DeployClass>iPhone_Launch2208</DeployClass>
-            <Operation>0</Operation>
+            <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -920,6 +1003,15 @@
             <RemoteDir>NotificationsDemo.app\</RemoteDir>
             <RemoteName>Default-Landscape@2x.png</RemoteName>
             <DeployClass>iPad_Launch2048</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\Redist\iossimulator\libpcre.dylib">
+            <RemoteDir>NotificationsDemo.app\</RemoteDir>
+            <RemoteName>libpcre.dylib</RemoteName>
+            <DeployClass>DependencyModule</DeployClass>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
