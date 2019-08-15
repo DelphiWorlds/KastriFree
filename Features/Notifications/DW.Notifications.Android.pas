@@ -374,6 +374,7 @@ var
 begin
   LID := GetUniqueID;
   LNotification := GetNativeNotification(ANotification, LID);
+  StoreNotification(ANotification, LID);
   NotificationManager.notify(LID, LNotification);
 end;
 
@@ -414,16 +415,18 @@ end;
 procedure TPlatformNotifications.StoreNotification(const ANotification: TNotification; const AID: Integer);
 var
   LEditor: JSharedPreferences_Editor;
+  LName: string;
 begin
-  if ANotification.Name.IsEmpty then
-   Exit; // <======
+  LName := ANotification.Name;
+  if LName.IsEmpty then
+    LName := AID.ToString;
   LEditor := FNotificationStore.edit;
   try
-    LEditor.putInt(StringToJString(ANotification.Name), AID);
+    LEditor.putInt(StringToJString(LName), AID);
   finally
     LEditor.apply;
   end;
-  TOSLog.d('Stored %s at %d', [ANotification.Name, AID]);
+  TOSLog.d('Stored %s at %d', [LName, AID]);
 end;
 
 end.
