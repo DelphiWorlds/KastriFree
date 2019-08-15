@@ -67,10 +67,12 @@ type
     FNotificationChannel: JNotificationChannel;
     FNotificationReceiver: TNotificationReceiver;
     FNotificationStore: JSharedPreferences;
-    function GetNativeNotification(const ANotification: TNotification): JNotification;
+    function GetNativeNotification(const ANotification: TNotification; const AID: Integer): JNotification;
     function GetNotificationPendingIntent(const ANotification: TNotification; const AID: Integer): JPendingIntent;
     function GetUniqueID: Integer;
-    function GetNotificationIntent(const ANotification: TNotification): JPendingIntent;
+    function GetNotificationIntent(const ANotification: TNotification; const AID: Integer): JPendingIntent;
+    procedure RemoveNotification(const ANotification: TNotification);
+    function RetrieveNotification(const AName: string; var ANotification: TNotification): Integer;
     procedure StoreNotification(const ANotification: TNotification; const AID: Integer);
   protected
     class property NotificationManager: JNotificationManager read GetNotificationManager;
@@ -91,6 +93,8 @@ uses
   System.SysUtils, System.DateUtils, System.TimeSpan,
   // Android
   Androidapi.Helpers, Androidapi.JNI.JavaTypes, Androidapi.JNIBridge, Androidapi.JNI.Net, Androidapi.JNI.Os, Androidapi.JNI.Embarcadero,
+  // REST
+  REST.Json,
   // DW
   DW.OSLog,
   DW.Androidapi.JNI.DWMultiBroadcastReceiver, DW.Android.Helpers;
@@ -229,7 +233,8 @@ begin
   FNotificationStore := TAndroidHelper.Context.getSharedPreferences(StringToJString(ClassName), TJContext.JavaClass.MODE_PRIVATE);
   if TAndroidHelperEx.CheckBuildAndTarget(TAndroidHelperEx.OREO) then
   begin
-    FNotificationChannel := TJNotificationChannel.JavaClass.init(TAndroidHelper.Context.getPackageName, StrToJCharSequence('default'), 4); // TJNotificationChannel.JavaClass.DEFAULT_CHANNEL_ID
+    // TJNotificationChannel.JavaClass.DEFAULT_CHANNEL_ID
+    FNotificationChannel := TJNotificationChannel.JavaClass.init(TAndroidHelper.Context.getPackageName, StrToJCharSequence('default'), 4);
     FNotificationChannel.enableLights(True);
     FNotificationChannel.enableVibration(True);
     FNotificationChannel.setLightColor(TJColor.JavaClass.GREEN);
@@ -260,17 +265,27 @@ begin
 end;
 
 function TPlatformNotifications.GetUniqueID: Integer;
+const
+  cUniqueIDKey = 'ZZZUniqueID';
+var
+  LEditor: JSharedPreferences_Editor;
 begin
-  Result := TJCalendar.JavaClass.getInstance.getTimeInMillis;
+  Result := FNotificationStore.getInt(StringToJString(cUniqueIDKey), 1);
+  LEditor := FNotificationStore.edit;
+  try
+    LEditor.putInt(StringToJString(cUniqueIDKey), Result + 1);
+  finally
+    LEditor.apply;
+  end;
 end;
 
-function TPlatformNotifications.GetNotificationIntent(const ANotification: TNotification): JPendingIntent;
+function TPlatformNotifications.GetNotificationIntent(const ANotification: TNotification; const AID: Integer): JPendingIntent;
 var
   LIntent: JIntent;
 begin
   LIntent := TAndroidHelper.Context.getPackageManager().getLaunchIntentForPackage(TAndroidHelper.Context.getPackageName());
   LIntent.setFlags(TJIntent.JavaClass.FLAG_ACTIVITY_SINGLE_TOP or TJIntent.JavaClass.FLAG_ACTIVITY_CLEAR_TOP);
-  Result := TJPendingIntent.JavaClass.getActivity(TAndroidHelper.Context, GetUniqueID, LIntent, TJPendingIntent.JavaClass.FLAG_UPDATE_CURRENT);
+  Result := TJPendingIntent.JavaClass.getActivity(TAndroidHelper.Context, AID, LIntent, TJPendingIntent.JavaClass.FLAG_UPDATE_CURRENT);
 end;
 
 function TPlatformNotifications.GetNotificationPendingIntent(const ANotification: TNotification; const AID: Integer): JPendingIntent;
@@ -278,18 +293,18 @@ var
   LIntent: JIntent;
   LNotification: JNotification;
 begin
-  LNotification := GetNativeNotification(ANotification);
-  LNotification.extras.putInt(TJDWMultiBroadcastReceiver.JavaClass.EXTRA_NOTIFICATION_ID, AID);
+  LNotification := GetNativeNotification(ANotification, AID);
   LNotification.extras.putString(TJDWMultiBroadcastReceiver.JavaClass.EXTRA_NOTIFICATION_NAME, StringToJString(ANotification.Name));
   LNotification.extras.putInt(TJDWMultiBroadcastReceiver.JavaClass.EXTRA_NOTIFICATION_REPEATINTERVAL, Integer(Ord(ANotification.RepeatInterval)));
   LIntent := TJIntent.Create;
   LIntent.setClass(TAndroidHelper.Context, TJDWMultiBroadcastReceiver.getClass);
   LIntent.setAction(TJDWMultiBroadcastReceiver.JavaClass.ACTION_NOTIFICATION);
+  LIntent.putExtra(TJDWMultiBroadcastReceiver.JavaClass.EXTRA_NOTIFICATION_ID, AID);
   LIntent.putExtra(TJDWMultiBroadcastReceiver.JavaClass.EXTRA_NOTIFICATION, TJParcelable.Wrap((LNotification as ILocalObject).GetObjectID));
   Result := TJPendingIntent.JavaClass.getBroadcast(TAndroidHelper.Context, AID, LIntent, TJPendingIntent.JavaClass.FLAG_UPDATE_CURRENT);
 end;
 
-function TPlatformNotifications.GetNativeNotification(const ANotification: TNotification): JNotification;
+function TPlatformNotifications.GetNativeNotification(const ANotification: TNotification; const AID: Integer): JNotification;
 var
   LBuilder: JNotificationCompat_Builder;
 begin
@@ -299,7 +314,7 @@ begin
     .setContentTitle(StrToJCharSequence(ANotification.Title))
     .setContentText(StrToJCharSequence(ANotification.AlertBody))
     .setTicker(StrToJCharSequence(ANotification.AlertBody))
-    .setContentIntent(GetNotificationIntent(ANotification))
+    .setContentIntent(GetNotificationIntent(ANotification, AID))
     .setNumber(ANotification.Number)
     .setAutoCancel(True)
     .setWhen(TJDate.Create.getTime);
@@ -332,46 +347,44 @@ end;
 
 procedure TPlatformNotifications.CancelNotification(const AName: string);
 var
-  LID: Integer;
-  LIntent: JIntent;
   LPendingIntent: JPendingIntent;
+  LNotification: TNotification;
+  LID: Integer;
 begin
+  TOSLog.d('+TPlatformNotifications.CancelNotification');
   if not AName.IsEmpty then
   begin
-    LID := FNotificationStore.getInt(StringToJString(AName), 0);
-    if LID <> 0 then
+    LID := RetrieveNotification(AName, LNotification);
+    if LID > -1 then
     begin
-      LIntent := TJIntent.Create;
-      LIntent.setAction(TJDWMultiBroadcastReceiver.JavaClass.ACTION_NOTIFICATION);
-      LPendingIntent := TJPendingIntent.JavaClass.getBroadcast(TAndroidHelper.Context, LID, LIntent, TJPendingIntent.JavaClass.FLAG_UPDATE_CURRENT);
+      TOSLog.d('Found %s with id of %d', [AName, LID]);
+      LPendingIntent := GetNotificationPendingIntent(LNotification, LID);
       TAndroidHelper.AlarmManager.cancel(LPendingIntent);
+      RemoveNotification(LNotification);
     end;
   end;
+  TOSLog.d('-TPlatformNotifications.CancelNotification');
 end;
 
 procedure TPlatformNotifications.PresentNotification(const ANotification: TNotification);
 var
   LNotification: JNotification;
+  LID: Integer;
 begin
-  LNotification := GetNativeNotification(ANotification);
-  if ANotification.Name.IsEmpty then
-    NotificationManager.notify(GetUniqueID, LNotification)
-  else
-    NotificationManager.notify(StringToJString(ANotification.Name), 0, LNotification);
-  LNotification := nil;
+  LID := GetUniqueID;
+  LNotification := GetNativeNotification(ANotification, LID);
+  NotificationManager.notify(LID, LNotification);
 end;
 
 procedure TPlatformNotifications.ScheduleNotification(const ANotification: TNotification);
 var
-  LNotification: JNotification;
-  LTime: Int64;
+  LTime: Integer;
   LPendingIntent: JPendingIntent;
-  LID: Int64;
+  LID: Integer;
 begin
   CancelNotification(ANotification.Name);
   LID := GetUniqueID;
   StoreNotification(ANotification, LID);
-  LNotification := GetNativeNotification(ANotification);
   LPendingIntent := GetNotificationPendingIntent(ANotification, LID);
   LTime := DateTimeLocalToUnixMSecGMT(ANotification.FireDate);
   if TOSVersion.Check(6) then
@@ -380,21 +393,36 @@ begin
     TAndroidHelper.AlarmManager.&set(TJAlarmManager.JavaClass.RTC_WAKEUP, LTime, LPendingIntent);
 end;
 
-procedure TPlatformNotifications.StoreNotification(const ANotification: TNotification; const AID: Integer);
+procedure TPlatformNotifications.RemoveNotification(const ANotification: TNotification);
 var
   LEditor: JSharedPreferences_Editor;
-  LName: string;
 begin
-  if ANotification.Name.IsEmpty then
-    LName := AID.ToString
-  else
-    LName := ANotification.Name;
   LEditor := FNotificationStore.edit;
   try
-    LEditor.putInt(StringToJString(LName), AID);
+    LEditor.remove(StringToJString(ANotification.Name));
   finally
     LEditor.apply;
   end;
+end;
+
+function TPlatformNotifications.RetrieveNotification(const AName: string; var ANotification: TNotification): Integer;
+begin
+  Result := FNotificationStore.getInt(StringToJString(AName), -1);
+end;
+
+procedure TPlatformNotifications.StoreNotification(const ANotification: TNotification; const AID: Integer);
+var
+  LEditor: JSharedPreferences_Editor;
+begin
+  if ANotification.Name.IsEmpty then
+   Exit; // <======
+  LEditor := FNotificationStore.edit;
+  try
+    LEditor.putInt(StringToJString(ANotification.Name), AID);
+  finally
+    LEditor.apply;
+  end;
+  TOSLog.d('Stored %s at %d', [ANotification.Name, AID]);
 end;
 
 end.

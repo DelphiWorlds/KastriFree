@@ -225,7 +225,9 @@ public class DWMultiBroadcastReceiver extends BroadcastReceiver {
   }
 
   private void setRepeatAlarm(Context context, Intent intent, long alarmTime) {
-    PendingIntent pendingIntent = PendingIntent.getBroadcast(context, intent.getIntExtra(EXTRA_NOTIFICATION_ID, 0), intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    int id = intent.getIntExtra(EXTRA_NOTIFICATION_ID, 0);
+    Log.v(TAG, "Setting repeat alarm for id: " + id);
+    PendingIntent pendingIntent = PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 		AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
     if (Build.VERSION.SDK_INT >= 21)
       alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, alarmTime, pendingIntent);
@@ -241,7 +243,9 @@ public class DWMultiBroadcastReceiver extends BroadcastReceiver {
       Notification notification = intent.getParcelableExtra(EXTRA_NOTIFICATION);
       NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
       // Dispatch the notification to the OS
-      manager.notify(notification.extras.getInt(EXTRA_NOTIFICATION_ID, 0), notification);
+      int id = intent.getIntExtra(EXTRA_NOTIFICATION_ID, 0);
+      Log.v(TAG, "Notifying with id: " + id);
+      manager.notify(id, notification);
       // Set alarm if repeating
       long alarmTime = getAlarmTime(notification.extras.getInt(EXTRA_NOTIFICATION_REPEATINTERVAL, 0));
       if (alarmTime != 0)
