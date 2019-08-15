@@ -18,7 +18,7 @@ object Form1: TForm1
     Size.Width = 362.000000000000000000
     Size.Height = 43.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 4
+    TabOrder = 5
     Text = 'Immediate'
     OnClick = ImmediateButtonClick
   end
@@ -28,7 +28,7 @@ object Form1: TForm1
     Margins.Top = 6.000000000000000000
     Margins.Right = 6.000000000000000000
     Position.X = 6.000000000000000000
-    Position.Y = 55.000000000000000000
+    Position.Y = 104.000000000000000000
     Size.Width = 362.000000000000000000
     Size.Height = 43.000000000000000000
     Size.PlatformDefault = False
@@ -42,7 +42,7 @@ object Form1: TForm1
     Margins.Top = 6.000000000000000000
     Margins.Right = 6.000000000000000000
     Position.X = 6.000000000000000000
-    Position.Y = 153.000000000000000000
+    Position.Y = 202.000000000000000000
     Size.Width = 362.000000000000000000
     Size.Height = 43.000000000000000000
     Size.PlatformDefault = False
@@ -59,11 +59,11 @@ object Form1: TForm1
     Margins.Right = 4.000000000000000000
     Margins.Bottom = 4.000000000000000000
     Size.Width = 366.000000000000000000
-    Size.Height = 291.000000000000000000
+    Size.Height = 242.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 6
+    TabOrder = 7
     Viewport.Width = 362.000000000000000000
-    Viewport.Height = 287.000000000000000000
+    Viewport.Height = 238.000000000000000000
   end
   object ScheduleRepeatingButton: TButton
     Align = Top
@@ -71,12 +71,26 @@ object Form1: TForm1
     Margins.Top = 6.000000000000000000
     Margins.Right = 6.000000000000000000
     Position.X = 6.000000000000000000
-    Position.Y = 104.000000000000000000
+    Position.Y = 153.000000000000000000
     Size.Width = 362.000000000000000000
     Size.Height = 43.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 2
     Text = 'Schedule Repeating Every Minute'
     OnClick = ScheduleRepeatingButtonClick
+  end
+  object CancelImmediateButton: TButton
+    Align = Top
+    Margins.Left = 6.000000000000000000
+    Margins.Top = 6.000000000000000000
+    Margins.Right = 6.000000000000000000
+    Position.X = 6.000000000000000000
+    Position.Y = 55.000000000000000000
+    Size.Width = 362.000000000000000000
+    Size.Height = 43.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 4
+    Text = 'Cancel Immediate'
+    OnClick = CancelImmediateButtonClick
   end
 end

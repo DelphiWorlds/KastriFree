@@ -14,10 +14,12 @@ type
     CancelScheduled: TButton;
     LogMemo: TMemo;
     ScheduleRepeatingButton: TButton;
+    CancelImmediateButton: TButton;
     procedure ImmediateButtonClick(Sender: TObject);
     procedure ScheduleButtonClick(Sender: TObject);
     procedure CancelScheduledClick(Sender: TObject);
     procedure ScheduleRepeatingButtonClick(Sender: TObject);
+    procedure CancelImmediateButtonClick(Sender: TObject);
   private
     FNotifications: TNotifications;
     procedure ImmediateNotification;
@@ -60,6 +62,7 @@ var
   LNotification: TNotification;
 begin
   LNotification.EnableSound := False;
+  LNotification.Name := 'ImmediateNotification';
   LNotification.Title := 'Immediate Notification';
   LNotification.Subtitle := 'Subtitles are cool';
   LNotification.AlertBody := 'This is an immediate notification';
@@ -89,6 +92,11 @@ end;
 procedure TForm1.ScheduleRepeatingButtonClick(Sender: TObject);
 begin
   ScheduleNotification(10, True);
+end;
+
+procedure TForm1.CancelImmediateButtonClick(Sender: TObject);
+begin
+  FNotifications.CancelNotification('ImmediateNotification');
 end;
 
 procedure TForm1.CancelScheduledClick(Sender: TObject);
