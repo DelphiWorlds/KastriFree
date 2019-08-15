@@ -360,6 +360,7 @@ begin
       TOSLog.d('Found %s with id of %d', [AName, LID]);
       LPendingIntent := GetNotificationPendingIntent(LNotification, LID);
       TAndroidHelper.AlarmManager.cancel(LPendingIntent);
+      TAndroidHelperEx.NotificationManager.cancel(LID);
       RemoveNotification(LNotification);
     end;
   end;
