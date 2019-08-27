@@ -26,7 +26,6 @@ type
   TLayout = class(FMX.Layouts.TLayout)
   private
     FIsElastic: Boolean;
-    // function GetChildrenOnlyRect: TRectF;
     procedure SetIsElastic(const Value: Boolean);
   protected
     procedure DoRealign; override;
