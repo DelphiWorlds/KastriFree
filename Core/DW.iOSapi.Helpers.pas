@@ -128,7 +128,7 @@ end;
 
 class function TiOSHelperEx.StandardUserDefaults: NSUserDefaults;
 begin
-  Result := TNSUserDefaults.Wrap(TNSUserDefaults.OCClass.StandardUserDefaults);
+  Result := TNSUserDefaults.Wrap(TNSUserDefaults.OCClass.standardUserDefaults);
 end;
 
 end.
