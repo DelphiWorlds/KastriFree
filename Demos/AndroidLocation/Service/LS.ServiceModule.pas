@@ -4,24 +4,13 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Android.Service, System.Sensors, System.Notification,
-  Androidapi.JNI.App, AndroidApi.JNI.GraphicsContentViewText, Androidapi.JNI.Os, Androidapi.JNIBridge, Androidapi.JNI.Location,
+  Androidapi.JNI.App, AndroidApi.JNI.GraphicsContentViewText, Androidapi.JNI.Os, Androidapi.JNIBridge,
   AndroidApi.JNI.JavaTypes,
-  DW.FileWriter, DW.MultiReceiver.Android, DW.Androidapi.JNI.KeyguardManager,
+  DW.FileWriter, DW.MultiReceiver.Android, DW.Location.Android,
   LS.AndroidTimer, LS.Config;
 
 type
   TServiceModule = class;
-
-  TLocationListener = class(TJavaLocal, JLocationListener)
-  private
-    FService: TServiceModule;
-  public
-    constructor Create(const AService: TServiceModule);
-    procedure onLocationChanged(P1: JLocation); cdecl;
-    procedure onStatusChanged(P1: JString; P2: Integer; P3: JBundle); cdecl;
-    procedure onProviderEnabled(P1: JString); cdecl;
-    procedure onProviderDisabled(P1: JString); cdecl;
-  end;
 
   /// <summary>
   ///   Acts as a receiver of broadcasts sent by Android
@@ -58,36 +47,28 @@ type
   private
     FConfig: TLocationConfig;
     FDozeAlarmIntent: JPendingIntent;
-    FGPSLocationListener: JLocationListener;
     FIsDozed: Boolean;
     FIsForeground: Boolean;
-    FKeyguardManager: JKeyguardManager;
     FLastSend: TDateTime;
     FLocalReceiver: TLocalReceiver;
-    FNetworkLocationListener: JLocationListener;
+    FLocation: TLocation;
     FNotificationChannel: JNotificationChannel;
-    FLocationManager: JLocationManager;
     FLogWriter: TFileWriter;
-    FPowerManager: JPowerManager;
     FSending: Boolean;
     FServiceReceiver: TServiceReceiver;
     FTimer: TAndroidTimer;
     FWakeLock: JPowerManager_WakeLock;
-    function AreListenersInstalled: Boolean;
     function CreateDozeAlarm(const AAction: string; const AStartAt: Int64): Boolean;
-    procedure CreateListeners;
     procedure CreateNotificationChannel;
     procedure CreateTimer;
     procedure DoMessage(const AMsg: string);
     procedure DoStatus;
     procedure DozeModeChange(const ADozed: Boolean);
     procedure EnableWakeLock(const AEnable: Boolean);
-    function GetLocationMode: Integer;
-    function HasPermissions: Boolean;
     procedure LocalReceiverReceive(intent: JIntent);
+    procedure LocationChangeHandler(Sender: TObject; const ALocation: TLocationCoord2D);
     procedure Pause;
     procedure PostRequest(const ARequest: TStream);
-    procedure RemoveListeners;
     procedure RestartService;
     procedure Resume;
     procedure SendNewLocation(const NewLocation: TLocationCoord2D; const AFrom: TLocationChangeFrom);
@@ -100,6 +81,7 @@ type
     procedure StopDozeAlarm;
     procedure StopForeground;
     procedure TimerEventHandler(Sender: TObject);
+    procedure UpdateConfig;
     procedure UpdateFromLastKnownLocation(const AFrom: TLocationChangeFrom);
     procedure SendNotification(const NewLocation: TLocationCoord2D; const AFrom: TLocationChangeFrom);
   protected
@@ -205,53 +187,18 @@ begin
   FService.LocalReceiverReceive(intent);
 end;
 
-{ TLocationListener }
-
-constructor TLocationListener.Create(const AService: TServiceModule);
-begin
-  inherited Create;
-  FService := AService;
-end;
-
-procedure TLocationListener.onLocationChanged(P1: JLocation);
-begin
-  FService.WriteLog('TLocationListener.onLocationChanged - LocationChanged');
-  FService.LocationChanged(TLocationCoord2D.Create(P1.getLatitude, P1.getLongitude), TLocationChangeFrom.Listener);
-end;
-
-procedure TLocationListener.onProviderDisabled(P1: JString);
-begin
-  //
-end;
-
-procedure TLocationListener.onProviderEnabled(P1: JString);
-begin
-  //
-end;
-
-procedure TLocationListener.onStatusChanged(P1: JString; P2: Integer; P3: JBundle);
-begin
-  //
-end;
-
 { TServiceModule }
 
 constructor TServiceModule.Create(AOwner: TComponent);
-var
-  LService: JObject;
 begin
   inherited;
+  FLocation := TLocation.Create;
+  FLocation.OnLocationChange := LocationChangeHandler;
   FConfig := TLocationConfig.GetConfig;
   // Creating a log file that can be read by both the service and the application
   FLogWriter := TFileWriter.Create(TPath.Combine(TPath.GetDocumentsPath, 'Location.log'), True);
   // AutoFlush means that writes are committed immediately
   FLogWriter.AutoFlush := True;
-  LService := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.KEYGUARD_SERVICE);
-  if LService <> nil then
-    FKeyguardManager := TJKeyguardManager.Wrap((LService as ILocalObject).GetObjectID);
-  LService := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.POWER_SERVICE);
-  if LService <> nil then
-    FPowerManager := TJPowerManager.Wrap((LService as ILocalObject).GetObjectID);
   FServiceReceiver := TServiceReceiver.Create(Self);
   FLocalReceiver := TLocalReceiver.Create(Self);
   CreateTimer;
@@ -277,7 +224,6 @@ begin
   FServiceReceiver.DisposeOf;
   FLocalReceiver.DisposeOf;
   FTimer.DisposeOf;
-  RemoveListeners;
   FLogWriter.DisposeOf;
   FConfig.DisposeOf;
   RestartService;
@@ -300,7 +246,7 @@ begin
   end;
   LRestart := (Intent <> nil) and (Intent.getIntExtra(StringToJString(cExtraServiceRestart), 0) = 1);
   // If the screen is locked when the service starts, it should start in "foreground" mode to ensure it can still access the network
-  if (LRestart and TAndroidHelperEx.CheckBuildAndTarget(26)) or ((FKeyguardManager <> nil) and FKeyguardManager.inKeyguardRestrictedInputMode) then
+  if (LRestart and TAndroidHelperEx.CheckBuildAndTarget(26)) or TAndroidHelperEx.KeyguardManager.inKeyguardRestrictedInputMode then
     StartForeground;
   Result := TJService.JavaClass.START_STICKY;
 end;
@@ -363,17 +309,12 @@ begin
   if AEnable then
   begin
     if FWakeLock = nil then
-      FWakeLock := FPowerManager.newWakeLock(TJPowerManager.JavaClass.PARTIAL_WAKE_LOCK, StringToJString(cWakeLockTag));
+      FWakeLock := TAndroidHelperEx.PowerManager.newWakeLock(TJPowerManager.JavaClass.PARTIAL_WAKE_LOCK, StringToJString(cWakeLockTag));
     if not FWakeLock.isHeld then
       FWakeLock.acquire;
   end
   else if (FWakeLock <> nil) and FWakeLock.isHeld then
     FWakeLock.release;
-end;
-
-function TServiceModule.GetLocationMode: Integer;
-begin
-  Result := TJSettings_Secure.JavaClass.getInt(TAndroidHelper.ContentResolver, TJSettings_Secure.JavaClass.LOCATION_MODE);
 end;
 
 function TServiceModule.CreateDozeAlarm(const AAction: string; const AStartAt: Int64): Boolean;
@@ -403,62 +344,6 @@ begin
   FTimer.Interval := cTimerIntervalMinimum;
   FTimer.OnTimer := TimerEventHandler;
   FTimer.Enabled := True;
-end;
-
-procedure TServiceModule.CreateListeners;
-var
-  LObject: JObject;
-begin
-  TOSLog.d('+TServiceModule.CreateListeners');
-  // Must use the app (UI) to request permissions
-  try
-    if HasPermissions and not AreListenersInstalled then
-    begin
-      LObject := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.LOCATION_SERVICE);
-      if LObject <> nil then
-      begin
-        FLocationManager := TJLocationManager.Wrap((LObject as ILocalObject).GetObjectID);
-        if FLocationManager.isProviderEnabled(TJLocationManager.JavaClass.GPS_PROVIDER) then
-        begin
-          FGPSLocationListener := TLocationListener.Create(Self);
-          FLocationManager.requestLocationUpdates(TJLocationManager.JavaClass.GPS_PROVIDER, cLocationMonitoringInterval, cLocationMonitoringDistance,
-            FGPSLocationListener, TJLooper.JavaClass.getMainLooper);
-          WriteLog('GPS Location Listener created and listening');
-        end;
-        if FLocationManager.isProviderEnabled(TJLocationManager.JavaClass.NETWORK_PROVIDER) then
-        begin
-          FNetworkLocationListener := TLocationListener.Create(Self);
-          FLocationManager.requestLocationUpdates(TJLocationManager.JavaClass.NETWORK_PROVIDER, cLocationMonitoringInterval, cLocationMonitoringDistance,
-            FNetworkLocationListener, TJLooper.JavaClass.getMainLooper);
-          WriteLog('Network Location Listener created and listening');
-        end;
-      end;
-    end
-    else if not HasPermissions and AreListenersInstalled then
-      RemoveListeners;
-  finally
-    SetIsPaused(not AreListenersInstalled);
-  end;
-  TOSLog.d('-TServiceModule.CreateListeners');
-end;
-
-procedure TServiceModule.RemoveListeners;
-begin
-  TOSLog.d('+TServiceModule.RemoveListeners');
-  try
-    if FLocationManager <> nil then
-    begin
-      FLocationManager.removeUpdates(FGPSLocationListener);
-      FLocationManager.removeUpdates(FNetworkLocationListener);
-    end;
-    FGPSLocationListener := nil;
-    FNetworkLocationListener := nil;
-    FLocationManager := nil;
-    WriteLog('Listeners removed');
-  finally
-    SetIsPaused(not AreListenersInstalled);
-  end;
-  TOSLog.d('-TServiceModule.RemoveListeners');
 end;
 
 procedure TServiceModule.DoMessage(const AMsg: string);
@@ -535,18 +420,16 @@ begin
   if intent.getAction.equals(TJIntent.JavaClass.ACTION_USER_PRESENT) or intent.getAction.equals(TJIntent.JavaClass.ACTION_SCREEN_OFF)
     or intent.getAction.equals(TJIntent.JavaClass.ACTION_SCREEN_ON) then
   begin
-    ScreenLockChange(FKeyguardManager.inKeyguardRestrictedInputMode);
+    ScreenLockChange(TAndroidHelperEx.KeyguardManager.inKeyguardRestrictedInputMode);
   end
   // Otherwise, check for "doze" mode changes
   else if TOSVersion.Check(6) and intent.getAction.equals(TJPowerManager.JavaClass.ACTION_DEVICE_IDLE_MODE_CHANGED) then
-    DozeModeChange(FPowerManager.isDeviceIdleMode);
+    DozeModeChange(TAndroidHelperEx.PowerManager.isDeviceIdleMode);
 end;
 
 procedure TServiceModule.SetIsPaused(const AValue: Boolean);
 begin
-  FConfig.IsPaused := AValue;
-  FConfig.Save;
-  DoStatus;
+  //
 end;
 
 procedure TServiceModule.ScreenLockChange(const ALocked: Boolean);
@@ -570,16 +453,6 @@ begin
     StopDozeAlarm;
 end;
 
-function TServiceModule.HasPermissions: Boolean;
-begin
-  Result := TOSDevice.CheckPermissions([cPermissionAccessCoarseLocation, cPermissionAccessFineLocation])
-end;
-
-function TServiceModule.AreListenersInstalled: Boolean;
-begin
-  Result := (FGPSLocationListener <> nil) or (FNetworkLocationListener <> nil);
-end;
-
 procedure TServiceModule.TimerEventHandler(Sender: TObject);
 begin
   WriteLog('TServiceModule.TimerEventHandler');
@@ -588,15 +461,13 @@ end;
 
 procedure TServiceModule.UpdateFromLastKnownLocation(const AFrom: TLocationChangeFrom);
 var
-  LLocation: JLocation;
+  LLocation: TLocationCoord2D;
 begin
-  if FLocationManager = nil then
-    Exit; // <======
-  LLocation := FLocationManager.getLastKnownLocation(TJLocationManager.JavaClass.GPS_PROVIDER);
-  if LLocation <> nil then
+  LLocation := FLocation.GetLastKnownLocation;
+  if Abs(LLocation.Latitude) <= 90 then
   begin
     WriteLog('TServiceModule.UpdateFromLastKnownLocation from: ' + cLocationFromCaptions[AFrom]);
-    LocationChanged(TLocationCoord2D.Create(LLocation.getLatitude, LLocation.getLongitude), AFrom);
+    LocationChanged(LLocation, AFrom);
   end;
 end;
 
@@ -617,6 +488,11 @@ begin
   end;
 end;
 
+procedure TServiceModule.LocationChangeHandler(Sender: TObject; const ALocation: TLocationCoord2D);
+begin
+  LocationChanged(ALocation, TLocationChangeFrom.Listener);
+end;
+
 procedure TServiceModule.SendNewLocation(const NewLocation: TLocationCoord2D; const AFrom: TLocationChangeFrom);
 const
   cLocationUpdateTag = '%s: %s @ %s';
@@ -629,6 +505,9 @@ begin
   LTag := Format(cLocationUpdateTag, ['DW', cLocationFromCaptions[AFrom], FormatDateTime('mm-dd hh:nn:ss.zzz', Now)]);
   LStream := TStringStream.Create(Format(cLocationRequestJSON, ['x', NewLocation.Latitude, NewLocation.Longitude, LTag, Ord(FIsDozed)]));
   try
+    DoMessage(LStream.DataString);
+//!!!!!!
+{
     TOSLog.d('Posting request: %s', [LStream.DataString]);
     try
       PostRequest(LStream);
@@ -640,6 +519,7 @@ begin
         WriteLog('Exception in PostRequest: ' + E.Message);
       end;
     end;
+}
   finally
     LStream.Free;
   end;
@@ -690,12 +570,21 @@ end;
 
 procedure TServiceModule.Pause;
 begin
-  RemoveListeners;
+  FLocation.Pause;
+  UpdateConfig;
 end;
 
 procedure TServiceModule.Resume;
 begin
-  CreateListeners;
+  FLocation.Resume;
+  UpdateConfig;
+end;
+
+procedure TServiceModule.UpdateConfig;
+begin
+  FConfig.IsPaused := FLocation.IsPaused;
+  FConfig.Save;
+  DoStatus;
 end;
 
 end.

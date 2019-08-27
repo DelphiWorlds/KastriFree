@@ -3,11 +3,11 @@ unit LA.MainFrm;
 interface
 
 uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants, System.Actions, System.Messaging,
+  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants, System.Actions, System.Messaging, System.Permissions,
   Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.App, Androidapi.JNI.Location,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Controls.Presentation, FMX.StdCtrls, FMX.ScrollBox, FMX.Memo,
   FMX.Layouts, FMX.TabControl, FMX.ActnList, FMX.Objects,
-  DW.MultiReceiver.Android, DW.PermissionsRequester, DW.PermissionsTypes;
+  DW.MultiReceiver.Android;
 
 type
   TMessageReceivedEvent = procedure(Sender: TObject; const Msg: string) of object;
@@ -47,14 +47,13 @@ type
     procedure RefreshLogActionExecute(Sender: TObject);
     procedure PauseUpdatesActionExecute(Sender: TObject);
   private
-    FPermissions: TPermissionsRequester;
     FReceiver: TLocalReceiver;
     procedure ApplicationEventMessageHandler(const Sender: TObject; const M: TMessage);
     procedure EnablePauseUpdates;
     function IsPaused: Boolean;
     function IsServiceRunning: Boolean;
     procedure RefreshLog;
-    procedure PermissionsResultHandler(Sender: TObject; const ARequestCode: Integer; const AResults: TPermissionResults);
+    procedure LocationPermissionsResultHandler(Sender: TObject; const APermissions: TArray<string>; const AGrantResults: TArray<TPermissionStatus>);
     procedure ServiceMessageHandler(Sender: TObject; const AMsg: string);
     procedure ServiceStatusHandler(Sender: TObject);
     procedure SendCommand(const ACommand: Integer);
@@ -74,8 +73,30 @@ uses
   System.IOUtils, System.Android.Service,
   Androidapi.Helpers, Androidapi.JNIBridge, Androidapi.JNI.JavaTypes,
   FMX.Platform,
-  DW.OSLog, DW.OSDevice, DW.Androidapi.JNI.LocalBroadcastManager, DW.Android.Helpers,
+  DW.OSLog, DW.OSDevice, DW.Androidapi.JNI.LocalBroadcastManager, DW.Android.Helpers, DW.Consts.Android,
   LS.Consts, LS.Config;
+
+type
+  TPermissionResults = TArray<TPermissionStatus>;
+
+  TPermissionResultsHelper = record helper for TPermissionResults
+  public
+    function AreAllGranted: Boolean;
+  end;
+
+{ TPermissionResultsHelper }
+
+function TPermissionResultsHelper.AreAllGranted: Boolean;
+var
+  LStatus: TPermissionStatus;
+begin
+  for LStatus in Self do
+  begin
+    if LStatus <> TPermissionStatus.Granted then
+      Exit(False); // <======
+  end;
+  Result := True;
+end;
 
 { TLocalReceiver }
 
@@ -113,8 +134,6 @@ constructor TfrmMain.Create(AOwner: TComponent);
 begin
   inherited;
   TabControl.ActiveTab := MessagesTab;
-  FPermissions := TPermissionsRequester.Create;
-  FPermissions.OnPermissionsResult := PermissionsResultHandler;
   FReceiver := TLocalReceiver.Create(True);
   FReceiver.OnMessageReceived := ServiceMessageHandler;
   FReceiver.OnStatus := ServiceStatusHandler;
@@ -126,7 +145,6 @@ end;
 destructor TfrmMain.Destroy;
 begin
   TMessageManager.DefaultManager.Unsubscribe(TApplicationEventMessage, ApplicationEventMessageHandler);
-  FPermissions.Free;
   FReceiver.Free;
   inherited;
 end;
@@ -171,20 +189,15 @@ end;
 procedure TfrmMain.PauseUpdatesActionExecute(Sender: TObject);
 begin
   if IsPaused then
-    FPermissions.RequestPermissions([cPermissionAccessCoarseLocation, cPermissionAccessFineLocation], cRequestCodeLocation)
+    TPermissionsService.DefaultService.RequestPermissions([cPermissionAccessCoarseLocation, cPermissionAccessFineLocation], LocationPermissionsResultHandler)
   else
     SendCommand(cServiceCommandPause);
 end;
 
-procedure TfrmMain.PermissionsResultHandler(Sender: TObject; const ARequestCode: Integer; const AResults: TPermissionResults);
+procedure TfrmMain.LocationPermissionsResultHandler(Sender: TObject; const APermissions: TArray<string>; const AGrantResults: TArray<TPermissionStatus>);
 begin
-  case ARequestCode of
-    cRequestCodeLocation:
-    begin
-      if AResults.AreAllGranted then
-        SendCommand(cServiceCommandResume);
-    end;
-  end;
+  if AGrantResults.AreAllGranted then
+    SendCommand(cServiceCommandResume);
 end;
 
 procedure TfrmMain.RefreshLog;
