@@ -19,10 +19,26 @@ uses
 type
   TBase64Helper = record
   public
+    /// <summary>
+    ///   Takes a string, compresses it, then Base64 encodes it
+    /// </summary>
     class function CompressEncode(const ASource: string): string; overload; static;
+    /// <summary>
+    ///   Takes a stream, compresses it, then Base64 encodes it
+    /// </summary>
     class function CompressEncode(const AStream: TStream): string; overload; static;
+    /// <summary>
+    ///   Takes a string, Base64 decodes it, then decompresses it
+    /// </summary>
     class function DecodeDecompress(const ASource: string): string; overload; static;
+    /// <summary>
+    ///   Takes a string, Base64 decodes it, then decompresses it into a stream
+    /// </summary>
     class procedure DecodeDecompress(const ASource: string; const AStream: TStream); overload; static;
+    /// <summary>
+    ///   Decodes a Base64 string and saves it to a file
+    /// </summary>
+    class procedure DecodeToFile(const ASource, AFileName: string); static;
   end;
 
 implementation
@@ -98,6 +114,21 @@ begin
     end;
   finally
     LCompressedStream.Free;
+  end;
+end;
+
+class procedure TBase64Helper.DecodeToFile(const ASource, AFileName: string);
+var
+  LStream: TMemoryStream;
+  LBytes: TBytes;
+begin
+  LStream := TMemoryStream.Create;
+  try
+    LBytes := TNetEncoding.Base64.DecodeStringToBytes(ASource);
+    LStream.Write(LBytes, Length(LBytes));
+    LStream.SaveToFile(AFileName);
+  finally
+    LStream.Free;
   end;
 end;
 
