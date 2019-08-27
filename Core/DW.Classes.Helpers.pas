@@ -34,6 +34,10 @@ type
     /// </summary>
     class procedure Queue(const AProc: TThreadProcedure; const ADelay: Integer = 0); static;
     /// <summary>
+    ///   Queues a method in the main thread, if necessary
+    /// </summary>
+    class procedure QueueMain(const ARunProc: TThreadProcedure); static;
+    /// <summary>
     ///   Synchronizes a method for execution after an optional delay
     /// </summary>
     class procedure Sync(const AProc: TThreadProcedure; const ADelay: Integer = 0); static;
@@ -82,6 +86,14 @@ begin
       TThread.Queue(nil, AProc);
     end
   ).Start;
+end;
+
+class procedure TDo.QueueMain(const ARunProc: TThreadProcedure);
+begin
+  if not IsMainThread then
+    TThread.Queue(nil, ARunProc)
+  else
+    ARunProc;
 end;
 
 class procedure TDo.Sync(const AProc: TThreadProcedure; const ADelay: Integer = 0);
