@@ -14,11 +14,14 @@ interface
 
 uses
   // Android
-  Androidapi.JNI.JavaTypes, Androidapi.JNI.Net, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.Os, Androidapi.JNI.App;
+  Androidapi.JNI.JavaTypes, Androidapi.JNI.Net, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.Os, Androidapi.JNI.App,
+  // DW
+  DW.Androidapi.JNI.KeyguardManager;
 
 type
   TAndroidHelperEx = record
   private
+    class var FKeyguardManager: JKeyguardManager;
     class var FNotificationManager: JNotificationManager;
     class var FPowerManager: JPowerManager;
     class var FWakeLock: JPowerManager_WakeLock;
@@ -75,6 +78,10 @@ type
     ///   Returns whether or not a service is running
     /// </summary>
     class function IsServiceRunning(const AServiceName: string): Boolean; static;
+    /// <summary>
+    ///   Returns the keyguard manager
+    /// </summary>
+    class function KeyguardManager: JKeyguardManager; static;
     /// <summary>
     ///   Returns the notification manager
     /// </summary>
@@ -217,6 +224,19 @@ begin
   LIntent := TJIntent.JavaClass.init(TAndroidHelper.Context, GetClass(AServiceName));
   LPendingIntent := TJPendingIntent.JavaClass.getService(TAndroidHelper.Context, 0, LIntent, TJPendingIntent.JavaClass.FLAG_NO_CREATE);
   Result := LPendingIntent <> nil;
+end;
+
+class function TAndroidHelperEx.KeyguardManager: JKeyguardManager;
+var
+  LService: JObject;
+begin
+  if FKeyguardManager = nil then
+  begin
+    LService := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.KEYGUARD_SERVICE);
+    if LService <> nil then
+      FKeyguardManager := TJKeyguardManager.Wrap(JObjectToID(LService));
+  end;
+  Result := FKeyguardManager;
 end;
 
 class function TAndroidHelperEx.NotificationManager: JNotificationManager;
