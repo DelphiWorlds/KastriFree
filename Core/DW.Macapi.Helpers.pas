@@ -13,12 +13,14 @@ unit DW.Macapi.Helpers;
 interface
 
 uses
+  // RTL
+  System.Classes,
   // Mac
   {$IF Defined(MACOS)}
   Macapi.CoreFoundation,
   {$ENDIF}
   {$IF Defined(MACDEV)}
-  Macapi.Foundation;
+  Macapi.Foundation, Macapi.AppKit;
   {$ENDIF}
   {$IF Defined(IOS)}
   iOSapi.Foundation;
@@ -46,6 +48,18 @@ type
     procedure SetValue(const AValue, AKey: string); overload;
   end;
 
+  TMacHelperEx = record
+  public
+    // class function GetLocationManagerAuthorization: TAuthorizationType; static;
+    // class function NSDictionaryToJSON(const ADictionary: NSDictionary): string; static;
+    class function MainBundle: NSBundle; static;
+    {$IF Defined(MACDEV)}
+    class function SharedApplication: NSApplication; static;
+    {$ENDIF}
+    class function StandardUserDefaults: NSUserDefaults; static;
+  end;
+
+
 /// <summary>
 ///   Retrieves a number value from an NSDictionary, with optional default (otherwise zero)
 /// </summary>
@@ -62,6 +76,7 @@ function CocoaDoubleConst(const AFwk: string; const AConstStr: string): Double;
 ///   Puts string values from an array into an NSArray
 /// </summary>
 function StringArrayToNSArray(const AArray: array of string; const ADequote: Boolean = False): NSArray;
+function StringsToNSArray(const AStrings: TStrings; const ADequote: Boolean = False): NSArray;
 /// <summary>
 ///   Converts a string directly into an NSString reference (ID)
 /// </summary>
@@ -74,7 +89,7 @@ function StrToCFStringRef(const AStr: string): CFStringRef;
 ///   Converts GMT to local time
 /// </summary>
 function GetLocalDateTime(const ADateTime: TDateTime): TDateTime;
-function GetMainBundle: NSBundle;
+function GetMainBundle: NSBundle; deprecated 'Use TMacHelperEx.MainBundle instead';
 function GetBundleValue(const AKey: string): string;
 
 implementation
@@ -180,6 +195,23 @@ begin
     Result := 0;
 end;
 
+function StringsToNSArray(const AStrings: TStrings; const ADequote: Boolean = False): NSArray;
+var
+  LArray: array of Pointer;
+  I: Integer;
+  LString: string;
+begin
+  SetLength(LArray, AStrings.Count);
+  for I := 0 to AStrings.Count - 1 do
+  begin
+    LString := AStrings[I];
+    if ADequote then
+      LString := AnsiDequotedStr(LString, '"');
+    LArray[I] := NSObjectToID(StrToNSStr(LString));
+  end;
+  Result := TNSArray.Wrap(TNSArray.OCClass.arrayWithObjects(@LArray[0], Length(LArray)));
+end;
+
 function StringArrayToNSArray(const AArray: array of string; const ADequote: Boolean = False): NSArray;
 var
   LArray: array of Pointer;
@@ -214,7 +246,7 @@ end;
 
 function GetMainBundle: NSBundle;
 begin
-  Result := TNSBundle.Wrap(TNSBundle.OCClass.mainBundle);
+  Result := TMacHelperEx.MainBundle;
 end;
 
 function GetBundleValue(const AKey: string): string;
@@ -225,6 +257,25 @@ begin
   LValueObject := GetMainBundle.infoDictionary.objectForKey(StrToObjectID(AKey));
   if LValueObject <> nil then
     Result := NSStrToStr(TNSString.Wrap(LValueObject));
+end;
+
+{ TMacHelperEx }
+
+class function TMacHelperEx.MainBundle: NSBundle;
+begin
+  Result := TNSBundle.Wrap(TNSBundle.OCClass.mainBundle);
+end;
+
+{$IF Defined(MACDEV)}
+class function TMacHelperEx.SharedApplication: NSApplication;
+begin
+  Result := TNSApplication.Wrap(TNSApplication.OCClass.sharedApplication);
+end;
+{$ENDIF}
+
+class function TMacHelperEx.StandardUserDefaults: NSUserDefaults;
+begin
+  Result := TNSUserDefaults.Wrap(TNSUserDefaults.OCClass.standardUserDefaults);
 end;
 
 end.
