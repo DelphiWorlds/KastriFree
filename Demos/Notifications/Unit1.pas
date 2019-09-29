@@ -71,7 +71,7 @@ end;
 
 procedure TForm1.ScheduleButtonClick(Sender: TObject);
 begin
-  ScheduleNotification(10, False);
+  ScheduleNotification(30, False);
 end;
 
 procedure TForm1.ScheduleNotification(const ASeconds: Integer; const ARepeating: Boolean);

@@ -33,7 +33,7 @@ object Form1: TForm1
     Size.Height = 43.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 3
-    Text = 'Schedule 10 Seconds'
+    Text = 'Schedule 30 Seconds'
     OnClick = ScheduleButtonClick
   end
   object CancelScheduled: TButton
