@@ -31,12 +31,13 @@ uses
 
 {$IF Defined(MACOS)}
 uses
-  DW.Macapi.ObjCRuntime, DW.Macapi.Helpers, DW.Macapi.Dispatch,
+  DW.Macapi.ObjCRuntime, DW.Macapi.Helpers, DW.Macapi.Dispatch, DW.Macapi.ObjCBlocks,
 {$IF Defined(MACDEV)}
   DW.Macapi.IOKit, DW.StatusBarMenu.Mac;
 {$ENDIF}
 {$IF Defined(IOS)}
-  DW.iOSapi.CoreNFC, DW.iOSapi.DeviceCheck, DW.iOSapi.SystemConfiguration, DW.iOSapi.UserNotifications, DW.iOSapi.Helpers;
+  DW.iOSapi.CoreNFC, DW.iOSapi.DeviceCheck, DW.iOSapi.SystemConfiguration, DW.iOSapi.UserNotifications, DW.iOSapi.Helpers,
+  DW.iOS.Sensors;
 {$ENDIF}
 {$ENDIF}
 
