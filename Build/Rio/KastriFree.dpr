@@ -28,7 +28,10 @@ uses
   DW.NFC in '..\..\Features\NFC\DW.NFC.pas',
   DW.Notifications in '..\..\Features\Notifications\DW.Notifications.pas',
   DW.Form.Contents in '..\..\ComponentHelpers\DW.Form.Contents.pas',
-  DW.SysUtils.Helpers in '..\..\Core\DW.SysUtils.Helpers.pas';
+  DW.SysUtils.Helpers in '..\..\Core\DW.SysUtils.Helpers.pas',
+  DW.Firebase.Messaging in '..\..\Features\Firebase\DW.Firebase.Messaging.pas',
+  DW.Sensors in '..\..\Core\DW.Sensors.pas',
+  DW.UIHelper in '..\..\Core\DW.UIHelper.pas';
 
 {$R *.res}
 
