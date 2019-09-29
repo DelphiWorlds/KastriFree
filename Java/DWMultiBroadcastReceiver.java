@@ -31,6 +31,8 @@ package com.delphiworlds.kastri;
     <meta-data android:name="DWMultiBroadcastReceiver.KEY_RESTART_AFTER_REPLACE" android:value="true" />
     <meta-data android:name="DWMultiBroadcastReceiver.KEY_START_ON_BOOT" android:value="true" />
     <meta-data android:name="DWMultiBroadcastReceiver.KEY_START_SERVICE_ON_BOOT" android:value="[yourservicename]>" />
+    <!-- Required if the device is to wake up when a notification is sent -->
+    <meta-data android:name="DWMultiBroadcastReceiver.WAKE_ON_NOTIFICATION" android:value="true" />
 
     <!-- **** This is the BroadcastReceiver. It handles the intents listed in the intent-filter tag. 
       Note: QUICKBOOT_POWERON is the intent for a restart, as opposed to a cold boot **** -->
@@ -69,6 +71,7 @@ public class DWMultiBroadcastReceiver extends BroadcastReceiver {
   private static final String KEY_START_ON_BOOT = "DWMultiBroadcastReceiver.KEY_START_ON_BOOT"; // true or false
   private static final String KEY_START_SERVICE_ON_BOOT = "DWMultiBroadcastReceiver.KEY_START_SERVICE_ON_BOOT"; // string = service name
   private static final String WAKE_LOCK_ID = "DWMultiBroadcastReceiver.WAKE_LOCK";
+  private static final String WAKE_ON_NOTIFICATION = "DWMultiBroadcastReceiver.WAKE_ON_NOTIFICATION";
 
   public static final String ACTION_SERVICE_ALARM = "com.delphiworlds.kastri.DWMultiBroadcastReceiver.ACTION_SERVICE_ALARM";
   public static final String ACTION_SERVICE_RESTART = "com.delphiworlds.kastri.DWMultiBroadcastReceiver.ACTION_SERVICE_RESTART";
@@ -242,6 +245,7 @@ public class DWMultiBroadcastReceiver extends BroadcastReceiver {
       LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
       Notification notification = intent.getParcelableExtra(EXTRA_NOTIFICATION);
       NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+      DWWakeUp.checkWakeUp(context, WAKE_ON_NOTIFICATION);
       // Dispatch the notification to the OS
       int id = intent.getIntExtra(EXTRA_NOTIFICATION_ID, 0);
       Log.v(TAG, "Notifying with id: " + id);

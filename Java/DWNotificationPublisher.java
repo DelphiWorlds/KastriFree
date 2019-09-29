@@ -8,6 +8,8 @@ package com.delphiworlds.kastri;
  *                                                     *
  *******************************************************/
 
+ // Example metadata: <meta-data android:name="DWNotificationPublisher.WAKE_ON_NOTIFICATION" android:value="true" />
+
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -29,6 +31,7 @@ public class DWNotificationPublisher {
   private static int mUniqueId = 0;
   private static NotificationChannel mDefaultChannel;
   private static NotificationManager mNotificationManager = null;
+  private static final String WAKE_ON_NOTIFICATION = "DWNotificationPublisher.WAKE_ON_NOTIFICATION";
 
   private static void initialize(Context context) {
       if (mNotificationManager != null)
@@ -140,6 +143,7 @@ public class DWNotificationPublisher {
       .setAutoCancel(true);
     // if (intent.hasExtra("notification_badgecount")) 
     //  ShortcutBadger.applyCount(this.getApplicationContext(), Integer.parseInt(intent.getStringExtra("notification_badgecount")));
+    DWWakeup.checkWakeUp(context, WAKE_ON_NOTIFICATION);
     mNotificationManager.notify(mUniqueId, builder.build());
     Log.v(TAG, "-sendNotification");
   }
