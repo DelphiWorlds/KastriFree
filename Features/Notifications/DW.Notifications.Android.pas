@@ -20,11 +20,56 @@ interface
 
 uses
   // Android
-  Androidapi.JNI.App, Androidapi.JNI.GraphicsContentViewText,
+  Androidapi.JNI.App, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.JavaTypes, Androidapi.JNIBridge,
   // DW
   DW.Notifications, DW.MultiReceiver.Android, DW.Androidapi.JNI.App, DW.Androidapi.JNI.Support;
 
 type
+  JSystem = interface;
+
+  JSystemClass = interface(JObjectClass)
+    ['{0CDDA5AF-A679-4D83-A1DF-1B7C9F355E7B}']
+    {class} function _Geterr: JPrintStream; cdecl;
+    {class} function _Getin: JInputStream; cdecl;
+    {class} function _Getout: JPrintStream; cdecl;
+    {class} procedure arraycopy(src: JObject; srcPos: Integer; dst: JObject; dstPos: Integer; length: Integer); cdecl;
+    {class} function clearProperty(name: JString): JString; cdecl;
+    // {class} function console: JConsole; cdecl;
+    {class} function currentTimeMillis: Int64; cdecl;
+    {class} procedure exit(code: Integer); cdecl;
+    {class} procedure gc; cdecl;
+    {class} function getProperties: JProperties; cdecl;
+    {class} function getProperty(propertyName: JString): JString; cdecl; overload;
+    {class} function getProperty(name: JString; defaultValue: JString): JString; cdecl; overload;
+    // {class} function getSecurityManager: JSecurityManager; cdecl;
+    {class} function getenv(name: JString): JString; cdecl; overload;
+    {class} function getenv: JMap; cdecl; overload;
+    {class} function identityHashCode(anObject: JObject): Integer; cdecl;
+    {class} function inheritedChannel: JChannel; cdecl;
+    {class} function lineSeparator: JString; cdecl;
+    {class} procedure load(pathName: JString); cdecl;
+    {class} procedure loadLibrary(libName: JString); cdecl;
+    {class} function mapLibraryName(nickname: JString): JString; cdecl;
+    {class} function nanoTime: Int64; cdecl;
+    {class} procedure runFinalization; cdecl;
+    {class} procedure runFinalizersOnExit(flag: Boolean); cdecl;
+    {class} procedure setErr(newErr: JPrintStream); cdecl;
+    {class} procedure setIn(newIn: JInputStream); cdecl;
+    {class} procedure setOut(newOut: JPrintStream); cdecl;
+    {class} procedure setProperties(p: JProperties); cdecl;
+    {class} function setProperty(name: JString; value: JString): JString; cdecl;
+    // {class} procedure setSecurityManager(sm: JSecurityManager); cdecl;
+    {class} property err: JPrintStream read _Geterr;
+    {class} property &in: JInputStream read _Getin;
+    {class} property &out: JPrintStream read _Getout;
+  end;
+
+  [JavaSignature('java/lang/System')]
+  JSystem = interface(JObject)
+    ['{93E6C8D4-0481-439B-A258-870D01C85DF4}']
+  end;
+  TJSystem = class(TJavaGenericImport<JSystemClass, JSystem>) end;
+
   TNotificationReceiver = class(TMultiReceiver)
   private
     FNotifications: TNotifications;
@@ -92,19 +137,19 @@ uses
   // RTL
   System.SysUtils, System.DateUtils, System.TimeSpan,
   // Android
-  Androidapi.Helpers, Androidapi.JNI.JavaTypes, Androidapi.JNIBridge, Androidapi.JNI.Net, Androidapi.JNI.Os, Androidapi.JNI.Embarcadero,
+  Androidapi.Helpers, Androidapi.JNI.Net, Androidapi.JNI.Os, Androidapi.JNI.Embarcadero,
   // REST
   REST.Json,
   // DW
-  DW.OSLog,
   DW.Androidapi.JNI.DWMultiBroadcastReceiver, DW.Android.Helpers;
 
 type
   TOpenNotifications = class(TNotifications);
 
-function DateTimeLocalToUnixMSecGMT(const ADateTime: TDateTime): Int64;
+// TODO: Move this to DW.Android.Helpers
+function GetTimeFromNowInMillis(const ASecondsFromNow: Int64): Int64;
 begin
-  Result := DateTimeToUnix(ADateTime) * MSecsPerSec - Round(TTimeZone.Local.UtcOffset.TotalMilliseconds);
+  Result := TJSystem.JavaClass.currentTimeMillis + (ASecondsFromNow * 1000);
 end;
 
 { TNotificationReceiver }
@@ -351,20 +396,17 @@ var
   LNotification: TNotification;
   LID: Integer;
 begin
-  TOSLog.d('+TPlatformNotifications.CancelNotification');
   if not AName.IsEmpty then
   begin
     LID := RetrieveNotification(AName, LNotification);
     if LID > -1 then
     begin
-      TOSLog.d('Found %s with id of %d', [AName, LID]);
       LPendingIntent := GetNotificationPendingIntent(LNotification, LID);
       TAndroidHelper.AlarmManager.cancel(LPendingIntent);
       TAndroidHelperEx.NotificationManager.cancel(LID);
       RemoveNotification(LNotification);
     end;
   end;
-  TOSLog.d('-TPlatformNotifications.CancelNotification');
 end;
 
 procedure TPlatformNotifications.PresentNotification(const ANotification: TNotification);
@@ -380,7 +422,7 @@ end;
 
 procedure TPlatformNotifications.ScheduleNotification(const ANotification: TNotification);
 var
-  LTime: Integer;
+  LTime: Int64;
   LPendingIntent: JPendingIntent;
   LID: Integer;
 begin
@@ -388,7 +430,7 @@ begin
   LID := GetUniqueID;
   StoreNotification(ANotification, LID);
   LPendingIntent := GetNotificationPendingIntent(ANotification, LID);
-  LTime := DateTimeLocalToUnixMSecGMT(ANotification.FireDate);
+  LTime := GetTimeFromNowInMillis(SecondsBetween(Now, ANotification.FireDate));
   if TOSVersion.Check(6) then
     TAndroidHelper.AlarmManager.setExactAndAllowWhileIdle(TJAlarmManager.JavaClass.RTC_WAKEUP, LTime, LPendingIntent)
   else
@@ -426,7 +468,6 @@ begin
   finally
     LEditor.apply;
   end;
-  TOSLog.d('Stored %s at %d', [LName, AID]);
 end;
 
 end.
