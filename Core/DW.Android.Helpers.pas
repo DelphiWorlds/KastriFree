@@ -172,7 +172,7 @@ end;
 
 class function TAndroidHelperEx.GetClass(const APackageClassName: string): Jlang_Class;
 begin
-  Result := TJLang_Class.JavaClass.forName(StringToJString(APackageClassName), True, TAndroidHelper.Activity.getClassLoader);
+  Result := TJLang_Class.JavaClass.forName(StringToJString(APackageClassName), True, TAndroidHelper.Context.getClassLoader);
 end;
 
 class function TAndroidHelperEx.GetDefaultIconID: Integer;
