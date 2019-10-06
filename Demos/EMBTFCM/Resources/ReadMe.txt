@@ -1,8 +1,4 @@
-For Android, put:
-
-  strings.xml
-
-..and/or for iOS put:
+For iOS, put:
 
   GoogleService-info.plist
 
