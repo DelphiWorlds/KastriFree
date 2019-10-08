@@ -5,11 +5,12 @@ interface
 implementation
 
 uses
-  System.SysUtils, System.Classes, System.JSON, System.PushNotification, System.Messaging,
-  Macapi.ObjectiveC, Macapi.Helpers,
+  System.SysUtils, System.Classes, System.JSON, System.PushNotification, System.Messaging, System.Notification,
+  Macapi.ObjectiveC, Macapi.Helpers, Macapi.ObjCRuntime,
   iOSapi.Foundation, iOSapi.UIKit, iOSapi.Helpers,
   FMX.Platform,
-  DW.iOSapi.Helpers, DW.iOSapi.Firebase, DW.iOSapi.UserNotifications;
+  DW.OSLog,
+  DW.iOSapi.Helpers, DW.iOSapi.Firebase, DW.iOSapi.UserNotifications, DW.Macapi.Helpers;
 
 type
   TFcmPushServiceNotification = class(TPushServiceNotification)
@@ -24,6 +25,24 @@ type
   end;
 
   TFcmPushService = class;
+
+  TUserNotificationCenterDelegate = class(TOCLocal, UNUserNotificationCenterDelegate)
+  private
+    FPushService: TFcmPushService;
+    procedure ProcessLocalNotification(request: UNNotificationRequest);
+    procedure ProcessNotificationRequest(request: UNNotificationRequest);
+    procedure ProcessRemoteNotification(request: UNNotificationRequest);
+  public
+    { UNUserNotificationCenterDelegate }
+    [MethodName('userNotificationCenter:willPresentNotification:withCompletionHandler:')]
+    procedure userNotificationCenterWillPresentNotificationWithCompletionHandler(center: UNUserNotificationCenter;
+      willPresentNotification: UNNotification; withCompletionHandler: Pointer); cdecl;
+    [MethodName('userNotificationCenter:didReceiveNotificationResponse:withCompletionHandler:')]
+    procedure userNotificationCenterDidReceiveNotificationResponseWithCompletionHandler(center: UNUserNotificationCenter;
+      didReceiveNotificationResponse: UNNotificationResponse; withCompletionHandler: Pointer); cdecl;
+  public
+    constructor Create(const APushService: TFcmPushService);
+  end;
 
   TFIRMessagingDelegate = class(TOCLocal, FIRMessagingDelegate)
   private
@@ -49,6 +68,7 @@ type
     FDeviceToken: string;
     FFIRMessagingDelegate: TFIRMessagingDelegate;
     FMessaging: FIRMessaging;
+    FNotificationCenterDelegate: TUserNotificationCenterDelegate;
     FStartupError: string;
     FStartupNotification: string;
     FStatus: TPushService.TStatus;
@@ -95,6 +115,14 @@ begin
     Result := NSStrToStr(LDevice.identifierForVendor.UUIDString);
 end;
 
+function NotificationCenter: UNUserNotificationCenter;
+begin
+  Result := TUNUserNotificationCenter.OCClass.currentNotificationCenter;
+end;
+
+function imp_implementationWithBlock(block: pointer): pointer; cdecl; external libobjc name  _PU + 'imp_implementationWithBlock';
+function imp_removeBlock(anImp: pointer): Integer; cdecl; external libobjc name _PU + 'imp_removeBlock';
+
 { TFcmPushServiceNotification }
 
 constructor TFcmPushServiceNotification.Create(const AJSON: string);
@@ -125,6 +153,77 @@ begin
   Result := FRawData;
 end;
 
+{ TUserNotificationCenterDelegate }
+
+constructor TUserNotificationCenterDelegate.Create(const APushService: TFcmPushService);
+begin
+  inherited Create;
+  FPushService := APushService;
+end;
+
+procedure TUserNotificationCenterDelegate.ProcessNotificationRequest(request: UNNotificationRequest);
+begin
+  if request.trigger.isKindOfClass(objc_getClass('UNPushNotificationTrigger')) then
+    ProcessRemoteNotification(request)
+  else
+    ProcessLocalNotification(request);
+end;
+
+procedure TUserNotificationCenterDelegate.ProcessRemoteNotification(request: UNNotificationRequest);
+begin
+  TOSLog.d('TUserNotificationCenterDelegate.ProcessRemoteNotification');
+  FPushService.MessageReceived(TiOSHelperEx.NSDictionaryToJSON(request.content.userInfo));
+end;
+
+procedure TUserNotificationCenterDelegate.ProcessLocalNotification(request: UNNotificationRequest);
+var
+  LNotification: TNotification;
+  LContent: UNNotificationContent;
+  LUserInfo: TNSDictionaryHelper;
+begin
+  LContent := request.content;
+  LUserInfo := TNSDictionaryHelper.Create(LContent.userInfo);
+  LNotification := TNotification.Create;
+  try
+    LNotification.Name := NSStrToStr(request.identifier);
+    LNotification.AlertBody := NSStrToStr(LContent.body);
+    LNotification.Title := NSStrToStr(LContent.title);
+    LNotification.EnableSound := LContent.sound <> nil;
+    // LNotification.SoundName := ?
+    LNotification.HasAction := LContent.categoryIdentifier <> nil;
+    LNotification.RepeatInterval := TRepeatInterval(LUserInfo.GetValue('RepeatInterval', 0));
+    TMessageManager.DefaultManager.SendMessage(Self, TMessage<TNotification>.Create(LNotification));
+  finally
+    LNotification.Free;
+  end;
+end;
+
+procedure TUserNotificationCenterDelegate.userNotificationCenterDidReceiveNotificationResponseWithCompletionHandler(center: UNUserNotificationCenter;
+  didReceiveNotificationResponse: UNNotificationResponse; withCompletionHandler: Pointer);
+var
+  LBlockImp: procedure; cdecl;
+begin
+  TOSLog.d('TUserNotificationCenterDelegate.userNotificationCenterDidReceiveNotificationResponseWithCompletionHandler');
+  ProcessNotificationRequest(didReceiveNotificationResponse.notification.request);
+  @LBlockImp := imp_implementationWithBlock(withCompletionHandler);
+  LBlockImp;
+  imp_removeBlock(@LBlockImp);
+end;
+
+procedure TUserNotificationCenterDelegate.userNotificationCenterWillPresentNotificationWithCompletionHandler(center: UNUserNotificationCenter;
+  willPresentNotification: UNNotification; withCompletionHandler: Pointer);
+var
+  LBlockImp: procedure(options: UNNotificationPresentationOptions); cdecl;
+  LOptions: UNNotificationPresentationOptions;
+begin
+  TOSLog.d('TUserNotificationCenterDelegate.userNotificationCenterWillPresentNotificationWithCompletionHandler');
+  ProcessNotificationRequest(willPresentNotification.request);
+  @LBlockImp := imp_implementationWithBlock(withCompletionHandler);
+  LOptions := UNNotificationPresentationOptionAlert;
+  LBlockImp(LOptions);
+  imp_removeBlock(@LBlockImp);
+end;
+
 { TFIRMessagingDelegate }
 
 constructor TFIRMessagingDelegate.Create(const APushService: TFcmPushService);
@@ -135,11 +234,13 @@ end;
 
 procedure TFIRMessagingDelegate.applicationReceivedRemoteMessage(remoteMessage: FIRMessagingRemoteMessage);
 begin
+  TOSLog.d('TFIRMessagingDelegate.applicationReceivedRemoteMessage');
   ReceivedMessage(remoteMessage);
 end;
 
 procedure TFIRMessagingDelegate.didReceiveMessage(messaging: FIRMessaging; remoteMessage: FIRMessagingRemoteMessage);
 begin
+  TOSLog.d('TFIRMessagingDelegate.didReceiveMessage');
   ReceivedMessage(remoteMessage);
 end;
 
@@ -173,6 +274,7 @@ destructor TFcmPushService.Destroy;
 begin
   TMessageManager.DefaultManager.Unsubscribe(TPushStartupNotificationMessage, PushStartupNotificationMessageMessageHandler);
   TMessageManager.DefaultManager.Unsubscribe(TPushDeviceTokenMessage, PushDeviceTokenMessageHandler);
+  FNotificationCenterDelegate.Free;
   inherited;
 end;
 
@@ -201,11 +303,13 @@ end;
 
 procedure TFcmPushService.MessageReceived(const AJSON: string);
 begin
-  TMessageManager.DefaultManager.SendMessage(nil, TPushRemoteNotificationMessage.Create(TPushNotificationData.Create(AJSON)));
+  DoReceiveNotification(TFcmPushServiceNotification.Create(AJSON));
 end;
 
 procedure TFcmPushService.Register;
 begin
+  FNotificationCenterDelegate := TUserNotificationCenterDelegate.Create(Self);
+  NotificationCenter.setDelegate(FNotificationCenterDelegate.GetObjectID);
   TFIRApp.OCClass.configure;
   FFIRMessagingDelegate := TFIRMessagingDelegate.Create(Self);
   Messaging.setDelegate(FFIRMessagingDelegate.GetObjectID);
@@ -216,6 +320,8 @@ begin
   SetDeviceToken(string.Empty);
   Messaging.setDelegate(nil);
   FFIRMessagingDelegate := nil;
+  FNotificationCenterDelegate.Free;
+  NotificationCenter.setDelegate(nil);
 end;
 
 procedure TFcmPushService.StartService;

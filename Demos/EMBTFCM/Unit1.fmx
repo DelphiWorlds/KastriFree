@@ -13,10 +13,49 @@ object frmMain: TfrmMain
     DataDetectorTypes = []
     Align = Client
     Size.Width = 389.000000000000000000
-    Size.Height = 480.000000000000000000
+    Size.Height = 439.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 0
     Viewport.Width = 385.000000000000000000
-    Viewport.Height = 476.000000000000000000
+    Viewport.Height = 435.000000000000000000
+  end
+  object ButtonsLayout: TLayout
+    Align = Top
+    Padding.Left = 4.000000000000000000
+    Padding.Top = 4.000000000000000000
+    Padding.Right = 4.000000000000000000
+    Padding.Bottom = 4.000000000000000000
+    Size.Width = 389.000000000000000000
+    Size.Height = 41.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    object LocalButton: TButton
+      Align = Left
+      Position.X = 117.000000000000000000
+      Position.Y = 4.000000000000000000
+      Size.Width = 117.000000000000000000
+      Size.Height = 33.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'Schedule Local'
+      OnClick = LocalButtonClick
+    end
+    object ClearButton: TButton
+      Align = Left
+      Margins.Right = 8.000000000000000000
+      Position.X = 4.000000000000000000
+      Position.Y = 4.000000000000000000
+      Size.Width = 105.000000000000000000
+      Size.Height = 33.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      Text = 'Clear Messages'
+      OnClick = ClearButtonClick
+    end
+  end
+  object NotificationCenter: TNotificationCenter
+    OnReceiveLocalNotification = NotificationCenterReceiveLocalNotification
+    Left = 172
+    Top = 84
   end
 end
