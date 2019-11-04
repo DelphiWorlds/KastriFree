@@ -79,15 +79,6 @@ uses
   // DW
   DW.VirtualKeyboard.Helpers, DW.ElasticLayout;
 
-function GetStatusBarHeight: Single;
-begin
-{$IF Defined(IOS)}
-  Result := TiOSHelper.SharedApplication.statusBarFrame.size.height;
-{$ELSE}
-  Result := 0;
-{$ENDIF}
-end;
-
 { TVertScrollBox }
 
 constructor TVertScrollBox.Create(AOwner: TComponent);
@@ -171,7 +162,7 @@ end;
 
 procedure TVertScrollBox.MoveControls;
 var
-  LOffset: Single;
+  LOffset, LStatusBarHeight: Single;
   LControlBottom: Single;
   LControlPosition: TPointF;
   LMemo: TCustomMemo;
@@ -179,6 +170,9 @@ begin
   FFocusedControl := nil;
   if (FControlsLayout = nil) or (Root = nil) or (Root.Focused = nil) or not (Root.Focused.GetObject is TControl) then
     Exit; // <======
+  LStatusBarHeight := 0;
+  if Root.GetObject is TCommonCustomForm then
+    LStatusBarHeight := Screen.Height - TCommonCustomForm(Root.GetObject).Height;
   if FStoredHeight = 0 then
     FStoredHeight := FControlsLayout.Height;
   if FNeedsIsElasticUpdate and (FControlsLayout is DW.ElasticLayout.TFlowLayout) then
@@ -203,7 +197,7 @@ begin
     LControlBottom := LControlPosition.Y + (LMemo.Caret.Pos.Y - LMemo.ViewportPosition.Y) + (LMemo.Caret.size.Height * 2) + 6;
   end;
   // + 2 = to give a tiny bit of clearance between the control "bottom" and the VK
-  LOffset := (LControlBottom + 2 + GetStatusBarHeight - FVKRect.Top) / Scale.Y;
+  LOffset := (LControlBottom + 2 + LStatusBarHeight - FVKRect.Top) / Scale.Y;
   if Trunc(LOffset) > 0 then
     ViewportPosition := PointF(0, LOffset);
 end;
