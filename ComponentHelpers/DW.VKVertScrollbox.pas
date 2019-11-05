@@ -27,10 +27,12 @@ type
     FCaretPos: TPointF;
     FControlsLayout: TControl;
     FFocusedControl: TControl;
+    FRestoreFocusControl: TControl;
     FNeedsIsElasticUpdate: Boolean;
     FRestoreViewport: Boolean;
     FStoredHeight: Single;
     FStoredIsElastic: Boolean;
+    FViewportOffset: Single;
     FVKRect: TRect;
     function IsFocusedObject: Boolean;
     function HasCaretPosChanged: Boolean;
@@ -123,8 +125,11 @@ begin
     Exit; // <=======
   if TVKStateChangeMessage(M).KeyboardVisible then
   begin
-    FVKRect := TVKStateChangeMessage(M).KeyboardBounds;
-    MoveControls;
+    if FVKRect <> TVKStateChangeMessage(M).KeyboardBounds then
+    begin
+      FVKRect := TVKStateChangeMessage(M).KeyboardBounds;
+      MoveControls;
+    end;
   end
   else
     RestoreControls;
@@ -150,9 +155,22 @@ end;
 
 procedure TVertScrollBox.IdleMessageHandler(const Sender: TObject; const M: TMessage);
 begin
-  // TIdleMessage is being used to check if the focused control has changed, or a caret position has changed. This may happen without the VK hiding/showing
+  // Check if the focused control has changed, or a caret position has changed. This may happen without the VK hiding/showing
   if TVirtualKeyboard.IsVisible and (HasCaretPosChanged or not IsFocusedObject) then
     MoveControls;
+  // Restore focused control after an orientation change
+  if FRestoreFocusControl <> nil then
+  begin
+    Root.Focused := FRestoreFocusControl;
+    TVirtualKeyboard.Show(FRestoreFocusControl);
+    FRestoreFocusControl := nil;
+  end;
+  // Change viewport after VK change
+  if FViewportOffset > 0 then
+  begin
+    ViewportPosition := PointF(0, FViewportOffset);
+    FViewportOffset := 0;
+  end;
 end;
 
 function TVertScrollBox.IsFocusedObject: Boolean;
@@ -199,22 +217,41 @@ begin
   // + 2 = to give a tiny bit of clearance between the control "bottom" and the VK
   LOffset := (LControlBottom + 2 + LStatusBarHeight - FVKRect.Top) / Scale.Y;
   if Trunc(LOffset) > 0 then
-    ViewportPosition := PointF(0, LOffset);
+    FViewportOffset := LOffset
+  else
+    FViewportOffset := 0;
+  // Viewport will be updated in IdleMessageHandler
 end;
 
 procedure TVertScrollBox.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited;
-  if (AComponent = FControlsLayout) and (Operation = TOperation.opRemove) then
-    FControlsLayout := nil;
+  if Operation = TOperation.opRemove then
+  begin
+    if AComponent = FControlsLayout then
+      FControlsLayout := nil;
+    if AComponent = FFocusedControl then
+      FFocusedControl := nil;
+  end;
 end;
 
 procedure TVertScrollBox.OrientationChangedMessageHandler(const Sender: TObject; const M: TMessage);
 begin
+  FRestoreFocusControl := nil;
   if not TVirtualKeyboard.GetBounds.IsEmpty then
   begin
     FVKRect := TVirtualKeyboard.GetBounds;
     MoveControls;
+  end
+  else
+  begin
+    // Retain focus (for iOS)
+    if (Root <> nil) and (Root.Focused = nil) and (FFocusedControl <> nil) then
+    begin
+      Restore(True);
+      FRestoreFocusControl := FFocusedControl;
+      // Focus will be restored in IdleMessageHandler
+    end;
   end;
 end;
 
