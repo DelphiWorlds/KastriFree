@@ -174,6 +174,7 @@ end;
 constructor TPlatformNotifications.Create(const ANotifications: TNotifications);
 begin
   inherited;
+  TPlatformNotifications.UpdateDelegate;
   FNotificationCenterDelegate.Notifications := ANotifications;
   RequestAuthorization;
 end;
