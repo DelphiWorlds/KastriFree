@@ -85,7 +85,9 @@ begin
   LNotification.AlertBody := 'This notification was scheduled - so there';
   LNotification.FireDate := Now + EncodeTime(0, 0, ASeconds, 0);
   if ARepeating then
-    LNotification.RepeatInterval := TRepeatInterval.Minute;
+    LNotification.RepeatInterval := TRepeatInterval.Minute
+  else
+    LNotification.RepeatInterval := TRepeatInterval.None;
   FNotifications.ScheduleNotification(LNotification);
 end;
 
