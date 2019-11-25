@@ -30,6 +30,17 @@ type
     destructor Destroy; override;
   end;
 
+  TLogWriter = class(TFileWriter)
+  private
+    FTimestampFormat: string;
+    function GetTimestamp: string;
+  public
+    constructor Create(const AFilename: string; const ATimestampFormat: string = 'mm-dd hh:nn:ss.zzz');
+    procedure WriteLine(const Value: string); override;
+    procedure WriteLine(const Format: string; Args: array of const); override;
+    property TimestampFormat: string read FTimestampFormat write FTimestampFormat;
+  end;
+
 implementation
 
 uses
@@ -59,6 +70,34 @@ destructor TFileWriter.Destroy;
 begin
   FStream.Free;
   inherited;
+end;
+
+{ TLogWriter }
+
+constructor TLogWriter.Create(const AFilename: string; const ATimestampFormat: string = 'mm-dd hh:nn:ss.zzz');
+begin
+  inherited Create(AFilename, True);
+  AutoFlush := True;
+  FTimestampFormat := ATimestampFormat;
+end;
+
+function TLogWriter.GetTimestamp: string;
+begin
+  Result := '';
+  if not FTimestampFormat.IsEmpty then
+  begin
+    Result := FormatDateTime(FTimestampFormat, Now) + ': ';
+  end;
+end;
+
+procedure TLogWriter.WriteLine(const Format: string; Args: array of const);
+begin
+  inherited WriteLine(GetTimestamp + Format, Args);
+end;
+
+procedure TLogWriter.WriteLine(const Value: string);
+begin
+  inherited WriteLine(GetTimestamp + Value);
 end;
 
 end.
