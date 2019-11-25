@@ -12,6 +12,9 @@ unit DW.Geodetic;
 
 interface
 
+uses
+  System.Sensors;
+
 type
   TGeodetic = record
   public
@@ -21,7 +24,8 @@ type
     /// <remarks>
     ///   At present, untested. Result may vary between OS's, and might change in future if their algorithm is changed
     /// </remarks>
-    class function DistanceBetween(const ALatitudeFrom, ALongitudeFrom, ALatitudeTo, ALongitudeTo: Double): Double; static;
+    class function DistanceBetween(const ALatitudeFrom, ALongitudeFrom, ALatitudeTo, ALongitudeTo: Double): Double; overload; static;
+    class function DistanceBetween(const ALocationFrom: TLocationCoord2D; const ALocationTo: TLocationCoord2D): Double; overload; static;
   end;
 
 implementation
@@ -40,6 +44,11 @@ uses
 class function TGeodetic.DistanceBetween(const ALatitudeFrom, ALongitudeFrom, ALatitudeTo, ALongitudeTo: Double): Double;
 begin
   Result := TPlatformGeodetic.DistanceBetween(ALatitudeFrom, ALongitudeFrom, ALatitudeTo, ALongitudeTo);
+end;
+
+class function TGeodetic.DistanceBetween(const ALocationFrom, ALocationTo: TLocationCoord2D): Double;
+begin
+  Result := DistanceBetween(ALocationFrom.Latitude, ALocationFrom.Longitude, ALocationTo.Latitude, ALocationTo.Longitude);
 end;
 
 end.
