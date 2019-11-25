@@ -14,14 +14,126 @@ interface
 
 uses
   // Android
-  Androidapi.JNI.JavaTypes, Androidapi.JNI.Os, Androidapi.JNIBridge;
+  Androidapi.JNI.JavaTypes, Androidapi.JNI.Os, Androidapi.JNIBridge, Androidapi.JNI.GraphicsContentViewText;
 
 type
+  JActivityManager_RunningServiceInfo = interface;
+  JSystem = interface;
   JHandlerThread = interface;
   JEnvironment = interface;
   JStatFs = interface;
   JAsyncTask = interface;
   JAsyncTask_Status = interface;
+
+  JActivityManager_RunningServiceInfoClass = interface(JObjectClass)
+  ['{4D839321-4528-4030-88D9-3142BFDAB323}']
+    function _GetCREATOR: JParcelable_Creator;
+    function _GetFLAG_FOREGROUND: Integer;
+    function _GetFLAG_PERSISTENT_PROCESS: Integer;
+    function _GetFLAG_STARTED: Integer;
+    function _GetFLAG_SYSTEM_PROCESS: Integer;
+    function init: JActivityManager_RunningServiceInfo; cdecl;
+    property CREATOR: JParcelable_Creator read _GetCREATOR;
+    property FLAG_FOREGROUND: Integer read _GetFLAG_FOREGROUND;
+    property FLAG_PERSISTENT_PROCESS: Integer read _GetFLAG_PERSISTENT_PROCESS;
+    property FLAG_STARTED: Integer read _GetFLAG_STARTED;
+    property FLAG_SYSTEM_PROCESS: Integer read _GetFLAG_SYSTEM_PROCESS;
+  end;
+
+  [JavaSignature('android/app/ActivityManager$RunningServiceInfo')]
+  JActivityManager_RunningServiceInfo = interface(JObject)
+  ['{CEECA783-977A-4E16-8907-C4F65F25D168}']
+    function _GetactiveSince: Int64;
+    function _GetclientCount: Integer;
+    function _GetclientLabel: Integer;
+    function _GetclientPackage: JString;
+    function _GetcrashCount: Integer;
+    function _Getflags: Integer;
+    function _Getforeground: Boolean;
+    function _GetlastActivityTime: Int64;
+    function _Getpid: Integer;
+    function _Getprocess: JString;
+    function _Getrestarting: Int64;
+    function _Getservice: JComponentName;
+    function _Getstarted: Boolean;
+    function _Getuid: Integer;
+    procedure _SetactiveSince(Value: Int64);
+    procedure _SetclientCount(Value: Integer);
+    procedure _SetclientLabel(Value: Integer);
+    procedure _SetclientPackage(Value: JString);
+    procedure _SetcrashCount(Value: Integer);
+    procedure _Setflags(Value: Integer);
+    procedure _Setforeground(Value: Boolean);
+    procedure _SetlastActivityTime(Value: Int64);
+    procedure _Setpid(Value: Integer);
+    procedure _Setprocess(Value: JString);
+    procedure _Setrestarting(Value: Int64);
+    procedure _Setservice(Value: JComponentName);
+    procedure _Setstarted(Value: Boolean);
+    procedure _Setuid(Value: Integer);
+    function describeContents: Integer; cdecl;
+    procedure readFromParcel(source: JParcel); cdecl;
+    procedure writeToParcel(dest: JParcel; flags: Integer); cdecl;
+    property activeSince: Int64 read _GetactiveSince write _SetactiveSince;
+    property clientCount: Integer read _GetclientCount write _SetclientCount;
+    property clientLabel: Integer read _GetclientLabel write _SetclientLabel;
+    property clientPackage: JString read _GetclientPackage write _SetclientPackage;
+    property crashCount: Integer read _GetcrashCount write _SetcrashCount;
+    property flags: Integer read _Getflags write _Setflags;
+    property foreground: Boolean read _Getforeground write _Setforeground;
+    property lastActivityTime: Int64 read _GetlastActivityTime write _SetlastActivityTime;
+    property pid: Integer read _Getpid write _Setpid;
+    property process: JString read _Getprocess write _Setprocess;
+    property restarting: Int64 read _Getrestarting write _Setrestarting;
+    property service: JComponentName read _Getservice write _Setservice;
+    property started: Boolean read _Getstarted write _Setstarted;
+    property uid: Integer read _Getuid write _Setuid;
+  end;
+  TJActivityManager_RunningServiceInfo = class(TJavaGenericImport<JActivityManager_RunningServiceInfoClass, JActivityManager_RunningServiceInfo>)
+  end;
+
+  JSystemClass = interface(JObjectClass)
+    ['{0CDDA5AF-A679-4D83-A1DF-1B7C9F355E7B}']
+    {class} function _Geterr: JPrintStream; cdecl;
+    {class} function _Getin: JInputStream; cdecl;
+    {class} function _Getout: JPrintStream; cdecl;
+    {class} procedure arraycopy(src: JObject; srcPos: Integer; dst: JObject; dstPos: Integer; length: Integer); cdecl;
+    {class} function clearProperty(name: JString): JString; cdecl;
+    // {class} function console: JConsole; cdecl;
+    {class} function currentTimeMillis: Int64; cdecl;
+    {class} procedure exit(code: Integer); cdecl;
+    {class} procedure gc; cdecl;
+    {class} function getProperties: JProperties; cdecl;
+    {class} function getProperty(propertyName: JString): JString; cdecl; overload;
+    {class} function getProperty(name: JString; defaultValue: JString): JString; cdecl; overload;
+    // {class} function getSecurityManager: JSecurityManager; cdecl;
+    {class} function getenv(name: JString): JString; cdecl; overload;
+    {class} function getenv: JMap; cdecl; overload;
+    {class} function identityHashCode(anObject: JObject): Integer; cdecl;
+    {class} function inheritedChannel: JChannel; cdecl;
+    {class} function lineSeparator: JString; cdecl;
+    {class} procedure load(pathName: JString); cdecl;
+    {class} procedure loadLibrary(libName: JString); cdecl;
+    {class} function mapLibraryName(nickname: JString): JString; cdecl;
+    {class} function nanoTime: Int64; cdecl;
+    {class} procedure runFinalization; cdecl;
+    {class} procedure runFinalizersOnExit(flag: Boolean); cdecl;
+    {class} procedure setErr(newErr: JPrintStream); cdecl;
+    {class} procedure setIn(newIn: JInputStream); cdecl;
+    {class} procedure setOut(newOut: JPrintStream); cdecl;
+    {class} procedure setProperties(p: JProperties); cdecl;
+    {class} function setProperty(name: JString; value: JString): JString; cdecl;
+    // {class} procedure setSecurityManager(sm: JSecurityManager); cdecl;
+    {class} property err: JPrintStream read _Geterr;
+    {class} property &in: JInputStream read _Getin;
+    {class} property &out: JPrintStream read _Getout;
+  end;
+
+  [JavaSignature('java/lang/System')]
+  JSystem = interface(JObject)
+    ['{93E6C8D4-0481-439B-A258-870D01C85DF4}']
+  end;
+  TJSystem = class(TJavaGenericImport<JSystemClass, JSystem>) end;
 
   JHandlerThreadClass = interface(JThreadClass)
     ['{FAAD33B5-6400-4F38-B3F9-EE8C85500F15}']
