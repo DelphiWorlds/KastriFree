@@ -30,7 +30,8 @@ public class DWWebChromeClient extends WebChromeClient {
   } 
 
   public void handleFileChooserResult(Intent intent, int resultCode) {
-    mFilePathCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, intent));
+    if (mFilePathCallback != null)
+      mFilePathCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, intent));
     mFilePathCallback = null;
   }
 }
