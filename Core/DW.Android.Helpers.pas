@@ -16,7 +16,7 @@ uses
   // Android
   Androidapi.JNI.JavaTypes, Androidapi.JNI.Net, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.Os, Androidapi.JNI.App,
   // DW
-  DW.Androidapi.JNI.KeyguardManager;
+  DW.Androidapi.JNI.KeyguardManager, DW.Androidapi.JNI.Os;
 
 type
   TAndroidHelperEx = record
@@ -67,13 +67,25 @@ type
     /// </summary>
     class function GetTargetSdkVersion: Integer; static;
     /// <summary>
+    ///   Returns the time from now, plus the ASecondsFromNow
+    /// </summary>
+    class function GetTimeFromNowInMillis(const ASecondsFromNow: Int64): Int64; static;
+    /// <summary>
     ///   Returns installed Sdk version
     /// </summary>
     class function GetBuildSdkVersion: Integer; static;
     /// <summary>
+    ///   Returns information about a running service, if the service is running
+    /// </summary>
+    class function GetRunningServiceInfo(const AServiceName: string): JActivityManager_RunningServiceInfo; static;
+    /// <summary>
     ///   Returns whether or not battery optimizations are being ignored
     /// </summary>
     class function IsIgnoringBatteryOptimizations: Boolean; static;
+    /// <summary>
+    ///   Returns whether a service is running foreground
+    /// </summary>
+    class function IsServiceForeground(const AServiceName: string): Boolean; static;
     /// <summary>
     ///   Returns whether or not a service is running
     /// </summary>
@@ -126,7 +138,7 @@ uses
   // RTL
   System.SysUtils, System.DateUtils,
   // Android
-  Androidapi.Helpers, Androidapi.JNI.Media, Androidapi.JNI.Provider,
+  Androidapi.Helpers, Androidapi.JNI.Media, Androidapi.JNI.Provider, Androidapi.JNIBridge,
   // DW
   DW.Androidapi.JNI.FileProvider;
 
@@ -168,6 +180,11 @@ end;
 class function TAndroidHelperEx.GetBuildSdkVersion: Integer;
 begin
    Result := TJBuild_VERSION.JavaClass.SDK_INT;
+end;
+
+class function TAndroidHelperEx.GetTimeFromNowInMillis(const ASecondsFromNow: Int64): Int64;
+begin
+  Result := TJSystem.JavaClass.currentTimeMillis + (ASecondsFromNow * 1000);
 end;
 
 class function TAndroidHelperEx.GetClass(const APackageClassName: string): Jlang_Class;
@@ -216,14 +233,35 @@ begin
   Result := PowerManager.isIgnoringBatteryOptimizations(TAndroidHelper.Context.getPackageName);
 end;
 
-class function TAndroidHelperEx.IsServiceRunning(const AServiceName: string): Boolean;
+class function TAndroidHelperEx.GetRunningServiceInfo(const AServiceName: string): JActivityManager_RunningServiceInfo;
 var
-  LIntent: JIntent;
-  LPendingIntent: JPendingIntent;
+  LService: JObject;
+  LRunningServices: JList;
+  LServiceInfo: JActivityManager_RunningServiceInfo;
+  I: Integer;
 begin
-  LIntent := TJIntent.JavaClass.init(TAndroidHelper.Context, GetClass(AServiceName));
-  LPendingIntent := TJPendingIntent.JavaClass.getService(TAndroidHelper.Context, 0, LIntent, TJPendingIntent.JavaClass.FLAG_NO_CREATE);
-  Result := LPendingIntent <> nil;
+  Result := nil;
+  LService := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.ACTIVITY_SERVICE);
+  LRunningServices := TJActivityManager.Wrap(JObjectToID(LService)).getRunningServices(MaxInt);
+  for I := 0 to LRunningServices.size - 1 do
+  begin
+    LServiceInfo := TJActivityManager_RunningServiceInfo.Wrap(JObjectToID(LRunningServices.get(I)));
+    if AServiceName.Equals(JStringToString(LServiceInfo.service.getClassName)) then
+      Exit(LServiceInfo);
+  end;
+end;
+
+class function TAndroidHelperEx.IsServiceForeground(const AServiceName: string): Boolean;
+var
+  LServiceInfo: JActivityManager_RunningServiceInfo;
+begin
+  LServiceInfo := GetRunningServiceInfo(AServiceName);
+  Result := (LServiceInfo <> nil) and LServiceInfo.foreground;
+end;
+
+class function TAndroidHelperEx.IsServiceRunning(const AServiceName: string): Boolean;
+begin
+  Result := GetRunningServiceInfo(AServiceName) <> nil;
 end;
 
 class function TAndroidHelperEx.KeyguardManager: JKeyguardManager;
