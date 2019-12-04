@@ -17,7 +17,9 @@ uses
   System.Sensors,
   // Android
   Androidapi.JNI.App, AndroidApi.JNI.GraphicsContentViewText, Androidapi.JNI.Os, Androidapi.JNIBridge, Androidapi.JNI.Location,
-  AndroidApi.JNI.JavaTypes;
+  AndroidApi.JNI.JavaTypes,
+  // DW
+  DW.Timer.Android;
 
 type
   TLocation = class;
@@ -33,7 +35,9 @@ type
     procedure onStatusChanged(provider: JString; status: Integer; extras: JBundle); cdecl;
   end;
 
-  TLocationChangeEvent = procedure(Sender: TObject; const Location: TLocationCoord2D) of object;
+  TLocationSource = (Listeners, Timer, Requested);
+
+  TLocationChangeEvent = procedure(Sender: TObject; const Location: TLocationCoord2D; const ASource: TLocationSource) of object;
 
   TLocation = class(TObject)
   private
@@ -42,28 +46,34 @@ type
     FLocationManager: JLocationManager;
     FMonitoringDistance: Integer;
     FMonitoringInterval: Integer;
+    FNeedsBackground: Boolean;
     FNetworkLocationListener: JLocationListener;
+    FTimer: TAndroidTimer;
     FOnLocationChange: TLocationChangeEvent;
     function AreListenersInstalled: Boolean;
     procedure CreateListeners;
+    function GetLastKnownLocation: TLocationCoord2D;
     function GetLocationMode: Integer;
     function HasPermissions: Boolean;
     procedure RemoveListeners;
+    procedure InternalRequestLastKnownLocation(const ASource: TLocationSource);
     procedure SetIsPaused(const AValue: Boolean);
-    procedure UpdateFromLastKnownLocation;
     procedure SetMonitoringDistance(const Value: Integer);
     procedure SetMonitoringInterval(const Value: Integer);
+    procedure TimerHandler(Sender: TObject);
   protected
-    procedure LocationChange(const ALocation: TLocationCoord2D);
+    procedure LocationChange(const ALocation: TLocationCoord2D; const ASource: TLocationSource);
   public
     constructor Create;
     destructor Destroy; override;
-    function GetLastKnownLocation: TLocationCoord2D;
     procedure Pause;
     procedure Resume;
+    procedure RequestLastKnownLocation;
     property IsPaused: Boolean read FIsPaused;
     property MonitoringDistance: Integer read FMonitoringDistance write SetMonitoringDistance;
     property MonitoringInterval: Integer read FMonitoringInterval write SetMonitoringInterval;
+    property NeedsBackground: Boolean read FNeedsBackground write FNeedsBackground;
+    property Timer: TAndroidTimer read FTimer;
     property OnLocationChange: TLocationChangeEvent read FOnLocationChange write FOnLocationChange;
   end;
 
@@ -71,15 +81,19 @@ implementation
 
 uses
   // RTL
-  System.Permissions,
+  System.Permissions, System.SysUtils,
   // Android
   Androidapi.Helpers, Androidapi.JNI.Provider,
   // DW
-  DW.Consts.Android;
+  DW.OSLog,
+  DW.Consts.Android, DW.OSDevice;
 
 const
   cDefaultLocationMonitoringInterval = 15000;
   cDefaultLocationMonitoringDistance = 10;
+
+  cInvalidLatitude = 91;
+  cInvalidLongitude = 181;
 
 { TLocationListener }
 
@@ -91,7 +105,7 @@ end;
 
 procedure TLocationListener.onLocationChanged(location: JLocation);
 begin
-  FLocation.LocationChange(TLocationCoord2D.Create(location.getLatitude, location.getLongitude));
+  FLocation.LocationChange(TLocationCoord2D.Create(location.getLatitude, location.getLongitude), TLocationSource.Listeners);
 end;
 
 procedure TLocationListener.onProviderDisabled(provider: JString);
@@ -115,6 +129,8 @@ constructor TLocation.Create;
 begin
   inherited;
   FIsPaused := True;
+  FTimer := TAndroidTimer.Create;
+  FTimer.OnTimer := TimerHandler;
   FMonitoringDistance := cDefaultLocationMonitoringDistance;
   FMonitoringInterval := cDefaultLocationMonitoringInterval;
 end;
@@ -129,10 +145,13 @@ function TLocation.GetLastKnownLocation: TLocationCoord2D;
 var
   LLocation: JLocation;
 begin
-  Result := TLocationCoord2D.Create(91, 181);
-  LLocation := FLocationManager.getLastKnownLocation(TJLocationManager.JavaClass.GPS_PROVIDER);
-  if LLocation <> nil then
-    Result := TLocationCoord2D.Create(LLocation.getLatitude, LLocation.getLongitude);
+  Result := TLocationCoord2D.Create(cInvalidLatitude, cInvalidLongitude);
+  if FLocationManager <> nil then
+  begin
+    LLocation := FLocationManager.getLastKnownLocation(TJLocationManager.JavaClass.GPS_PROVIDER);
+    if LLocation <> nil then
+      Result := TLocationCoord2D.Create(LLocation.getLatitude, LLocation.getLongitude);
+  end;
 end;
 
 function TLocation.GetLocationMode: Integer;
@@ -145,6 +164,8 @@ var
   LObject: JObject;
 begin
   try
+    if not HasPermissions then
+      TOSLog.w('Insufficient permissions to use location services', True);
     if HasPermissions and not AreListenersInstalled then
     begin
       LObject := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.LOCATION_SERVICE);
@@ -156,17 +177,21 @@ begin
           FGPSLocationListener := TLocationListener.Create(Self);
           FLocationManager.requestLocationUpdates(TJLocationManager.JavaClass.GPS_PROVIDER, FMonitoringInterval, FMonitoringDistance,
             FGPSLocationListener, TJLooper.JavaClass.getMainLooper);
+          TOSLog.d('GPS location listener installed');
         end;
         if FLocationManager.isProviderEnabled(TJLocationManager.JavaClass.NETWORK_PROVIDER) then
         begin
           FNetworkLocationListener := TLocationListener.Create(Self);
           FLocationManager.requestLocationUpdates(TJLocationManager.JavaClass.NETWORK_PROVIDER, FMonitoringInterval, FMonitoringDistance,
             FNetworkLocationListener, TJLooper.JavaClass.getMainLooper);
+          TOSLog.d('Network location listener installed');
         end;
       end;
     end
     else if not HasPermissions and AreListenersInstalled then
       RemoveListeners;
+    if AreListenersInstalled then
+      TOSLog.d('Location services started');
   finally
     SetIsPaused(not AreListenersInstalled);
   end;
@@ -186,6 +211,23 @@ begin
   finally
     SetIsPaused(not AreListenersInstalled);
   end;
+end;
+
+procedure TLocation.InternalRequestLastKnownLocation(const ASource: TLocationSource);
+var
+  LLocation: TLocationCoord2D;
+begin
+  if not FIsPaused then
+  begin
+    LLocation := GetLastKnownLocation;
+    if LLocation.Latitude <> cInvalidLatitude then
+      LocationChange(LLocation, ASource);
+  end;
+end;
+
+procedure TLocation.RequestLastKnownLocation;
+begin
+  InternalRequestLastKnownLocation(TLocationSource.Requested);
 end;
 
 procedure TLocation.SetIsPaused(const AValue: Boolean);
@@ -221,9 +263,19 @@ begin
   end;
 end;
 
-function TLocation.HasPermissions: Boolean;
+procedure TLocation.TimerHandler(Sender: TObject);
 begin
-  Result := TPermissionsService.DefaultService.IsEveryPermissionGranted([cPermissionAccessCoarseLocation, cPermissionAccessFineLocation]);
+  InternalRequestLastKnownLocation(TLocationSource.Timer);
+end;
+
+function TLocation.HasPermissions: Boolean;
+var
+  LPermissions: TArray<string>;
+begin
+  LPermissions := [cPermissionAccessCoarseLocation, cPermissionAccessFineLocation];
+  if FNeedsBackground and TOSVersion.Check(10) then
+    LPermissions := LPermissions + [cPermissionAccessBackgroundLocation];
+  Result := PermissionsService.IsEveryPermissionGranted(LPermissions);
 end;
 
 function TLocation.AreListenersInstalled: Boolean;
@@ -231,21 +283,13 @@ begin
   Result := (FGPSLocationListener <> nil) or (FNetworkLocationListener <> nil);
 end;
 
-procedure TLocation.UpdateFromLastKnownLocation;
-var
-  LLocation: JLocation;
+procedure TLocation.LocationChange(const ALocation: TLocationCoord2D; const ASource: TLocationSource);
+const
+  cLocationSourceCaptions: array[TLocationSource] of string = ('Listeners', 'Timer', 'Requested');
 begin
-  if FLocationManager = nil then
-    Exit; // <======
-  LLocation := FLocationManager.getLastKnownLocation(TJLocationManager.JavaClass.GPS_PROVIDER);
-  if LLocation <> nil then
-    LocationChange(TLocationCoord2D.Create(LLocation.getLatitude, LLocation.getLongitude));
-end;
-
-procedure TLocation.LocationChange(const ALocation: TLocationCoord2D);
-begin
+  TOSLog.d('Location change from %s: %2.6f, %2.6f', [cLocationSourceCaptions[ASource], ALocation.Latitude, ALocation.Longitude], True);
   if Assigned(FOnLocationChange) then
-    FOnLocationChange(Self, ALocation);
+    FOnLocationChange(Self, ALocation, ASource);
 end;
 
 procedure TLocation.Pause;
