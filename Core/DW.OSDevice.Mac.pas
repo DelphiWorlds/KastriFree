@@ -12,12 +12,16 @@ unit DW.OSDevice.Mac;
 
 interface
 
+uses
+  DW.OSDevice;
+
 type
   /// <remarks>
   ///   DO NOT ADD ANY FMX UNITS TO THESE FUNCTIONS
   /// </remarks>
   TPlatformOSDevice = record
   public
+    class function GetCurrentLocaleInfo: TLocaleInfo; static;
     class function GetDeviceName: string; static;
     class function GetPackageID: string; static;
     class function GetPackageVersion: string; static;
@@ -35,9 +39,21 @@ uses
   // Mac
   Macapi.CoreFoundation, Macapi.Foundation, Macapi.Helpers, Macapi.IOKit, Macapi.AppKit,
   // DW
-  DW.Macapi.IOKit, DW.Macapi.Helpers;
+  DW.Macapi.IOKit, DW.Macapi.Helpers, DW.Macapi.Foundation;
 
 { TPlatformOSDevice }
+
+class function TPlatformOSDevice.GetCurrentLocaleInfo: TLocaleInfo;
+var
+  LLocale: NSLocale;
+begin
+  LLocale := TNSLocale.Wrap(TNSLocale.OCClass.currentLocale);
+  Result.LanguageCode := NSStrToStr(LLocale.languageCode);
+  Result.LanguageDisplayName := NSStrToStr(LLocale.localizedStringForLanguageCode(LLocale.languageCode));
+  Result.CountryCode := NSStrToStr(LLocale.countryCode);
+  Result.CountryDisplayName := NSStrToStr(LLocale.localizedStringForCountryCode(LLocale.countryCode));
+  Result.CurrencySymbol := NSStrToStr(LLocale.currencySymbol);
+end;
 
 class function TPlatformOSDevice.GetDeviceName: string;
 begin
