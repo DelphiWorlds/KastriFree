@@ -13,6 +13,8 @@ unit DW.OSLog.Android;
 interface
 
 uses
+  // Android
+  Androidapi.JNI.JavaTypes,
   // DW
   DW.OSLog;
 
@@ -21,6 +23,8 @@ type
   ///   DO NOT ADD ANY FMX UNITS TO THESE FUNCTIONS
   /// </remarks>
   TPlatformOSLog = record
+  private
+    class var FTag: JString;
   public
     class function GetTrace: string; static;
     class procedure Log(const ALogType: TLogType; const AMsg: string); static;
@@ -31,9 +35,9 @@ implementation
 
 uses
   // RTL
-  System.SysUtils,
+  System.SysUtils, System.IOUtils,
   // Android
-  Androidapi.JNI.JavaTypes, Androidapi.Log, Androidapi.Helpers,
+  Androidapi.Helpers,
   // DW
   DW.Androidapi.JNI.Log;
 
@@ -41,17 +45,18 @@ uses
 
 class procedure TPlatformOSLog.Log(const ALogType: TLogType; const AMsg: string);
 var
-  LMarshaller: TMarshaller;
-  LPointer: Pointer;
+  LMsg: JString;
 begin
-  LPointer := LMarshaller.AsUtf8(AMsg).ToPointer;
+  if FTag = nil then
+    FTag := StringToJString(TOSLog.Tag);
+  LMsg := StringToJString(AMsg);
   case ALogType of
     TLogType.Debug:
-      LOGI(LPointer);
+      TJutil_Log.JavaClass.d(FTag, LMsg);
     TLogType.Warning:
-      LOGW(LPointer);
+      TJutil_Log.JavaClass.w(FTag, LMsg);
     TLogType.Error:
-      LOGE(LPointer);
+      TJutil_Log.JavaClass.e(FTag, LMsg);
   end;
 end;
 
