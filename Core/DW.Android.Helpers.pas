@@ -79,6 +79,13 @@ type
     /// </summary>
     class function GetRunningServiceInfo(const AServiceName: string): JActivityManager_RunningServiceInfo; static;
     /// <summary>
+    ///   Returns whether the activity is running foreground
+    /// </summary>
+    /// <remarks>
+    ///   Useful from within a service to determine whether or not the service needs to run in foreground mode
+    /// </remarks>
+    class function IsActivityForeground: Boolean; static;
+    /// <summary>
     ///   Returns whether or not battery optimizations are being ignored
     /// </summary>
     class function IsIgnoringBatteryOptimizations: Boolean; static;
@@ -242,12 +249,38 @@ var
 begin
   Result := nil;
   LService := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.ACTIVITY_SERVICE);
-  LRunningServices := TJActivityManager.Wrap(JObjectToID(LService)).getRunningServices(MaxInt);
+  LRunningServices := TJActivityManager.Wrap(TAndroidHelper.JObjectToID(LService)).getRunningServices(MaxInt);
   for I := 0 to LRunningServices.size - 1 do
   begin
-    LServiceInfo := TJActivityManager_RunningServiceInfo.Wrap(JObjectToID(LRunningServices.get(I)));
+    LServiceInfo := TJActivityManager_RunningServiceInfo.Wrap(TAndroidHelper.JObjectToID(LRunningServices.get(I)));
     if AServiceName.Equals(JStringToString(LServiceInfo.service.getClassName)) then
       Exit(LServiceInfo);
+  end;
+end;
+
+class function TAndroidHelperEx.IsActivityForeground: Boolean;
+var
+  LService: JObject;
+  LRunningApps: JList;
+  LAppInfo: JActivityManager_RunningAppProcessInfo;
+  I: Integer;
+begin
+  Result := False;
+  LService := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.ACTIVITY_SERVICE);
+  LRunningApps := TJActivityManager.Wrap(TAndroidHelper.JObjectToID(LService)).getRunningAppProcesses;
+  for I := 0 to LRunningApps.size - 1 do
+  begin
+    LAppInfo := TJActivityManager_RunningAppProcessInfo.Wrap(TAndroidHelper.JObjectToID(LRunningApps.get(I)));
+    if LAppInfo.importance = 100 then
+    begin
+      if LAppInfo.importanceReasonComponent <> nil then
+      begin
+        if LAppInfo.importanceReasonComponent.getPackageName.equals(TAndroidHelper.Context.getPackageName) then
+          Exit(True);
+      end
+      else if LRunningApps.size = 1 then
+        Exit(True);
+    end;
   end;
 end;
 
@@ -272,7 +305,7 @@ begin
   begin
     LService := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.KEYGUARD_SERVICE);
     if LService <> nil then
-      FKeyguardManager := TJKeyguardManager.Wrap(JObjectToID(LService));
+      FKeyguardManager := TJKeyguardManager.Wrap(TAndroidHelper.JObjectToID(LService));
   end;
   Result := FKeyguardManager;
 end;
@@ -284,7 +317,7 @@ begin
   if FNotificationManager = nil then
   begin
     LService := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.NOTIFICATION_SERVICE);
-    FNotificationManager := TJNotificationManager.Wrap(JObjectToID(LService));
+    FNotificationManager := TJNotificationManager.Wrap(TAndroidHelper.JObjectToID(LService));
   end;
   Result := FNotificationManager;
 end;
@@ -297,7 +330,7 @@ begin
   begin
     LService := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.POWER_SERVICE);
     if LService <> nil then
-      FPowerManager := TJPowerManager.Wrap(JObjectToID(LService));
+      FPowerManager := TJPowerManager.Wrap(TAndroidHelper.JObjectToID(LService));
   end;
   Result := FPowerManager;
 end;
