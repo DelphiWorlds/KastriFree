@@ -12,6 +12,9 @@ unit DW.OSDevice.Android;
 
 interface
 
+uses
+  DW.OSDevice;
+
 type
   /// <remarks>
   ///   DO NOT ADD ANY FMX UNITS TO THESE FUNCTIONS
@@ -19,10 +22,13 @@ type
   TPlatformOSDevice = record
   public
     class function CheckPermission(const APermission: string): Boolean; static;
+    class function GetCurrentLocaleInfo: TLocaleInfo; static;
     class function GetDeviceName: string; static;
     class function GetPackageID: string; static;
     class function GetPackageVersion: string; static;
     class function GetUniqueDeviceID: string; static;
+    class function HasHardwareKeyboard: Boolean; static;
+    class function IsScreenLocked: Boolean; static;
     class function IsTouchDevice: Boolean; static;
   end;
 
@@ -32,7 +38,9 @@ uses
   // RTL
   System.SysUtils,
   // Android
-  Androidapi.Helpers, Androidapi.JNI.JavaTypes, Androidapi.JNI.Provider, Androidapi.JNI.Os,  Androidapi.JNI.GraphicsContentViewText;
+  Androidapi.Helpers, Androidapi.JNI.JavaTypes, Androidapi.JNI.Provider, Androidapi.JNI.Os,  Androidapi.JNI.GraphicsContentViewText,
+  // DW
+  DW.Android.Helpers;
 
 { TPlatformOSDevice }
 
@@ -42,6 +50,19 @@ begin
     Result := TAndroidHelper.Context.checkSelfPermission(StringToJString(APermission)) = TJPackageManager.JavaClass.PERMISSION_GRANTED
   else
     Result := True;
+end;
+
+class function TPlatformOSDevice.GetCurrentLocaleInfo: TLocaleInfo;
+var
+  LLocale: JLocale;
+begin
+  LLocale := TJLocale.JavaClass.getDefault;
+  Result.LanguageCode := JStringToString(LLocale.getISO3Language);
+  if Length(Result.LanguageCode) > 2 then
+    Delete(Result.LanguageCode, 3, MaxInt);
+  Result.LanguageDisplayName := JStringToString(LLocale.getDisplayLanguage);
+  Result.CountryCode := JStringToString(LLocale.getCountry);
+  Result.CountryDisplayName := JStringToString(LLocale.getDisplayCountry);
 end;
 
 class function TPlatformOSDevice.GetDeviceName: string;
@@ -71,6 +92,26 @@ var
 begin
   LName := TJSettings_Secure.JavaClass.ANDROID_ID;
   Result := JStringToString(TJSettings_Secure.JavaClass.getString(TAndroidHelper.ContentResolver, LName));
+end;
+
+class function TPlatformOSDevice.HasHardwareKeyboard: Boolean;
+var
+  LResources: JResources;
+  LConfiguration: JConfiguration;
+begin
+  Result := False;
+  LResources := TAndroidHelper.Context.getResources;
+  if LResources <> nil then
+  begin
+    LConfiguration := LResources.getConfiguration;
+    if LConfiguration <> nil then
+      Result := LConfiguration.keyboard <> TJConfiguration.JavaClass.KEYBOARD_NOKEYS;
+  end;
+end;
+
+class function TPlatformOSDevice.IsScreenLocked: Boolean;
+begin
+  Result := TAndroidHelperEx.KeyguardManager.inKeyguardRestrictedInputMode;
 end;
 
 // **** NOTE: Use this value with care, as devices that do not have touch support, but are connected to another screen, will report True
