@@ -14,22 +14,27 @@ interface
 
 uses
   // RTL
-  System.Classes,
-  // FMX
-  FMX.Types;
+  System.Classes;
 
 type
-  TThreadedTimer = class(TTimer)
+  TThreadedTimer = class(TComponent)
   private
+    FEnabled: Boolean;
+    FInterval: Integer;
+    FIntervalCheck: TDateTime;
     FThread: TThread;
-    procedure DoInterval;
+    FOnTimer: TNotifyEvent;
+    procedure DoTimer;
+    function IsMainThread: Boolean;
+    procedure SetEnabled(const Value: Boolean);
   protected
     procedure CheckInterval;
-    procedure KillTimer; override;
-    procedure UpdateTimer; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    property Enabled: Boolean read FEnabled write SetEnabled;
+    property Interval: Integer read FInterval write FInterval;
+    property OnTimer: TNotifyEvent read FOnTimer write FOnTimer;
   end;
 
   TTimerThread = class(TThread)
@@ -43,46 +48,59 @@ type
 
 implementation
 
+uses
+  DW.OSLog, // Debug
+  System.SysUtils, System.DateUtils;
+
+const
+  cSleepInterval = 20;
+
 { TThreadedTimer }
 
 constructor TThreadedTimer.Create(AOwner: TComponent);
 begin
   inherited;
-  Enabled := False;
   FThread := TTimerThread.Create(Self);
 end;
 
 destructor TThreadedTimer.Destroy;
 begin
-  Enabled := False;
   FThread.Free;
   inherited;
 end;
 
+function TThreadedTimer.IsMainThread: Boolean;
+begin
+  Result := ((TOSVersion.Platform = TOSVersion.TPlatform.pfAndroid) and (System.DelphiActivity = nil))
+    or (TThread.CurrentThread.ThreadID = MainThreadID);
+end;
+
 procedure TThreadedTimer.CheckInterval;
 begin
-  if Enabled then
-    DoInterval;
+  if FEnabled and (MillisecondsBetween(Now, FIntervalCheck) > FInterval) then
+  begin
+    FIntervalCheck := Now;
+    if not IsMainThread then
+      TThread.Synchronize(nil, DoTimer)
+    else
+      DoTimer;
+  end;
 end;
 
-procedure TThreadedTimer.DoInterval;
+procedure TThreadedTimer.DoTimer;
 begin
-  TThread.Synchronize(nil,
-    procedure
-    begin
-      DoOnTimer;
-    end
-  );
+  if Assigned(FOnTimer) then
+    FOnTimer(Self);
 end;
 
-procedure TThreadedTimer.KillTimer;
+procedure TThreadedTimer.SetEnabled(const Value: Boolean);
 begin
-  // No implementation of this method, as this timer does not use the platform timer service
-end;
-
-procedure TThreadedTimer.UpdateTimer;
-begin
-  // No implementation of this method, as this timer does not use the platform timer service
+  if FEnabled <> Value then
+  begin
+    FEnabled := Value;
+    if FEnabled then
+      FIntervalCheck := Now;
+  end;
 end;
 
 { TTimerThread }
@@ -97,7 +115,7 @@ procedure TTimerThread.Execute;
 begin
   while not Terminated do
   begin
-    Sleep(FTimer.Interval);
+    Sleep(cSleepInterval);
     FTimer.CheckInterval;
   end;
 end;
