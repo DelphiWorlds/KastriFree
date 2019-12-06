@@ -19,6 +19,15 @@ uses
   DW.PermissionsTypes;
 
 type
+  TLocaleInfo = record
+    CountryCode: string;
+    CountryDisplayName: string;
+    CurrencySymbol: string;
+    LanguageCode: string;
+    LanguageDisplayName: string;
+    function Culture: string;
+  end;
+
   /// <summary>
   ///   Operating System specific functions that operate below FMX
   /// </summary>
@@ -36,10 +45,15 @@ type
     /// </summary>
     class function CheckPermissions(const APermissions: array of string): Boolean; overload; static;
     class function CheckPermissions(const APermissions: array of string; var AResults: TPermissionResults): Boolean; overload; static;
+    class function GetCurrentLocaleInfo: TLocaleInfo; static;
     /// <summary>
     ///   Returns the name of the device, whether it is mobile or desktop
     /// </summary>
     class function GetDeviceName: string; static;
+    /// <summary>
+    ///   Returns a summary of information about the device/application, including Package ID, Version, Device Name and Device ID
+    /// </summary>
+    class function GetDeviceSummary: string; static;
     /// <summary>
     ///   Returns build for the application package, if any exists
     /// </summary>
@@ -65,6 +79,10 @@ type
     ///   Returns whether the device is a mobile device
     /// </summary>
     class function IsMobile: Boolean; static;
+    /// <summary>
+    ///   Returns whether the screen is locked
+    /// </summary>
+    class function IsScreenLocked: Boolean; static;
     /// <summary>
     ///   Returns whether the device has touch capability
     /// </summary>
@@ -128,9 +146,19 @@ begin
   Result := CheckPermissions(APermissions, LResults);
 end;
 
+class function TOSDevice.GetCurrentLocaleInfo: TLocaleInfo;
+begin
+  Result := TPlatformOSDevice.GetCurrentLocaleInfo;
+end;
+
 class function TOSDevice.GetDeviceName: string;
 begin
   Result := TPlatformOSDevice.GetDeviceName;
+end;
+
+class function TOSDevice.GetDeviceSummary: string;
+begin
+  Result := Format('%s Version: %s, Device: %s (%s)', [GetPackageID, GetPackageVersion, GetDeviceName, GetUniqueDeviceID]);
 end;
 
 class function TOSDevice.GetPackageBuild: string;
@@ -180,6 +208,15 @@ begin
   Result := TOSVersion.Platform in [TOSVersion.TPlatform.pfiOS, TOSVersion.TPlatform.pfAndroid];
 end;
 
+class function TOSDevice.IsScreenLocked: Boolean;
+begin
+  {$IF Defined(IOS) or Defined(ANDROID)}
+  Result := TPlatformOSDevice.IsScreenLocked;
+  {$ELSE}
+  Result := False;
+  {$ENDIF}
+end;
+
 class function TOSDevice.IsTouchDevice: Boolean;
 begin
   Result := TPlatformOSDevice.IsTouchDevice;
@@ -190,6 +227,13 @@ begin
   {$IF Defined(MSWINDOWS) or Defined(OSX)}
   TPlatformOSDevice.ShowFilesInFolder(AFileNames);
   {$ENDIF}
+end;
+
+{ TLocaleInfo }
+
+function TLocaleInfo.Culture: string;
+begin
+  Result := ''; // WIP
 end;
 
 end.
