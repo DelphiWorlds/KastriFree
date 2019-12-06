@@ -52,6 +52,7 @@ type
   public
     // class function GetLocationManagerAuthorization: TAuthorizationType; static;
     // class function NSDictionaryToJSON(const ADictionary: NSDictionary): string; static;
+    class function GetBundleValue(const AKey: string): string; static;
     class function MainBundle: NSBundle; static;
     {$IF Defined(MACDEV)}
     class function SharedApplication: NSApplication; static;
@@ -59,7 +60,10 @@ type
     class function StandardUserDefaults: NSUserDefaults; static;
   end;
 
-
+/// <summary>
+///   Retrieves cocoa double constant
+/// </summary>
+function CocoaDoubleConst(const AFwk: string; const AConstStr: string): Double;
 /// <summary>
 ///   Retrieves a number value from an NSDictionary, with optional default (otherwise zero)
 /// </summary>
@@ -69,13 +73,20 @@ function GetDictionaryNumberValue(const ADictionary: NSDictionary; const AKey: N
 /// </summary>
 function GetDictionaryStringValue(const ADictionary: NSDictionary; const AKey: NSString; const ADefault: string = ''): string;
 /// <summary>
-///   Retrieves cocoa double constant
+///   Converts GMT to local time
 /// </summary>
-function CocoaDoubleConst(const AFwk: string; const AConstStr: string): Double;
+function GetLocalDateTime(const ADateTime: TDateTime): TDateTime;
+/// <summary>
+///   Puts string values from an NSArray into an string array
+/// </summary>
+function NSArrayToStringArray(const AArray: NSArray): TArray<string>;
 /// <summary>
 ///   Puts string values from an array into an NSArray
 /// </summary>
 function StringArrayToNSArray(const AArray: array of string; const ADequote: Boolean = False): NSArray;
+/// <summary>
+///   Puts string values from a TStrings into an NSArray
+/// </summary>
 function StringsToNSArray(const AStrings: TStrings; const ADequote: Boolean = False): NSArray;
 /// <summary>
 ///   Converts a string directly into an NSString reference (ID)
@@ -85,12 +96,6 @@ function StrToObjectID(const AStr: string): Pointer;
 ///   Converts a string into an CFStringRef
 /// </summary>
 function StrToCFStringRef(const AStr: string): CFStringRef;
-/// <summary>
-///   Converts GMT to local time
-/// </summary>
-function GetLocalDateTime(const ADateTime: TDateTime): TDateTime;
-function GetMainBundle: NSBundle; deprecated 'Use TMacHelperEx.MainBundle instead';
-function GetBundleValue(const AKey: string): string;
 
 implementation
 
@@ -195,6 +200,14 @@ begin
     Result := 0;
 end;
 
+function NSArrayToStringArray(const AArray: NSArray): TArray<string>;
+var
+  I: Integer;
+begin
+  for I := 0 to AArray.count - 1 do
+    Result := Result + [NSStrToStr(TNSString.Wrap(AArray.objectAtIndex(I)))];
+end;
+
 function StringsToNSArray(const AStrings: TStrings; const ADequote: Boolean = False): NSArray;
 var
   LArray: array of Pointer;
@@ -244,22 +257,17 @@ begin
   Result := IncSecond(ADateTime, TNSTimeZone.Wrap(TNSTimeZone.OCClass.localTimeZone).secondsFromGMT);
 end;
 
-function GetMainBundle: NSBundle;
-begin
-  Result := TMacHelperEx.MainBundle;
-end;
+{ TMacHelperEx }
 
-function GetBundleValue(const AKey: string): string;
+class function TMacHelperEx.GetBundleValue(const AKey: string): string;
 var
   LValueObject: Pointer;
 begin
   Result := '';
-  LValueObject := GetMainBundle.infoDictionary.objectForKey(StrToObjectID(AKey));
+  LValueObject := MainBundle.infoDictionary.objectForKey(StrToObjectID(AKey));
   if LValueObject <> nil then
     Result := NSStrToStr(TNSString.Wrap(LValueObject));
 end;
-
-{ TMacHelperEx }
 
 class function TMacHelperEx.MainBundle: NSBundle;
 begin
