@@ -14,7 +14,7 @@ interface
 
 uses
   // DW
-  DW.FileVersionInfo.Win;
+  DW.OSDevice, DW.FileVersionInfo.Win;
 
 type
   /// <remarks>
@@ -26,6 +26,7 @@ type
     class destructor DestroyClass;
     class function GetFileVersionInfo: TFileVersionInfo; static;
   public
+    class function GetCurrentLocaleInfo: TLocaleInfo; static;
     class function GetDeviceName: string; static;
     class function GetPackageBuild: string; static;
     class function GetPackageID: string; static;
@@ -33,6 +34,7 @@ type
     class function GetUniqueDeviceID: string; static;
     class function GetUsername: string; static;
     class function IsBeta: Boolean; static;
+    class function IsScreenLocked: Boolean; static;
     class function IsTouchDevice: Boolean; static;
     class procedure ShowFilesInFolder(const AFileNames: array of string); static;
   end;
@@ -54,6 +56,36 @@ const
 class destructor TPlatformOSDevice.DestroyClass;
 begin
   FFileVersionInfo.Free;
+end;
+
+class function TPlatformOSDevice.GetCurrentLocaleInfo: TLocaleInfo;
+var
+  LBuffer: array[0..255] of Char;
+  LLength: Integer;
+begin
+  LLength := GetLocaleInfo(GetUserDefaultLCID, LOCALE_SISO639LANGNAME, LBuffer, Length(LBuffer));
+  if LLength > 0 then
+  begin
+    SetString(Result.LanguageCode, LBuffer, LLength - 1);
+    Result.LanguageCode := Result.LanguageCode.Substring(0, 2);
+  end
+  else
+    Result.LanguageCode := 'en';
+  LLength := GetLocaleInfo(GetUserDefaultLCID, LOCALE_SLANGUAGE, LBuffer, Length(LBuffer));
+  if LLength > 0 then
+    SetString(Result.LanguageCode, LBuffer, LLength - 1)
+  else
+    Result.LanguageCode := '';
+  LLength := GetLocaleInfo(GetUserDefaultLCID, LOCALE_SISO3166CTRYNAME, LBuffer, Length(LBuffer));
+  if LLength > 0 then
+    SetString(Result.CountryCode, LBuffer, LLength - 1)
+  else
+    Result.CountryCode := '';
+  LLength := GetLocaleInfo(GetUserDefaultLCID, LOCALE_SCOUNTRY, LBuffer, Length(LBuffer));
+  if LLength > 0 then
+    SetString(Result.CountryDisplayName, LBuffer, LLength - 1)
+  else
+    Result.CountryDisplayName := '';
 end;
 
 class function TPlatformOSDevice.GetDeviceName: string;
@@ -133,6 +165,11 @@ end;
 class function TPlatformOSDevice.IsBeta: Boolean;
 begin
   Result := TFileFlag.PreRelease in GetFileVersionInfo.FileFlags;
+end;
+
+class function TPlatformOSDevice.IsScreenLocked: Boolean;
+begin
+  Result := False; // To be implemented
 end;
 
 class function TPlatformOSDevice.IsTouchDevice: Boolean;
