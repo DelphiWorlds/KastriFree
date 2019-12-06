@@ -24,22 +24,25 @@ type
   TOSLog = record
   private
     class var FEnabled: Boolean;
+    class var FIncludeDeviceSummary: Boolean;
     class var FTag: string;
     /// <summary>
     ///   Timestamps ASrc if prefixed with an '@'
     /// </summary>
     class function ts(const ASrc: string): string; static;
     class function FormatMsg(const AFmt: string; const AParams: array of const): string; static;
+    class procedure LogCloud(AFmt: string; const AParams: array of const; const ALogType: TLogType); static;
   public
     /// <summary>
     ///   Replacement functions for IFMXLoggingService
     /// </summary>
-    class procedure d(const AFmt: string); overload; static;
-    class procedure d(const AFmt: string; const AParams: array of const); overload; static;
-    class procedure e(const AFmt: string); overload; static;
-    class procedure e(const AFmt: string; const AParams: array of const); overload; static;
-    class procedure w(const AFmt: string); overload; static;
-    class procedure w(const AFmt: string; const AParams: array of const); overload; static;
+    class procedure d(const AFmt: string; const ACloud: Boolean = False); overload; static;
+    class procedure d(const AInstance: TObject; const AFmt: string; const ACloud: Boolean = False); overload; static;
+    class procedure d(const AFmt: string; const AParams: array of const; const ACloud: Boolean = False); overload; static;
+    class procedure e(const AFmt: string; const ACloud: Boolean = False); overload; static;
+    class procedure e(const AFmt: string; const AParams: array of const; const ACloud: Boolean = False); overload; static;
+    class procedure w(const AFmt: string; const ACloud: Boolean = False); overload; static;
+    class procedure w(const AFmt: string; const AParams: array of const; const ACloud: Boolean = False); overload; static;
     /// <summary>
     ///   Retrieves the OS stack trace. ANDROID ONLY at present
     /// </summary>
@@ -55,6 +58,7 @@ type
     /// </remarks>
     class procedure Trace; static;
     class property Enabled: Boolean read FEnabled write FEnabled;
+    class property IncludeDeviceSummary: Boolean read FIncludeDeviceSummary write FIncludeDeviceSummary;
     class property Tag: string read FTag write FTag;
   end;
 
@@ -66,6 +70,13 @@ implementation
 uses
   // RTL
   System.SysUtils,
+  System.TypInfo,
+  // Grijjy
+  {$IF Defined(CLOUDLOGGING)}
+  Grijjy.CloudLogging,
+  {$ENDIF}
+  // DW
+  DW.OSDevice,
   {$IF Defined(ANDROID)}
   DW.OSLog.Android;
   {$ELSEIF Defined(MACOS)}
@@ -97,46 +108,107 @@ begin
     LUseTimestamp := True;
     Result := Result.Substring(1);
   end;
+  {$IF not Defined(ANDROID)}
   if not FTag.IsEmpty then
-    Result := Format('[%s] %s', [FTag, Result]);
+    Result := Format('@%s %s', [FTag, Result]);
+  {$ENDIF}
   if LUseTimestamp then
     Result := Format('%s - %s', [FormatDateTime('yyyy/mm/dd hh:nn:ss.zzz', Now), Result]);
 end;
 
-class procedure TOSLog.d(const AFmt: string);
+class procedure TOSLog.LogCloud(AFmt: string; const AParams: array of const; const ALogType: TLogType);
+{$IF Defined(CLOUDLOGGING)}
+var
+  LMsg: string;
+  LLogLevel: TgoLogLevel;
+begin
+  if AFmt.StartsWith('@') then
+    AFmt := AFmt.Substring(1);
+  LMsg := Format(AFmt, AParams);
+  if FIncludeDeviceSummary then
+    LMsg := TOSDevice.GetDeviceSummary + ': ' + LMsg;
+  LLogLevel := TgoLogLevel.Info;
+  case ALogType of
+    TLogType.Warning:
+      LLogLevel := TgoLogLevel.Warning;
+    TLogType.Error:
+      LLogLevel := TgoLogLevel.Error;
+  end;
+  GrijjyLog.Send(LMsg, LLogLevel);
+end;
+{$ELSE}
+begin
+
+end;
+{$ENDIF}
+
+class procedure TOSLog.d(const AFmt: string; const ACloud: Boolean = False);
 begin
   if FEnabled then
     TPlatformOSLog.Log(TLogType.Debug, FormatMsg(ts(AFmt), []));
 end;
 
-class procedure TOSLog.d(const AFmt: string; const AParams: array of const);
+class procedure TOSLog.d(const AFmt: string; const AParams: array of const; const ACloud: Boolean = False);
 begin
   if FEnabled then
+  begin
     TPlatformOSLog.Log(TLogType.Debug, FormatMsg(ts(AFmt), AParams));
+    if ACloud then
+      LogCloud(AFmt, AParams, TLogType.Debug);
+   end;
 end;
 
-class procedure TOSLog.e(const AFmt: string);
+class procedure TOSLog.e(const AFmt: string; const ACloud: Boolean = False);
 begin
   if FEnabled then
+  begin
     TPlatformOSLog.Log(TLogType.Error, FormatMsg(ts(AFmt), []));
+    if ACloud then
+      LogCloud(AFmt, [], TLogType.Error);
+   end;
 end;
 
-class procedure TOSLog.e(const AFmt: string; const AParams: array of const);
+class procedure TOSLog.d(const AInstance: TObject; const AFmt: string; const ACloud: Boolean = False);
+var
+  LTypeData: PTypeData;
+begin
+  LTypeData := nil;
+  if AInstance <> nil then
+    LTypeData := GetTypeData(AInstance.ClassInfo);
+  if LTypeData <> nil then
+    d(AFmt.Substring(0, 1) + LTypeData^.UnitNameFld.ToString + '.' + AInstance.ClassName + '.' + AFmt.Substring(1), ACloud)
+  else
+    d(AFmt, ACloud);
+end;
+
+class procedure TOSLog.e(const AFmt: string; const AParams: array of const; const ACloud: Boolean = False);
 begin
   if FEnabled then
+  begin
     TPlatformOSLog.Log(TLogType.Error, FormatMsg(ts(AFmt), AParams));
+    if ACloud then
+      LogCloud(AFmt, AParams, TLogType.Error);
+  end;
 end;
 
-class procedure TOSLog.w(const AFmt: string);
+class procedure TOSLog.w(const AFmt: string; const ACloud: Boolean = False);
 begin
   if FEnabled then
+  begin
     TPlatformOSLog.Log(TLogType.Warning, FormatMsg(ts(AFmt), []));
+    if ACloud then
+      LogCloud(AFmt, [], TLogType.Warning);
+  end;
 end;
 
-class procedure TOSLog.w(const AFmt: string; const AParams: array of const);
+class procedure TOSLog.w(const AFmt: string; const AParams: array of const; const ACloud: Boolean = False);
 begin
   if FEnabled then
+  begin
     TPlatformOSLog.Log(TLogType.Warning, FormatMsg(ts(AFmt), AParams));
+    if ACloud then
+      LogCloud(AFmt, AParams, TLogType.Warning);
+  end;
 end;
 
 class function TOSLog.GetTrace: string;
