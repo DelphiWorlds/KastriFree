@@ -3,6 +3,7 @@ unit DW.Consts.Android;
 interface
 
 const
+  cPermissionAccessBackgroundLocation = 'android.permission.ACCESS_BACKGROUND_LOCATION';
   cPermissionAccessCoarseLocation = 'android.permission.ACCESS_COARSE_LOCATION';
   cPermissionAccessFineLocation = 'android.permission.ACCESS_FINE_LOCATION';
   cPermissionCamera = 'android.permission.CAMERA';
