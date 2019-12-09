@@ -26,7 +26,7 @@
 {$ENDIF}
 
 // Indicates whether the app is being compiled for a mobile platform
-{$IF Defined(IOS) or Defined(ANDROID)}
+{$IF Defined(IOS) or Defined(ANDROID) or Defined(ANDROID64)}
   {$DEFINE MOBILE}
 {$ENDIF}
 
