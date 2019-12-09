@@ -87,6 +87,7 @@ begin
     TAndroidHelper.Context.unregisterReceiver(FBroadcastReceiver)
   else
     TJLocalBroadcastManager.JavaClass.getInstance(TAndroidHelper.Context).unregisterReceiver(FBroadcastReceiver);
+  FBroadcastReceiver := nil;
 end;
 
 end.
