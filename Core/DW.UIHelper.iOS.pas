@@ -14,7 +14,9 @@ interface
 
 uses
   // RTL
-  System.Types;
+  System.Types,
+  // FMX
+  FMX.Types;
 
 type
   /// <summary>
@@ -25,7 +27,8 @@ type
     /// <summary>
     ///   Special function for handling of "notch" based devices
     /// </summary>
-    class function GetOffsetRect: TRectF; static;
+    class function GetOffsetRect: TRectF; overload; static;
+    class function GetOffsetRect(const AHandle: TWindowHandle): TRectF; overload; static;
   end;
 
 implementation
@@ -48,15 +51,23 @@ type
   TUIView = class(TOCGenericImport<UIViewClass, UIView>)  end;
 
 class function TPlatformUIHelper.GetOffsetRect: TRectF;
+begin
+  Result := TRectF.Empty;
+  if Application.MainForm <> nil then
+    Result := GetOffsetRect(Application.MainForm.Handle);
+end;
+
+class function TPlatformUIHelper.GetOffsetRect(const AHandle: TWindowHandle): TRectF;
 var
   LInsets: UIEdgeInsets;
 begin
   Result := TRectF.Empty;
-  if TOSVersion.Check(11) and (Application.MainForm <> nil) then
+  if TOSVersion.Check(11) and (AHandle <> nil) then
   begin
-    LInsets := TUIView.Wrap(NSObjectToID(WindowHandleToPlatform(Application.MainForm.Handle).View)).safeAreaInsets;
+    LInsets := TUIView.Wrap(NSObjectToID(WindowHandleToPlatform(AHandle).View)).safeAreaInsets;
     Result := RectF(LInsets.left, LInsets.top, LInsets.right, LInsets.bottom);
   end;
 end;
+
 
 end.

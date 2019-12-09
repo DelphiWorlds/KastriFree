@@ -16,7 +16,7 @@ uses
   // RTL
   System.Types,
   // FMX
-  FMX.Forms;
+  FMX.Types, FMX.Forms;
 
 type
   /// <summary>
@@ -27,7 +27,8 @@ type
     /// <summary>
     ///   Special function for handling of "notch" based devices
     /// </summary>
-    class function GetOffsetRect: TRectF; static;
+    class function GetOffsetRect: TRectF; overload; static;
+    class function GetOffsetRect(const AHandle: TWindowHandle): TRectF; overload; static;
     class procedure Render(const AForm: TForm); static;
   end;
 
@@ -39,6 +40,12 @@ uses
 { TPlatformUIHelper }
 
 class function TPlatformUIHelper.GetOffsetRect: TRectF;
+begin
+  // Yet to be implemented. Work is in progress
+  Result := TRectF.Empty;
+end;
+
+class function TPlatformUIHelper.GetOffsetRect(const AHandle: TWindowHandle): TRectF;
 begin
   // Yet to be implemented. Work is in progress
   Result := TRectF.Empty;

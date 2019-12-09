@@ -16,7 +16,7 @@ uses
   // RTL
   System.Types, System.UITypes,
   // FMX
-  FMX.Forms;
+  FMX.Types, FMX.Forms;
 
 type
   /// <summary>
@@ -27,7 +27,8 @@ type
     /// <summary>
     ///   Special function for handling of "notch" based devices
     /// </summary>
-    class function GetOffsetRect: TRectF; static;
+    class function GetOffsetRect: TRectF; overload; static;
+    class function GetOffsetRect(const AHandle: TWindowHandle): TRectF; overload; static;
     /// <summary>
     ///   Returns Black or White, depending on the background color supplied
     /// </summary>
@@ -54,6 +55,15 @@ class function TUIHelper.GetOffsetRect: TRectF;
 begin
   {$IF Defined(IOS) or Defined(Android)}
   Result := TPlatformUIHelper.GetOffsetRect;
+  {$ELSE}
+  Result := RectF(0, 0, 0, 0);
+  {$ENDIF}
+end;
+
+class function TUIHelper.GetOffsetRect(const AHandle: TWindowHandle): TRectF;
+begin
+  {$IF Defined(IOS) or Defined(Android)}
+  Result := TPlatformUIHelper.GetOffsetRect(AHandle);
   {$ELSE}
   Result := RectF(0, 0, 0, 0);
   {$ENDIF}
