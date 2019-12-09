@@ -31,6 +31,7 @@ type
   public
     class function GetLocationManagerAuthorization: TAuthorizationType; static;
     class function HasBackgroundMode(const AMode: string): Boolean; static;
+    class function IsBackground: Boolean; static;
     class function IsIPhoneX: Boolean; static;
     class function NSDictionaryToJSON(const ADictionary: NSDictionary): string; static;
     class function SharedApplication: UIApplication; static;
@@ -83,6 +84,11 @@ begin
     if AMode.Equals(LModeString) then
       Exit(True); // <======
   end;
+end;
+
+class function TiOSHelperEx.IsBackground: Boolean;
+begin
+  Result := SharedApplication.applicationState = UIApplicationStateBackground;
 end;
 
 class function TiOSHelperEx.IsIPhoneX: Boolean;
