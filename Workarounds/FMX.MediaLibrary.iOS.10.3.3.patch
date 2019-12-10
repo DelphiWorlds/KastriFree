@@ -1,0 +1,157 @@
+diff -r C:\Program Files (x86)\Embarcadero\Studio\20.0\source\fmx\FMX.MediaLibrary.iOS.pas Z:\Source\DelphiWorlds\Patches\Delphi\10.3.3\FMX.MediaLibrary.iOS.pas
+20a21,23
+>   // DW changes
+>   DW.Macapi.Helpers, System.Sensors, System.Sensors.Components,
+>   //
+33a37,39
+>     // DW
+>     FMetadata: NSDictionary;
+>     //
+37c43,45
+<     constructor Create(const AImageManager: TImageManagerCocoa; const AImage: UIImage; const AHandler: TWriteImageCompletionEvent);
+---
+>     // DW - added AMetadata parameter
+>     constructor Create(const AImageManager: TImageManagerCocoa; const AImage: UIImage; const AMetadata: NSDictionary;
+>       const AHandler: TWriteImageCompletionEvent);
+44a53,55
+>     // DW
+>     FLocationSensor: TLocationSensor;
+>     //
+46a58,60
+> 	// DW
+>     procedure LocationChangedHandler(Sender: TObject; const OldLocation, NewLocation: TLocationCoord2D);
+> 	//
+49c63,65
+<     procedure SaveImageToSavedPhotosAlbum(const AImage: UIImage; const AOnResult: TWriteImageCompletionEvent = nil);
+---
+>     // DW - added AMetadata parameter
+>     procedure SaveImageToSavedPhotosAlbum(const AImage: UIImage; const AMetadata: NSDictionary;
+>   const AOnResult: TWriteImageCompletionEvent = nil);
+70a87,90
+>     // DW
+>     FLocation: TLocationCoord2D;
+>     function GetMetadata(const AEditingInfo: NSDictionary): NSDictionary;
+>     //
+123a144,147
+>   // DW
+>   FLocationSensor := TLocationSensor.Create(nil);
+>   FLocationSensor.OnLocationChanged := LocationChangedHandler;
+>   //
+129a154,156
+>   // DW
+>   FLocationSensor.Free;
+>   //
+145a173,179
+> 
+> // DW
+> procedure TImageManagerCocoa.LocationChangedHandler(Sender: TObject; const OldLocation, NewLocation: TLocationCoord2D);
+> begin
+>   FImageDelegate.FLocation := NewLocation;
+> end;
+> //
+153c187,188
+<     SaveImageToSavedPhotosAlbum(OCImage, AWriteImageCompletionEvent);
+---
+>     // DW - passing nil for metadata
+>     SaveImageToSavedPhotosAlbum(OCImage, nil, AWriteImageCompletionEvent);
+159c194,195
+< procedure TImageManagerCocoa.SaveImageToSavedPhotosAlbum(const AImage: UIImage;
+---
+> // DW - added AMetadata parameter
+> procedure TImageManagerCocoa.SaveImageToSavedPhotosAlbum(const AImage: UIImage; const AMetadata: NSDictionary;
+164c200,203
+<   SaveImageRequest := TSaveImageRequest.Create(Self, AImage, AOnResult);
+---
+>   // DW
+>   FLocationSensor.Active := False;
+>   // DW - added AMetadata parameter
+>   SaveImageRequest := TSaveImageRequest.Create(Self, AImage, AMetadata, AOnResult);
+267a307,309
+>   // DW
+>   FLocationSensor.Active := True;
+>   //
+277a320,321
+>   // DW
+>   FLocation := TLocationCoord2D.Create(91, 181);
+311a356,407
+> // DW
+> const
+>   libImageIO = '/System/Library/Frameworks/ImageIO.framework/ImageIO';
+> 
+> function kCGImagePropertyGPSDictionary: NSString;
+> begin
+>   Result := CocoaNSStringConst(libImageIO, 'kCGImagePropertyGPSDictionary');
+> end;
+> 
+> function kCGImagePropertyGPSLatitudeRef: NSString;
+> begin
+>   Result := CocoaNSStringConst(libImageIO, 'kCGImagePropertyGPSLatitudeRef');
+> end;
+> 
+> function kCGImagePropertyGPSLatitude: NSString;
+> begin
+>   Result := CocoaNSStringConst(libImageIO, 'kCGImagePropertyGPSLatitude');
+> end;
+> 
+> function kCGImagePropertyGPSLongitudeRef: NSString;
+> begin
+>   Result := CocoaNSStringConst(libImageIO, 'kCGImagePropertyGPSLongitudeRef');
+> end;
+> 
+> function kCGImagePropertyGPSLongitude: NSString;
+> begin
+>   Result := CocoaNSStringConst(libImageIO, 'kCGImagePropertyGPSLongitude');
+> end;
+> 
+> function TImageDelegate.GetMetadata(const AEditingInfo: NSDictionary): NSDictionary;
+> const
+>   cLatRefs: array[Boolean] of string = ('S', 'N');
+>   cLngRefs: array[Boolean] of string = ('W', 'E');
+> var
+>   LGPS, LInfo: NSMutableDictionary;
+> begin
+>   Result := TNSDictionary.Wrap(AEditingInfo.objectForKey(NSObjectToID(UIImagePickerControllerMediaMetadata)));
+>   if FLocation.Latitude < 91 then
+>   begin
+>     LInfo := TNSMutableDictionary.Create;
+>     LInfo.setDictionary(Result);
+>     LGPS := TNSMutableDictionary.Create;
+>     LGPS.setObject(TNSNumber.OCClass.numberWithDouble(Abs(FLocation.Latitude)), NSObjectToID(kCGImagePropertyGPSLatitude));
+>     LGPS.setObject(StringToID(cLatRefs[FLocation.Latitude >= 0]), NSObjectToID(kCGImagePropertyGPSLatitudeRef));
+>     LGPS.setObject(TNSNumber.OCClass.numberWithDouble(Abs(FLocation.Longitude)), NSObjectToID(kCGImagePropertyGPSLongitude));
+>     LGPS.setObject(StringToID(cLngRefs[FLocation.Longitude >= 0]), NSObjectToID(kCGImagePropertyGPSLongitudeRef));
+>     LInfo.setObject(NSObjectToID(LGPS), NSObjectToID(kCGImagePropertyGPSDictionary));
+>     Result := TNSDictionary.Wrap(NSObjectToID(LInfo));
+>   end;
+> end;
+> //
+> 
+332c428,429
+<       FImageManager.SaveImageToSavedPhotosAlbum(didFinishPickingImage);
+---
+> 	  // DW - added metadata parameter
+>       FImageManager.SaveImageToSavedPhotosAlbum(didFinishPickingImage, GetMetadata(editingInfo));
+354c451,452
+<       FImageManager.SaveImageToSavedPhotosAlbum(ImageTmp);
+---
+> 	  // DW - added metadata parameter
+>       FImageManager.SaveImageToSavedPhotosAlbum(ImageTmp, GetMetadata(didFinishPickingMediaWithInfo));
+467c565,567
+< constructor TSaveImageRequest.Create(const AImageManager: TImageManagerCocoa; const AImage: UIImage; const AHandler: TWriteImageCompletionEvent);
+---
+> // DW - added AMetadata parameter
+> constructor TSaveImageRequest.Create(const AImageManager: TImageManagerCocoa; const AImage: UIImage; const AMetadata: NSDictionary;
+>       const AHandler: TWriteImageCompletionEvent);
+474a575,577
+>   // DW
+>   FMetadata := AMetadata;
+>   //
+498c601,606
+<     AssetsLibrary.writeImageToSavedPhotosAlbum(FImage.CGImage, FImage.imageOrientation, PerformResultOfSavingPhoto);
+---
+>     // DW
+>     if FMetadata <> nil then
+>       AssetsLibrary.writeImageToSavedPhotosAlbum(FImage.CGImage, FMetadata, PerformResultOfSavingPhoto)
+>     else
+>     //
+>       AssetsLibrary.writeImageToSavedPhotosAlbum(FImage.CGImage, FImage.imageOrientation, PerformResultOfSavingPhoto);
