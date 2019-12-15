@@ -70,9 +70,15 @@ begin
 end;
 
 function TThreadedTimer.IsMainThread: Boolean;
+var
+  LIsService: Boolean;
 begin
-  Result := ((TOSVersion.Platform = TOSVersion.TPlatform.pfAndroid) and (System.DelphiActivity = nil))
-    or (TThread.CurrentThread.ThreadID = MainThreadID);
+  {$IF Defined(ANDROID) or Defined(ANDROID64)}
+  LIsService := System.DelphiActivity = nil;
+  {$ELSE}
+  LIsService := False;
+  {$ENDIF}
+  Result := (TThread.CurrentThread.ThreadID = MainThreadID) or LIsService;
 end;
 
 procedure TThreadedTimer.CheckInterval;
