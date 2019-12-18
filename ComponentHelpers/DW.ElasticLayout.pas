@@ -91,6 +91,7 @@ var
   LRect: TRectF;
 begin
   LRect := GetChildrenOnlyRect;
+  LRect.Inflate(Padding.Left, Padding.Top, Padding.Right, Padding.Bottom);
   FDisableAlign := True;
   try
     if not (Align in [TAlignLayout.Top, TAlignLayout.MostTop, TAlignLayout.Bottom, TAlignLayout.MostBottom]) then
