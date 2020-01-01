@@ -32,7 +32,7 @@ type
     /// <summary>
     ///   Returns Black or White, depending on the background color supplied
     /// </summary>
-    class function GetTextColor(const ABackgroundColor: TColor): TColor; static;
+    class function GetTextColor(const ABackgroundColor: TAlphaColor): TAlphaColor; static;
     /// <summary>
     ///   Force a repaint of the form
     /// </summary>
@@ -77,7 +77,7 @@ begin
   {$ENDIF}
 end;
 
-class function TUIHelper.GetTextColor(const ABackgroundColor: TColor): TColor;
+class function TUIHelper.GetTextColor(const ABackgroundColor: TAlphaColor): TAlphaColor;
 var
   LRec: TAlphaColorRec;
 begin
