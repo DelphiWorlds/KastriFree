@@ -46,7 +46,6 @@ type
     FFIRMessagingDelegate: TFIRMessagingDelegate;
     FMessaging: FIRMessaging;
     procedure CheckNotificationsAuthorizationHandler(settings: UNNotificationSettings);
-    procedure FIRMessagingConnectCompletionHandler(error: NSError);
     function GetUserDefaultsTokenKey: NSString;
     function Messaging: FIRMessaging;
     procedure PushDeviceTokenMessageHandler(const Sender: TObject; const M: TMessage);
@@ -184,9 +183,6 @@ end;
 
 procedure TPlatformFirebaseMessaging.Connect;
 begin
-//  Apparently, Connect and Disconnect have been deprecated for some time, and have now been removed from 6.0.0
-//  Disconnect;
-//  Messaging.connectWithCompletion(FIRMessagingConnectCompletionHandler);
   IsConnected := True;
 end;
 
@@ -207,11 +203,6 @@ procedure TPlatformFirebaseMessaging.DoApplicationEnteredBackground;
 begin
   if TOSVersion.Check(10) then
     Messaging.setShouldEstablishDirectChannel(False);
-end;
-
-procedure TPlatformFirebaseMessaging.FIRMessagingConnectCompletionHandler(error: NSError);
-begin
-  IsConnected := error = nil;
 end;
 
 procedure TPlatformFirebaseMessaging.TokenReceived(const AToken: string);
