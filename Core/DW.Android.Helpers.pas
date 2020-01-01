@@ -42,6 +42,7 @@ type
       OREO = 26;
       OREO_MR1 = 27;
       PIE = 28;
+      Q = 29;
     /// <summary>
     ///   Checks if both build and target are greater or equal to the tested value
     /// </summary>
