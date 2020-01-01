@@ -99,8 +99,7 @@ type
 
   UNNotificationRequestClass = interface(NSObjectClass)
     ['{766845C9-A53C-409A-A893-8FF5E2A3A295}']
-    { class } function requestWithIdentifier(identifier: NSString; content: UNNotificationContent;
-      trigger: UNNotificationTrigger): Pointer { instancetype }; cdecl;
+    { class } function requestWithIdentifier(identifier: NSString; content: UNNotificationContent; trigger: UNNotificationTrigger): Pointer; cdecl;
   end;
 
   UNNotificationRequest = interface(NSObject)
@@ -127,7 +126,7 @@ type
   UNNotificationActionClass = interface(NSObjectClass)
     ['{AAD80C86-7813-45E2-9E04-5A351819A2C4}']
     { class } function actionWithIdentifier(identifier: NSString; title: NSString;
-      options: UNNotificationActionOptions): Pointer { instancetype }; cdecl;
+      options: UNNotificationActionOptions): Pointer; cdecl;
   end;
 
   UNNotificationAction = interface(NSObject)
@@ -142,7 +141,7 @@ type
   UNTextInputNotificationActionClass = interface(UNNotificationActionClass)
     ['{0A7AB4DD-B2D0-4639-9343-FB32BBB7B928}']
     { class } function actionWithIdentifier(identifier: NSString; title: NSString; options: UNNotificationActionOptions;
-      textInputButtonTitle: NSString; textInputPlaceholder: NSString): Pointer { instancetype }; cdecl;
+      textInputButtonTitle: NSString; textInputPlaceholder: NSString): Pointer; cdecl;
   end;
 
   UNTextInputNotificationAction = interface(UNNotificationAction)
@@ -155,8 +154,7 @@ type
 
   UNNotificationAttachmentClass = interface(NSObjectClass)
     ['{140486D0-F352-4687-8BF4-272014BDD8AF}']
-    { class } function attachmentWithIdentifier(identifier: NSString; URL: NSURL; options: NSDictionary;
-      error: NSError): Pointer { instancetype }; cdecl;
+    { class } function attachmentWithIdentifier(identifier: NSString; URL: NSURL; options: NSDictionary; error: NSError): Pointer; cdecl;
   end;
 
   UNNotificationAttachment = interface(NSObject)
@@ -171,7 +169,7 @@ type
   UNNotificationCategoryClass = interface(NSObjectClass)
     ['{EB8B0B0A-65EC-403A-9372-DAD56B2CEA1A}']
     { class } function categoryWithIdentifier(identifier: NSString; actions: NSArray; intentIdentifiers: NSArray;
-      options: UNNotificationCategoryOptions): Pointer { instancetype }; cdecl;
+      options: UNNotificationCategoryOptions): Pointer; cdecl;
   end;
 
   UNNotificationCategory = interface(NSObject)
@@ -186,8 +184,8 @@ type
 
   UNNotificationSoundClass = interface(NSObjectClass)
     ['{FCE6B805-3175-4248-BB72-1FE34575B153}']
-    { class } function defaultSound: Pointer { instancetype }; cdecl;
-    { class } function soundNamed(name: NSString): Pointer { instancetype }; cdecl;
+    { class } function defaultSound: Pointer; cdecl;
+    { class } function soundNamed(name: NSString): Pointer; cdecl;
   end;
 
   UNNotificationSound = interface(NSObject)
@@ -322,7 +320,7 @@ type
 
   UNTimeIntervalNotificationTriggerClass = interface(UNNotificationTriggerClass)
     ['{E297E94F-B29B-40E9-A1F1-8B8897B87714}']
-    { class } function triggerWithTimeInterval(timeInterval: NSTimeInterval; repeats: Boolean): Pointer { instancetype }; cdecl;
+    { class } function triggerWithTimeInterval(timeInterval: NSTimeInterval; repeats: Boolean): Pointer; cdecl;
   end;
 
   UNTimeIntervalNotificationTrigger = interface(UNNotificationTrigger)
@@ -389,12 +387,12 @@ type
 
   UNUserNotificationCenterDelegate = interface(IObjectiveC)
     ['{53E6E4D3-F99B-4E8C-AA6B-6CCAF31F7252}']
-    [MethodName('userNotificationCenter:willPresentNotification:withCompletionHandler:')]
-    procedure userNotificationCenterWillPresentNotificationWithCompletionHandler(center: UNUserNotificationCenter;
-      willPresentNotification: UNNotification; withCompletionHandler: Pointer); cdecl;
+    [MethodName('userNotificationCenter:openSettingsForNotification:')]
+    procedure userNotificationCenter(center: UNUserNotificationCenter; notification: UNNotification); overload; cdecl;
     [MethodName('userNotificationCenter:didReceiveNotificationResponse:withCompletionHandler:')]
-    procedure userNotificationCenterDidReceiveNotificationResponseWithCompletionHandler(center: UNUserNotificationCenter;
-      didReceiveNotificationResponse: UNNotificationResponse; withCompletionHandler: Pointer); cdecl;
+    procedure userNotificationCenter(center: UNUserNotificationCenter; response: UNNotificationResponse; completionHandler: Pointer); overload; cdecl;
+    [MethodName('userNotificationCenter:willPresentNotification:withCompletionHandler:')]
+    procedure userNotificationCenter(center: UNUserNotificationCenter; notification: UNNotification; completionHandler: Pointer); overload; cdecl;
   end;
 
 function UNErrorDomain: NSString;
