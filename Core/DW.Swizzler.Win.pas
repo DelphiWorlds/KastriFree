@@ -24,6 +24,12 @@ type
     Addr: ^Pointer;
   end;
 
+  /// <summary>
+  ///   Class for redirecting ("swizzling") methods
+  /// </summary>
+  /// <remarks>
+  ///   Useful for "overriding" non-virtual methods. NOTE: At present, works on Windows ONLY
+  /// </remarks>
   TSwizzler = class(TObject)
   private
     FNewProc: Pointer;
@@ -36,8 +42,20 @@ type
     constructor Create(const APackage, AProcName: string; const ANewProc: Pointer); overload;
     constructor Create(const AOldProc, ANewProc: Pointer); overload;
     procedure BeforeDestruction; override;
+    /// <summary>
+    ///   Disables swizzling
+    /// </summary>
+    /// <remarks>
+    ///   Call this method inside of the "overriding" method before calling the swizzled method to prevent recursion.
+    /// </remarks>
     procedure Disable;
+    /// <summary>
+    ///   Enables swizzling
+    /// </summary>
     procedure Enable;
+    /// <summary>
+    ///   Reference to the original (swizzled) method
+    /// </summary>
     property OldProc: Pointer read FOldProc;
   end;
 
