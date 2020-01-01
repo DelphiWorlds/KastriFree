@@ -1,4 +1,4 @@
-unit DW.PermissionsRequester;
+unit DW.PermissionsRequester {$IF CompilerVersion > 32} deprecated 'use System.Permissions'{$ENDIF};
 
 {*******************************************************}
 {                                                       }
