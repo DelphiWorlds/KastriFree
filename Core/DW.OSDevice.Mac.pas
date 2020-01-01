@@ -89,12 +89,12 @@ end;
 
 class function TPlatformOSDevice.GetPackageID: string;
 begin
-  Result := GetBundleValue('CFBundleIdentifier');
+  Result := TMacHelperEx.GetBundleValue('CFBundleIdentifier');
 end;
 
 class function TPlatformOSDevice.GetPackageVersion: string;
 begin
-  Result := GetBundleValue('CFBundleVersion');
+  Result := TMacHelperEx.GetBundleValue('CFBundleVersion');
 end;
 
 class procedure TPlatformOSDevice.ShowFilesInFolder(const AFileNames: array of string);
