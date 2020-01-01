@@ -21,7 +21,9 @@ type
   /// </remarks>
   TPlatformOSDevice = record
   public
+    {$IF CompilerVersion < 33}
     class function CheckPermission(const APermission: string): Boolean; static;
+    {$ENDIF}
     class function GetCurrentLocaleInfo: TLocaleInfo; static;
     class function GetDeviceName: string; static;
     class function GetPackageID: string; static;
@@ -44,6 +46,7 @@ uses
 
 { TPlatformOSDevice }
 
+{$IF CompilerVersion < 33}
 class function TPlatformOSDevice.CheckPermission(const APermission: string): Boolean;
 begin
   if TJBuild_VERSION.JavaClass.SDK_INT >= 23 then
@@ -51,6 +54,7 @@ begin
   else
     Result := True;
 end;
+{$ENDIF}
 
 class function TPlatformOSDevice.GetCurrentLocaleInfo: TLocaleInfo;
 var

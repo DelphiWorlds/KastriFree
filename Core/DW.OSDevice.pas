@@ -13,10 +13,12 @@ unit DW.OSDevice;
 interface
 
 uses
-  // RTL
-  System.Types,
+  {$IF CompilerVersion < 33}
   // DW
-  DW.PermissionsTypes;
+  DW.PermissionsTypes,
+  {$ENDIF}
+  // RTL
+  System.Types;
 
 type
   TLocaleInfo = record
@@ -36,6 +38,7 @@ type
   /// </remarks>
   TOSDevice = record
   public
+    {$IF CompilerVersion < 33}
     /// <summary>
     ///   Checks whether or not a single permissions has been granted
     /// </summary>
@@ -45,6 +48,7 @@ type
     /// </summary>
     class function CheckPermissions(const APermissions: array of string): Boolean; overload; static;
     class function CheckPermissions(const APermissions: array of string; var AResults: TPermissionResults): Boolean; overload; static;
+    {$ENDIF}
     class function GetCurrentLocaleInfo: TLocaleInfo; static;
     /// <summary>
     ///   Returns the name of the device, whether it is mobile or desktop
@@ -95,6 +99,7 @@ implementation
 uses
   // RTL
   System.SysUtils,
+  // DW
   DW.OSLog,
   {$IF Defined(ANDROID)}
   DW.OSDevice.Android;
@@ -110,6 +115,7 @@ uses
 
 { TOSDevice }
 
+{$IF CompilerVersion < 33}
 class function TOSDevice.CheckPermission(const APermission: string; const ALog: Boolean = False): Boolean;
 begin
   {$IF Defined(ANDROID)}
@@ -145,6 +151,7 @@ var
 begin
   Result := CheckPermissions(APermissions, LResults);
 end;
+{$ENDIF}
 
 class function TOSDevice.GetCurrentLocaleInfo: TLocaleInfo;
 begin
