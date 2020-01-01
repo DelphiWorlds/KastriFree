@@ -27,6 +27,7 @@ type
   protected
     procedure Connect; override;
     procedure Disconnect; override;
+    procedure RequestAuthorization; override;
     procedure SubscribeToTopic(const ATopicName: string); override;
     procedure UnsubscribeFromTopic(const ATopicName: string); override;
   end;
@@ -58,6 +59,11 @@ begin
 end;
 
 procedure TPlatformFirebaseMessaging.Disconnect;
+begin
+  //
+end;
+
+procedure TPlatformFirebaseMessaging.RequestAuthorization;
 begin
   //
 end;
