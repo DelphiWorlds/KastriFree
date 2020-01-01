@@ -16,13 +16,13 @@ type
   TOSMetadata = record
   public
     class function ContainsKey(const AKey: string): Boolean; static;
-    class function GetValue(const AKey: string; var AValue: string): Boolean; { overload; } static;
+    class function GetValue(const AKey: string; var AValue: string): Boolean; static;
   end;
 
 implementation
 
 uses
-  // RTL
+  // DW
   {$IF Defined(ANDROID)}
   DW.OSMetadata.Android;
   {$ELSEIF Defined(MACOS)}
