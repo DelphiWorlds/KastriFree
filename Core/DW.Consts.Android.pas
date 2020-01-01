@@ -19,6 +19,29 @@ const
   cPermissionUseFingerprint = 'android.permission.USE_FINGERPRINT';
   cPermissionWriteExternalStorage = 'android.permission.WRITE_EXTERNAL_STORAGE';
 
+  cLocationPriorityBalancedPowerAccuracy = 102;
+  cLocationPriorityHighAccuracy = 100;
+  cLocationPriorityLowPower = 104;
+  cLocationPriorityNoPower = 105;
+
+  cLocationBroadcastAction = 'com.delphiworlds.kastri.LOCATION_BROADCAST_ACTION';
+  cLocationBroadcastExtraLatitude = 'Latitude';
+  cLocationBroadcastExtraLongitude = 'Longitude';
+
+  cDWBroadcastReceiverName = 'com.delphiworlds.kastri.DWMultiBroadcastReceiver';
+  cDWBroadcastReceiverActionAlarmTimer = cDWBroadcastReceiverName + '.ACTION_ALARM_TIMER';
+  cDWBroadcastReceiverActionServiceAlarm = cDWBroadcastReceiverName + '.ACTION_SERVICE_ALARM';
+  cDWBroadcastReceiverActionServiceRestart = cDWBroadcastReceiverName + '.ACTION_SERVICE_RESTART';
+  cDWBroadcastReceiverExtraServiceRestart = cDWBroadcastReceiverName + '.EXTRA_SERVICE_RESTART';
+
+  cServiceCommandAction = 'com.delphiworlds.action.SERVICE_COMMAND';
+  cServiceBroadcastParamCommand = 'COMMAND';
+  cServiceCommandAppBecameActive = 1;
+  cServiceCommandAppEnteredBackground = 2;
+  cServiceCommandAppWillTerminate = 3;
+
+  cEMBTJavaServicePrefix = 'com.embarcadero.services.';
+
 implementation
 
 end.
