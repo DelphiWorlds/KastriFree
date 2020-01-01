@@ -14,8 +14,10 @@ interface
 
 uses
   {$IF Defined(IOS)}
+  // iOS
   iOSapi.Foundation;
   {$ELSEIF Defined(MACOS)}
+  // Mac
   Macapi.Foundation;
   {$ENDIF}
 
@@ -33,6 +35,7 @@ type
 implementation
 
 uses
+  // Mac
   Macapi.Helpers;
 
 { TPlatformOSMetadata }
