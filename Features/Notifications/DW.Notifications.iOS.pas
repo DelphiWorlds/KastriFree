@@ -36,12 +36,12 @@ type
     property Notifications: TNotifications read FNotifications write FNotifications;
   public
     { UNUserNotificationCenterDelegate }
-    [MethodName('userNotificationCenter:willPresentNotification:withCompletionHandler:')]
-    procedure userNotificationCenterWillPresentNotificationWithCompletionHandler(center: UNUserNotificationCenter;
-      willPresentNotification: UNNotification; withCompletionHandler: Pointer); cdecl;
+    [MethodName('userNotificationCenter:openSettingsForNotification:')]
+    procedure userNotificationCenter(center: UNUserNotificationCenter; notification: UNNotification); overload; cdecl;
     [MethodName('userNotificationCenter:didReceiveNotificationResponse:withCompletionHandler:')]
-    procedure userNotificationCenterDidReceiveNotificationResponseWithCompletionHandler(center: UNUserNotificationCenter;
-      didReceiveNotificationResponse: UNNotificationResponse; withCompletionHandler: Pointer); cdecl;
+    procedure userNotificationCenter(center: UNUserNotificationCenter; response: UNNotificationResponse; completionHandler: Pointer); overload; cdecl;
+    [MethodName('userNotificationCenter:willPresentNotification:withCompletionHandler:')]
+    procedure userNotificationCenter(center: UNUserNotificationCenter; notification: UNNotification; completionHandler: Pointer); overload; cdecl;
   end;
 
   TAuthorizationCallback = reference to procedure(const AGranted: Boolean);
@@ -132,30 +132,35 @@ begin
   TOpenNotifications(FNotifications).DoNotificationReceived(LNotification);
 end;
 
-procedure TUserNotificationCenterDelegate.userNotificationCenterDidReceiveNotificationResponseWithCompletionHandler(center: UNUserNotificationCenter;
-  didReceiveNotificationResponse: UNNotificationResponse; withCompletionHandler: Pointer);
+procedure TUserNotificationCenterDelegate.userNotificationCenter(center: UNUserNotificationCenter;
+  response: UNNotificationResponse; completionHandler: Pointer);
 var
   LBlockImp: procedure; cdecl;
 begin
   TOSLog.d('TUserNotificationCenterDelegate.userNotificationCenterDidReceiveNotificationResponseWithCompletionHandler');
-  ProcessNotificationRequest(didReceiveNotificationResponse.notification.request);
-  @LBlockImp := imp_implementationWithBlock(withCompletionHandler);
+  ProcessNotificationRequest(response.notification.request);
+  @LBlockImp := imp_implementationWithBlock(completionHandler);
   LBlockImp;
   imp_removeBlock(@LBlockImp);
 end;
 
-procedure TUserNotificationCenterDelegate.userNotificationCenterWillPresentNotificationWithCompletionHandler(center: UNUserNotificationCenter;
-  willPresentNotification: UNNotification; withCompletionHandler: Pointer);
+procedure TUserNotificationCenterDelegate.userNotificationCenter(center: UNUserNotificationCenter;
+  notification: UNNotification; completionHandler: Pointer);
 var
   LBlockImp: procedure(options: UNNotificationPresentationOptions); cdecl;
   LOptions: UNNotificationPresentationOptions;
 begin
   TOSLog.d('TUserNotificationCenterDelegate.userNotificationCenterWillPresentNotificationWithCompletionHandler');
-  ProcessNotificationRequest(willPresentNotification.request);
-  @LBlockImp := imp_implementationWithBlock(withCompletionHandler);
+  ProcessNotificationRequest(notification.request);
+  @LBlockImp := imp_implementationWithBlock(completionHandler);
   LOptions := UNNotificationPresentationOptionAlert;
   LBlockImp(LOptions);
   imp_removeBlock(@LBlockImp);
+end;
+
+procedure TUserNotificationCenterDelegate.userNotificationCenter(center: UNUserNotificationCenter; notification: UNNotification);
+begin
+  //
 end;
 
 { TPlatformNotifications }
