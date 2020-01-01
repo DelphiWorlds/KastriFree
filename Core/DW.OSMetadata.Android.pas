@@ -13,6 +13,7 @@ unit DW.OSMetadata.Android;
 interface
 
 uses
+  // Android
   Androidapi.JNI.Os;
 
 type
@@ -28,7 +29,8 @@ type
 implementation
 
 uses
-  Androidapi.JNI.GraphicsContentViewText, Androidapi.Helpers;
+  // Android
+  Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.JavaTypes, Androidapi.Helpers;
 
 { TPlatformOSMetadata }
 
