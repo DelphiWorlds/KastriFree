@@ -21,8 +21,6 @@ uses
   DW.RichEdit in '..\..\Controls\DW.RichEdit.pas',
   DW.MediaLibrary in '..\..\Core\DW.MediaLibrary.pas',
   DW.OSDevice in '..\..\Core\DW.OSDevice.pas',
-  DW.PermissionsRequester in '..\..\Core\DW.PermissionsRequester.pas',
-  DW.PermissionsTypes in '..\..\Core\DW.PermissionsTypes.pas',
   DW.ThreadedTimer in '..\..\Core\DW.ThreadedTimer.pas',
   DW.Connectivity in '..\..\Features\Connectivity\DW.Connectivity.pas',
   DW.NFC in '..\..\Features\NFC\DW.NFC.pas',
@@ -30,8 +28,10 @@ uses
   DW.Form.Contents in '..\..\ComponentHelpers\DW.Form.Contents.pas',
   DW.SysUtils.Helpers in '..\..\Core\DW.SysUtils.Helpers.pas',
   DW.Firebase.Messaging in '..\..\Features\Firebase\DW.Firebase.Messaging.pas',
-  DW.Sensors in '..\..\Core\DW.Sensors.pas',
-  DW.UIHelper in '..\..\Core\DW.UIHelper.pas';
+  DW.UIHelper in '..\..\Core\DW.UIHelper.pas',
+  DW.Location in '..\..\Core\DW.Location.pas',
+  DW.OSMetadata in '..\..\Core\DW.OSMetadata.pas',
+  DW.Sensors in '..\..\Core\DW.Sensors.pas';
 
 {$R *.res}
 
