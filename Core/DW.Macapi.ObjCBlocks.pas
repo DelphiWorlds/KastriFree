@@ -31,7 +31,7 @@ uses
   // RTL
   System.Rtti, System.TypInfo,
   // Mac
-  Macapi.Helpers,
+  Macapi.Helpers, Macapi.ObjectiveC,
   {$IF not Defined(IOS)}
   Macapi.Foundation;
   {$ELSE}
@@ -95,7 +95,6 @@ end;
 
 function Invoke(const ABlock: Pointer; const AParams: TBlockMethodParams): Pointer; cdecl;
 var
-  LBlockInfo: TBlockInfo;
   LIndex: Integer;
 begin
   Result := nil;
