@@ -13,7 +13,7 @@ unit DW.Android.Service;
 interface
 
 uses
-  // RTL/Android
+  // RTL
   System.Android.Service;
 
 type
@@ -25,9 +25,12 @@ type
 implementation
 
 uses
+  // RTL
   System.SysUtils,
+  // Android
   Androidapi.Helpers, AndroidApi.JNI.GraphicsContentViewText,
-  DW.Androidapi.JNI.ContextWrapper;
+  // DW
+  DW.Consts.Android, DW.Androidapi.JNI.ContextWrapper;
 
 { TLocalServiceConnection }
 
@@ -40,8 +43,8 @@ begin
   begin
     LIntent := TJIntent.Create;
     LService := AServiceName;
-    if not LService.StartsWith('com.embarcadero.services.') then
-      LService := 'com.embarcadero.services.' + LService;
+    if not LService.StartsWith(cEMBTJavaServicePrefix) then
+      LService := cEMBTJavaServicePrefix + LService;
     LIntent.setClassName(TAndroidHelper.Context.getPackageName(), TAndroidHelper.StringToJString(LService));
     TJContextWrapper.Wrap(System.JavaContext).startForegroundService(LIntent);
   end
