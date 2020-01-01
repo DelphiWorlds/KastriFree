@@ -1,35 +1,25 @@
 unit DW.iOSapi.Foundation;
 
+{*******************************************************}
+{                                                       }
+{                    Kastri Free                        }
+{                                                       }
+{          DelphiWorlds Cross-Platform Library          }
+{                                                       }
+{*******************************************************}
+
+{$I DW.GlobalDefines.inc}
+
 interface
 
 uses
+  // Mac
   Macapi.ObjectiveC,
+  // iOS
   iOSapi.Foundation;
 
 type
   NSLocaleKey = NSString;
-
-  NSLocaleClass = interface(NSObjectClass)
-    ['{4597A459-6F9B-49F4-8C80-3F8ED8FDB9D1}']
-    {class} function autoupdatingCurrentLocale: NSLocale; cdecl;
-    {class} function availableLocaleIdentifiers: NSArray; cdecl;
-    {class} function canonicalLanguageIdentifierFromString(&string: NSString): NSString; cdecl;
-    {class} function canonicalLocaleIdentifierFromString(&string: NSString): NSString; cdecl;
-    {class} function characterDirectionForLanguage(isoLangCode: NSString): NSLocaleLanguageDirection; cdecl;
-    {class} function commonISOCurrencyCodes: NSArray; cdecl;
-    {class} function componentsFromLocaleIdentifier(&string: NSString): NSDictionary; cdecl;
-    {class} function currentLocale: NSLocale; cdecl;
-    {class} function ISOCountryCodes: NSArray; cdecl;
-    {class} function ISOCurrencyCodes: NSArray; cdecl;
-    {class} function ISOLanguageCodes: NSArray; cdecl;
-    {class} function lineDirectionForLanguage(isoLangCode: NSString): NSLocaleLanguageDirection; cdecl;
-    {class} function localeIdentifierFromComponents(dict: NSDictionary): NSString; cdecl;
-    {class} function localeIdentifierFromWindowsLocaleCode(lcid: UInt32): NSString; cdecl;
-    {class} function localeWithLocaleIdentifier(ident: NSString): Pointer; cdecl;
-    {class} function preferredLanguages: NSArray; cdecl;
-    {class} function systemLocale: NSLocale; cdecl;
-    {class} function windowsLocaleCodeFromLocaleIdentifier(localeIdentifier: NSString): UInt32; cdecl;
-  end;
 
   NSLocale = interface(NSObject)
     ['{6D772B7D-BE16-4960-A10B-D5BCEE8D3B94}']
