@@ -53,7 +53,7 @@ uses
   // RTL
   System.SysUtils,
   // Android
-  Androidapi.Helpers;
+  Androidapi.Helpers, Androidapi.JNI.App;
 
 const
   cFileChooserRequestCode = 9999;
