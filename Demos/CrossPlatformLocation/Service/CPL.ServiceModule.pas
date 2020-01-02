@@ -79,8 +79,7 @@ const
 
   cLocationTimerInterval = 120000; // Milliseconds
 
-  cUpdaterRootURL = 'http://wherecanibe.com';
-  cUpdaterLocationURL = cUpdaterRootURL + '/api/location';
+  cUpdaterLocationURL = ''; // Replace this with the URL you send updates to
 
 { TLocalReceiver }
 
