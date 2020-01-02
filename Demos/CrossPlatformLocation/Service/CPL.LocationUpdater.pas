@@ -23,6 +23,7 @@ uses
   DW.OSLog, DW.OSDevice;
 
 const
+  // Change this to whatever format is required by your location update service.
   cLocationRequestJSONTemplate = '{"deviceid": "%s", "latitude": "%2.6f", "longitude": "%2.6f", "os": "%S", "device_status": "%d"}';
 
 { TLocationUpdater }
@@ -32,7 +33,6 @@ var
   LStream: TStringStream;
   LJSON: string;
 begin
-  // Add challenge argument later...
   LJSON := Format(cLocationRequestJSONTemplate, [{'',} TOSDevice.GetUniqueDeviceID, ALocation.Latitude, ALocation.Longitude, 'Android', AStatus]);
   LStream := TStringStream.Create(LJSON);
   try
