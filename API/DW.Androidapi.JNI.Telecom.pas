@@ -114,7 +114,7 @@ type
   TJPhoneAccount_Builder = class(TJavaGenericImport<JPhoneAccount_BuilderClass, JPhoneAccount_Builder>)
   end;
 
-  JPhoneAccountHandleClass = interface(JObjectClass)
+  JPhoneAccountHandleClass = interface(JParcelableClass)
     ['{4346FC20-CA4A-4488-BBEB-E0076CD625D4}']
     function _GetCREATOR: JParcelable_Creator; cdecl;
     function init(componentName: JComponentName; id: JString): JPhoneAccountHandle; cdecl; overload;
@@ -123,7 +123,7 @@ type
   end;
 
   [JavaSignature('android/telecom/PhoneAccountHandle')]
-  JPhoneAccountHandle = interface(JObject)
+  JPhoneAccountHandle = interface(JParcelable)
     ['{94B296F6-3F9F-49B5-A333-3564F3B6C66C}']
     function describeContents: Integer; cdecl;
     function equals(other: JObject): boolean; cdecl;
