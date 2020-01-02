@@ -74,7 +74,7 @@ begin
   inherited;
   {$IF Defined(CLOUDLOGGING)}
   GrijjyLog.SetLogLevel(TgoLogLevel.Info);
-  GrijjyLog.Connect(cCloudLoggingHost, 'Atek');
+  GrijjyLog.Connect(cCloudLoggingHost, cCloudLoggingName);
   {$ENDIF}
   FLocation := TLocation.Create;
   FLocation.Usage := TLocationUsage.Always;
