@@ -8,7 +8,7 @@ const
   cServiceCommandStartLocationUpdates = 100;
   cServiceCommandStopLocationUpdates = 101;
 
-  cCloudLoggingHost = 'tcp://delphiworlds.com:7337';
+  cCloudLoggingHost = ''; // Change this value to wherever your cloud logging host is
   cCloudLoggingName = 'CrossPlatformLocation';
 
 implementation
