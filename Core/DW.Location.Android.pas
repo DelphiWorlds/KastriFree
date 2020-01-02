@@ -157,7 +157,7 @@ begin
     LProviders := FLocationManager.getProviders(True);
     for I := 0 to LProviders.size - 1 do
     begin
-      LLocation := FLocationManager.getLastKnownLocation(TJString.Wrap(JObjectToID(LProviders.get(I))));
+      LLocation := FLocationManager.getLastKnownLocation(TJString.Wrap(TAndroidHelper.JObjectToID(LProviders.get(I))));
       if LLocation <> nil then
         Exit(TLocationCoord2D.Create(LLocation.getLatitude, LLocation.getLongitude));  // <======
     end;
