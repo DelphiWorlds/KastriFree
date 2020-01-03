@@ -19,6 +19,8 @@ const
   cPermissionUseFingerprint = 'android.permission.USE_FINGERPRINT';
   cPermissionWriteExternalStorage = 'android.permission.WRITE_EXTERNAL_STORAGE';
 
+  cMetadataFCMDefaultChannelId = 'com.google.firebase.messaging.default_notification_channel_id';
+
   cLocationPriorityBalancedPowerAccuracy = 102;
   cLocationPriorityHighAccuracy = 100;
   cLocationPriorityLowPower = 104;
