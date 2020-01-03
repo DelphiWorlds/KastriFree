@@ -44,7 +44,9 @@ implementation
 
 uses
   // RTL
-  System.JSON;
+  System.JSON,
+  // DW
+  DW.Consts.Android, DW.OSMetadata;
 
 procedure TPushUDP.UDPTimerTimer(Sender: TObject);
 begin
@@ -55,7 +57,7 @@ end;
 procedure TPushUDP.SendDeviceInfo;
 var
   LJSON: TJSONObject;
-  LOS: string;
+  LOS, LChannelId: string;
 begin
   if TOSVersion.Platform = TOSVersion.TPlatform.pfiOS then
     LOS := 'IOS'
@@ -63,10 +65,12 @@ begin
     LOS := 'Android'
   else
     LOS := 'Unknown';
+  TOSMetadata.GetValue(cMetadataFCMDefaultChannelId, LChannelId);
   LJSON := TJSONObject.Create;
   try
     LJSON.AddPair('deviceid', FDeviceID);
     LJSON.AddPair('token', FToken);
+    LJSON.AddPair('channelid', LChannelId);
     LJSON.AddPair('os', LOS);
     UDPClient.Broadcast(LJSON.ToJSON, UDPClient.Port);
   finally
