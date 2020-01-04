@@ -29,8 +29,6 @@ uses
   DW.OSMetadata.Mac;
   {$ELSEIF Defined(MSWINDOWS)}
   DW.OSMetadata.Win;
-  {$ELSEIF Defined(LINUX)}
-  DW.OSMetadata.Linux;
   {$ENDIF}
 
 { TOSMetadata }
