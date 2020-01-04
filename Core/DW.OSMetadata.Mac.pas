@@ -29,7 +29,7 @@ type
     class function InternalGetValue(const AKey: string): Pointer; static;
   public
     class function ContainsKey(const AKey: string): Boolean; static;
-    class function GetValue(const AKey: string; var AValue: string): Boolean; { overload; } static;
+    class function GetValue(const AKey: string; var AValue: string): Boolean; static;
   end;
 
 implementation
