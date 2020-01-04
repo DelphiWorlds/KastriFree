@@ -14,7 +14,7 @@ interface
 
 uses
   // RTL
-  System.Classes, System.PushNotification, System.Json;
+  System.Classes, System.PushNotification, System.Json, System.Messaging;
 
 type
   TNotificationReceivedEvent = procedure(Sender: TObject; const Notification: TPushServiceNotification) of object;
@@ -22,19 +22,23 @@ type
 
   TPushNotifications = class(TObject)
   private
+    FChannelId: string;
     FChannelTitle: string;
     FDeviceID: string;
     FDeviceToken: string;
+    FIsForeground: Boolean;
     FServiceConnection: TPushServiceConnection;
     FShowBannerIfForeground: Boolean;
     FOnMessageReceived: TMessageReceivedEvent;
     FOnNotificationReceived: TNotificationReceivedEvent;
     FOnTokenReceived: TNotifyEvent;
+    procedure ApplicationEventMessageHandler(const Sender: TObject; const M: TMessage);
     procedure CheckStartupNotifications;
     procedure CreateChannel;
     procedure CreateConnection;
     function GetChannelId: string;
     function GetPushService: TPushService;
+    procedure PresentLocalNotification(const AJSON: TJSONObject);
     procedure ReceiveNotificationHandler(Sender: TObject; const AServiceNotification: TPushServiceNotification);
     procedure ServiceConnectionChangeHandler(Sender: TObject; APushChanges: TPushService.TChanges);
   public
@@ -52,29 +56,47 @@ type
 implementation
 
 uses
-  DW.OSLog,
-  {$IF Defined(IOS)}
-  DW.PushNotification.iOS,
-  {$ENDIF}
+  // RTL
+  System.SysUtils, System.Notification,
+  // FMX
+  FMX.Platform,
   {$IF Defined(ANDROID)}
   FMX.PushNotification.Android,
-  DW.OSMetadata.Android,
   {$ENDIF}
-  System.SysUtils, System.Notification,
-  FMX.Platform;
+  // DW
+  DW.Consts.Android, DW.OSDevice,
+  {$IF Defined(IOS)}
+  DW.PushNotification.iOS;
+  {$ENDIF}
+  {$IF Defined(ANDROID)}
+  DW.OSMetadata.Android;
+  {$ENDIF}
 
 { TPushNotifications }
 
 constructor TPushNotifications.Create(const AChannelTitle: string);
 begin
   inherited Create;
+  FShowBannerIfForeground := True;
+  TMessageManager.DefaultManager.SubscribeToMessage(TApplicationEventMessage, ApplicationEventMessageHandler);
   FChannelTitle := AChannelTitle;
 end;
 
 destructor TPushNotifications.Destroy;
 begin
+  TMessageManager.DefaultManager.Unsubscribe(TApplicationEventMessage, ApplicationEventMessageHandler);
   FServiceConnection.Free;
   inherited;
+end;
+
+procedure TPushNotifications.ApplicationEventMessageHandler(const Sender: TObject; const M: TMessage);
+begin
+  case TApplicationEventMessage(M).Value.Event of
+    TApplicationEvent.BecameActive:
+      FIsForeground := True;
+    TApplicationEvent.EnteredBackground:
+      FIsForeground := False;
+  end;
 end;
 
 procedure TPushNotifications.CreateConnection;
@@ -93,19 +115,18 @@ procedure TPushNotifications.CreateChannel;
 var
   LNotificationCenter: TNotificationCenter;
   LChannel: TChannel;
-  LChannelId: string;
 begin
-  LChannelId := GetChannelId;
-  if LChannelId.IsEmpty or FChannelTitle.IsEmpty then
+  FChannelId := GetChannelId;
+  if FChannelId.IsEmpty or FChannelTitle.IsEmpty then
     Exit; // <======
   LNotificationCenter := TNotificationCenter.Create(nil);
   try
     LChannel := TChannel.Create;
     try
-      LChannel.Id := LChannelId;
+      LChannel.Id := FChannelId;
       LChannel.Title := FChannelTitle;
       LChannel.Description := '';
-      // Required for appearing as a banner when the app is not running
+      // Required for appearing as a banner when the app is not running, or when in the foreground
       LChannel.Importance := TImportance.High;
       LNotificationCenter.CreateOrUpdateChannel(LChannel);
     finally
@@ -119,7 +140,7 @@ end;
 function TPushNotifications.GetChannelId: string;
 {$IF Defined(ANDROID)}
 begin
-  TPlatformOSMetadata.GetValue('com.google.firebase.messaging.default_notification_channel_id', Result);
+  TPlatformOSMetadata.GetValue(cMetadataFCMDefaultChannelId, Result);
 end;
 {$ELSE}
 begin
@@ -128,35 +149,60 @@ end;
 {$ENDIF}
 
 procedure TPushNotifications.CheckStartupNotifications;
+{$IF Defined(ANDROID)}
 var
   LNotification: TPushServiceNotification;
 begin
   // Handle startup notifications
-  {$IF Defined(ANDROID)}
   for LNotification in FServiceConnection.Service.StartupNotifications do
     ReceiveNotificationHandler(FServiceConnection, LNotification);
-  {$ENDIF}
 end;
+{$ELSE}
+begin
+  //
+end;
+{$ENDIF}
 
 function TPushNotifications.GetPushService: TPushService;
 begin
   Result := TPushServiceManager.Instance.GetServiceByName(TPushService.TServiceNames.GCM);
 end;
 
-procedure TPushNotifications.ReceiveNotificationHandler(Sender: TObject; const AServiceNotification: TPushServiceNotification);
+procedure TPushNotifications.PresentLocalNotification(const AJSON: TJSONObject);
 var
-  LMessageText: string;
-  LBodyValue: TJsonValue;
+  LNotificationCenter: TNotificationCenter;
+  LNotification: TNotification;
+begin
+  LNotificationCenter := TNotificationCenter.Create(nil);
+  try
+    LNotification := TNotification.Create;
+    try
+      LNotification.ChannelId := FChannelId;
+      if not AJSON.TryGetValue('title', LNotification.Title) then
+        AJSON.TryGetValue('["gcm.notification.title"]', LNotification.Title);
+      if not AJSON.TryGetValue('body', LNotification.AlertBody) then
+        AJSON.TryGetValue('["gcm.notification.body"]', LNotification.AlertBody);
+      LNotificationCenter.PresentNotification(LNotification);
+    finally
+      LNotification.Free;
+    end;
+  finally
+    LNotificationCenter.Free;
+  end;
+end;
+
+procedure TPushNotifications.ReceiveNotificationHandler(Sender: TObject; const AServiceNotification: TPushServiceNotification);
 begin
   // An opportunity to handle the notification
   if Assigned(FOnNotificationReceived) then
     FOnNotificationReceived(Self, AServiceNotification);
-  if (AServiceNotification.Json <> nil) and Assigned(FOnMessageReceived) then
-    FOnMessageReceived(Self, AServiceNotification.Json);
-  if AServiceNotification.DataObject <> nil then
-    TOSLog.d('AServiceNotification.DataObject: %s', [AServiceNotification.DataObject.ToJSON])
-  else
-    TOSLog.d('AServiceNotification.DataObject is nil');
+  if AServiceNotification.Json <> nil then
+  begin
+    if TOSDevice.IsPlatform(TOSPlatform.pfAndroid) and FShowBannerIfForeground and FIsForeground then
+      PresentLocalNotification(AServiceNotification.Json);
+    if Assigned(FOnMessageReceived) then
+      FOnMessageReceived(Self, AServiceNotification.Json);
+  end;
 end;
 
 procedure TPushNotifications.ServiceConnectionChangeHandler(Sender: TObject; APushChanges: TPushService.TChanges);
