@@ -13,6 +13,8 @@ unit DW.OSDevice;
 interface
 
 uses
+  // RTL
+  System.SysUtils,
   {$IF CompilerVersion < 33}
   // DW
   DW.PermissionsTypes,
@@ -21,6 +23,8 @@ uses
   System.Types;
 
 type
+  TOSPlatform = TOSVersion.TPlatform;
+
   TLocaleInfo = record
     CountryCode: string;
     CountryDisplayName: string;
@@ -91,14 +95,19 @@ type
     ///   Returns whether the device has touch capability
     /// </summary>
     class function IsTouchDevice: Boolean; static;
+    /// <summary>
+    ///   Returns whether the platform matches
+    /// </summary>
+    class function IsPlatform(const APlatform: TOSPlatform): Boolean; static;
+    /// <summary>
+    ///   Shows the folder that contains the nominated files
+    /// </summary>
     class procedure ShowFilesInFolder(const AFileNames: array of string); static;
   end;
 
 implementation
 
 uses
-  // RTL
-  System.SysUtils,
   // DW
   DW.OSLog,
   {$IF Defined(ANDROID)}
@@ -213,6 +222,11 @@ end;
 class function TOSDevice.IsMobile: Boolean;
 begin
   Result := TOSVersion.Platform in [TOSVersion.TPlatform.pfiOS, TOSVersion.TPlatform.pfAndroid];
+end;
+
+class function TOSDevice.IsPlatform(const APlatform: TOSPlatform): Boolean;
+begin
+  Result := TOSVersion.Platform = APlatform;
 end;
 
 class function TOSDevice.IsScreenLocked: Boolean;
