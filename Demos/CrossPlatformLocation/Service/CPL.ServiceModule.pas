@@ -32,6 +32,7 @@ type
     FUpdater: TLocationUpdater;
     procedure BackgroundMonitorDozeChange(Sender: TObject; const AIsDozed: Boolean);
     procedure BackgroundMonitorScreenLockChange(Sender: TObject; const AIsScreenLocked: Boolean);
+    procedure ConnectToDatabase;
     procedure CreateNotificationChannel;
     procedure CreateObjects;
     procedure DestroyObjects;
@@ -51,18 +52,19 @@ var
 
 implementation
 
-{%CLASSGROUP 'FMX.Controls.TControl'}
+{%CLASSGROUP 'System.Classes.TPersistent'}
 
 {$R *.dfm}
 
 uses
-  System.Permissions,
+  System.Permissions, System.IOUtils,
   Androidapi.Helpers, Androidapi.JNI.Support, AndroidApi.JNI.JavaTypes,
   {$IF Defined(CLOUDLOGGING)}
   Grijjy.CloudLogging,
   {$ENDIF}
   DW.OSLog,
   DW.Android.Helpers, DW.Consts.Android, DW.OSDevice,
+  CPL.LocationsDataModule,
   CPL.Consts;
 
 const
@@ -105,6 +107,7 @@ end;
 constructor TServiceModule.Create(AOwner: TComponent);
 begin
   inherited;
+  ConnectToDatabase;
   CreateObjects;
   if TAndroidHelperEx.IsServiceRunning(cServiceNameFull) then
     FLocation.Resume;
@@ -114,6 +117,12 @@ procedure TServiceModule.AndroidServiceDestroy(Sender: TObject);
 begin
   DestroyObjects;
   RestartService;
+end;
+
+procedure TServiceModule.ConnectToDatabase;
+begin
+  LocationsDataModule := TLocationsDataModule.Create(Self);
+  LocationsDataModule.Connect;
 end;
 
 procedure TServiceModule.CreateObjects;
@@ -287,7 +296,8 @@ begin
     LStatus := 1;
   if FBackgroundMonitor.IsDozed then
     LStatus := 2;
-  FUpdater.SendLocation(ALocation, LStatus);
+//  FUpdater.SendLocation(ALocation, LStatus);
+  LocationsDataModule.AddLocation(ALocation, LStatus);
 end;
 
 end.

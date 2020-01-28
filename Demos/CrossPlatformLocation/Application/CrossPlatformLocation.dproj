@@ -6,7 +6,7 @@
         <MainSource>CrossPlatformLocation.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Android64</Platform>
+        <Platform Condition="'$(Platform)'==''">Android</Platform>
         <TargetedPlatforms>37983</TargetedPlatforms>
         <AppType>Application</AppType>
         <PlatformSDK Condition="'$(PlatformSDK)'=='' And '$(Platform)'=='Android64'">AndroidSDK25.2.5_64bit.sdk</PlatformSDK>
@@ -492,18 +492,18 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="$(BDS)\bin\Artwork\iOS\iPhone\FM_ApplicationIcon_57x57.png" Configuration="Debug" Class="iPhone_AppIcon57">
+                <DeployFile LocalName="$(BDS)\bin\Artwork\iOS\iPad\FM_LaunchImagePortrait_1668x2388.png" Configuration="Debug" Class="iPad_Launch1668x2388">
                     <Platform Name="iOSDevice64">
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_SplashImage_426x320.png" Configuration="Debug" Class="Android_SplashImage426">
-                    <Platform Name="Android">
-                        <RemoteName>splash_image.png</RemoteName>
+                        <RemoteName>Default-1668w-2388h@2x~ipad.png</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="$(BDS)\bin\Artwork\iOS\iPad\FM_ApplicationIcon_144x144.png" Configuration="Debug" Class="iPad_AppIcon144">
+                    <Platform Name="iOSDevice64">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\iOS\iPhone\FM_ApplicationIcon_57x57.png" Configuration="Debug" Class="iPhone_AppIcon57">
                     <Platform Name="iOSDevice64">
                         <Overwrite>true</Overwrite>
                     </Platform>
@@ -513,9 +513,9 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="$(BDS)\bin\Artwork\iOS\iPad\FM_LaunchImagePortrait_1668x2388.png" Configuration="Debug" Class="iPad_Launch1668x2388">
-                    <Platform Name="iOSDevice64">
-                        <RemoteName>Default-1668w-2388h@2x~ipad.png</RemoteName>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_SplashImage_426x320.png" Configuration="Debug" Class="Android_SplashImage426">
+                    <Platform Name="Android">
+                        <RemoteName>splash_image.png</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -650,9 +650,29 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="..\CPL.sqlite" Configuration="Release" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets\internal</RemoteDir>
+                        <RemoteName>CPL.sqlite</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\CPL.sqlite" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteName>CPL.sqlite</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="iOSDevice64\Debug\CrossPlatformLocation.info.plist" Configuration="Debug" Class="ProjectiOSInfoPList">
                     <Platform Name="iOSDevice64">
                         <RemoteName>Info.plist</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\CPL.sqlite" Configuration="Release" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\assets\internal</RemoteDir>
+                        <RemoteName>CPL.sqlite</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -962,6 +982,13 @@
                 <DeployFile LocalName="$(BDS)\bin\Artwork\iOS\iPhone\FM_LaunchImage_2436x1125.png" Configuration="Debug" Class="iPhone_Launch2436">
                     <Platform Name="iOSDevice64">
                         <RemoteName>Default-Landscape-1125w-2436h@3x.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\CPL.sqlite" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\assets\internal</RemoteDir>
+                        <RemoteName>CPL.sqlite</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
