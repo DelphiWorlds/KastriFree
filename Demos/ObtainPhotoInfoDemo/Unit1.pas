@@ -43,12 +43,7 @@ uses
   Androidapi.Helpers, Androidapi.JNI.Media, Androidapi.JNIBridge, Androidapi.JNI.Provider,
   Androidapi.JNI.App, Androidapi.JNI.Os, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.Net,
   FMX.Platform.Android,
-  DW.Androidapi.JNI.Os;
-
-const
-  cPermissionReadExternalStorage = 'android.permission.READ_EXTERNAL_STORAGE';
-  cPermissionWriteExternalStorage = 'android.permission.WRITE_EXTERNAL_STORAGE';
-  cPermissionCamera = 'android.permission.CAMERA';
+  DW.Androidapi.JNI.Os, DW.Consts.Android;
 
 {$IF CompilerVersion > 32}
 type
@@ -104,7 +99,9 @@ begin
     begin
       Memo1.Lines.Add('Latitude: ' +  LLatLong.Items[0].ToString);
       Memo1.Lines.Add('Longitude: ' +  LLatLong.Items[1].ToString);
-    end;
+    end
+    else
+      Memo1.Lines.Add('Unable to obtain location info');
   finally
     LLatLong.Free;
   end;
@@ -137,7 +134,8 @@ end;
 procedure TForm1.Button1Click(Sender: TObject);
 begin
 {$IF CompilerVersion > 32}
-  TPermissionsService.DefaultService.RequestPermissions([cPermissionReadExternalStorage, cPermissionWriteExternalStorage, cPermissionCamera],
+  TPermissionsService.DefaultService.RequestPermissions([cPermissionReadExternalStorage, cPermissionWriteExternalStorage, cPermissionCamera,
+    cPermissionAccessCoarseLocation, cPermissionAccessFineLocation],
     TakePhotoPermissionsResultHandler);
 {$ELSE}
   TakePhoto;
