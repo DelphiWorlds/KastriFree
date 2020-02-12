@@ -32,6 +32,11 @@ const
   MPRepeatTypeOff = 0;
   MPRepeatTypeOne = 1;
   MPRepeatTypeAll = 2;
+  MPRemoteCommandHandlerStatusSuccess = 0;
+  MPRemoteCommandHandlerStatusNoSuchContent = 100;
+  MPRemoteCommandHandlerStatusNoActionableNowPlayingItem = 110;
+  MPRemoteCommandHandlerStatusDeviceNotFound = 120;
+  MPRemoteCommandHandlerStatusCommandFailed = 200;
 
 type
   MPRemoteCommandEvent = interface;
@@ -51,6 +56,7 @@ type
   MPNowPlayingInfoMediaType = NSInteger;
   MPNowPlayingPlaybackState = NSInteger;
   MPNowPlayingInfoLanguageOptionType = NSInteger;
+  MPRemoteCommandHandlerStatus = NSInteger;
 
   TMPRemoteCommandBlockMethod1 = procedure(event: MPRemoteCommandEvent) of object;
 
