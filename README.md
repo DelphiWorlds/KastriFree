@@ -25,3 +25,6 @@ I have a Slack team for Delphi Worlds, which contains a channel for discussion a
   https://slack.delphiworlds.com
 
 ![](https://tokei.rs/b1/github/DelphiWorlds/KastriFree)
+
+If you find Kastri Free useful, please consider making a donation:
+[![](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=CRMMYFP3QSS68)
