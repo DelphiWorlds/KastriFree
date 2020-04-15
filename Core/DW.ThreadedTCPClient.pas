@@ -27,6 +27,7 @@ type
   TExceptionEvent = procedure(Sender: TObject; const E: Exception) of object;
   TResponseEvent = procedure(Sender: TObject; const Code: Integer; const Response: string) of object;
   TReceiveDataEvent = procedure(Sender: TObject; const Data: TBytes) of object;
+  TCmdEvent = procedure(Sender: TObject; const Cmd: string) of object;
 
   TClientState = (None, Connecting, Disconnecting, Sending, Receiving, ConnectError);
 
@@ -52,6 +53,7 @@ type
     FOnException: TExceptionEvent;
     FOnReceiveData: TReceiveDataEvent;
     FOnResponse: TResponseEvent;
+    FOnSendingCmd: TCmdEvent;
     procedure ConnectClient;
     procedure DisconnectClient;
     procedure DoConnected;
@@ -59,6 +61,7 @@ type
     procedure DoException(const AException: Exception);
     procedure DoReceiveData(const AData: TBytes);
     procedure DoResponse(const ACode: Integer; const AResponse: string);
+    procedure DoSendingCommand(const ACmd: string);
     function GetConnectTimeout: Integer;
     function GetHost: string;
     function GetIsConnected: Boolean;
@@ -85,11 +88,13 @@ type
     procedure InternalDoException(const AException: Exception); virtual;
     procedure InternalDoReceiveData(const AData: TBytes); virtual;
     procedure InternalDoResponse(const ACode: Integer; const AResponse: string); virtual;
+    procedure InternalDoSendingCmd(const ACmd: string); virtual;
     property OnConnected: TNotifyEvent read FOnConnected write FOnConnected;
     property OnDisconnected: TNotifyEvent read FOnDisconnected write FOnDisconnected;
     property OnException: TExceptionEvent read FOnException write FOnException;
     property OnReceiveData: TReceiveDataEvent read FOnReceiveData write FOnReceiveData;
     property OnResponse: TResponseEvent read FOnResponse write FOnResponse;
+    property OnSendingCmd: TCmdEvent read FOnSendingCmd write FOnSendingCmd;
   public
     constructor Create;
     destructor Destroy; override;
@@ -113,6 +118,7 @@ type
     property OnException;
     property OnReceiveData;
     property OnResponse;
+    property OnSendingCmd;
   end;
 
 implementation
@@ -345,6 +351,12 @@ end;
 procedure TCustomThreadedTCPClient.SendCmdFromClient(const ACmd: string);
 begin
   try
+    DoSendingCommand(ACmd);
+  except
+    on E: Exception do
+      HandleException(E);
+  end;
+  try
     FTCPClient.SendCmd(ACmd);
     if not Terminated then
       DoResponse(FTCPClient.LastCmdResult.NumericCode, FTCPClient.LastCmdResult.Text.Text);
@@ -436,10 +448,31 @@ begin
     InternalDoResponse(ACode, AResponse);
 end;
 
+procedure TCustomThreadedTCPClient.DoSendingCommand(const ACmd: string);
+begin
+  if FIsSynchronized and not IsMainThread then
+  begin
+    Synchronize(
+      procedure
+      begin
+        InternalDoSendingCmd(ACmd);
+      end
+    );
+  end
+  else
+    InternalDoSendingCmd(ACmd);
+end;
+
 procedure TCustomThreadedTCPClient.InternalDoResponse(const ACode: Integer; const AResponse: string);
 begin
   if Assigned(FOnResponse) then
     FOnResponse(Self, ACode, AResponse);
+end;
+
+procedure TCustomThreadedTCPClient.InternalDoSendingCmd(const ACmd: string);
+begin
+  if Assigned(FOnSendingCmd) then
+    FOnSendingCmd(Self, ACmd);
 end;
 
 procedure TCustomThreadedTCPClient.DoReceiveData(const AData: TBytes);
