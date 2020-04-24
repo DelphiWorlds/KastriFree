@@ -51,7 +51,7 @@ begin
   if not LJSON.IsEmpty then
   begin
     AObject := JsonToObject<T>(LJSON, AOptions);
-    Result := True;
+    Result := AObject <> nil;
   end;
 end;
 
