@@ -333,7 +333,7 @@ procedure TFcmPushService.Unregister;
 begin
   SetDeviceToken(string.Empty);
   Messaging.setDelegate(nil);
-  FFIRMessagingDelegate := nil;
+  FFIRMessagingDelegate.Free;
   FNotificationCenterDelegate.Free;
   NotificationCenter.setDelegate(nil);
 end;
