@@ -27,6 +27,7 @@ type
     FFirebaseMessaging: TFirebaseMessaging;
     FIsConnected: Boolean;
     FIsForeground: Boolean;
+    FShowBannerWhenForeground: Boolean;
     FWasConnected: Boolean;
   protected
     procedure ApplicationBecameActive;
@@ -46,6 +47,7 @@ type
     procedure UnsubscribeFromTopic(const ATopicName: string); virtual; abstract;
     property IsConnected: Boolean read FIsConnected write FIsConnected;
     property IsForeground: Boolean read FIsForeground write FIsForeground;
+    property ShowBannerWhenForeground: Boolean read FShowBannerWhenForeground write FShowBannerWhenForeground;
   public
     constructor Create(const AFirebaseMessaging: TFirebaseMessaging); virtual;
     destructor Destroy; override;
@@ -66,6 +68,8 @@ type
     function GetIsConnected: Boolean;
     procedure PushFailToRegisterMessageHandler(const Sender: TObject; const M: TMessage);
     procedure PushRemoteNotificationMessageHandler(const Sender: TObject; const M: TMessage);
+    function GetShowBannerWhenForeground: Boolean;
+    procedure SetShowBannerWhenForeground(const Value: Boolean);
   protected
     procedure DoAuthorizationResult(const AGranted: Boolean);
     procedure DoMessageReceived(const APayload: TStrings);
@@ -82,6 +86,7 @@ type
     property DeviceToken: string read GetDeviceToken;
     property IsActive: Boolean read FIsActive;
     property IsConnected: Boolean read GetIsConnected;
+    property ShowBannerWhenForeground: Boolean read GetShowBannerWhenForeground write SetShowBannerWhenForeground;
     property Token: string read FToken;
     property OnAuthorizationResult: TAuthorizationResultEvent read FOnAuthorizationResult write FOnAuthorizationResult;
     property OnMessageReceived: TFirebaseMessageReceivedEvent read FOnMessageReceived write FOnMessageReceived;
@@ -108,6 +113,7 @@ constructor TCustomPlatformFirebaseMessaging.Create(const AFirebaseMessaging: TF
 begin
   inherited Create;
   FFirebaseMessaging := AFirebaseMessaging;
+  FShowBannerWhenForeground := True;
 end;
 
 destructor TCustomPlatformFirebaseMessaging.Destroy;
@@ -234,6 +240,11 @@ begin
   Result := FPlatformFirebaseMessaging.IsConnected;
 end;
 
+function TFirebaseMessaging.GetShowBannerWhenForeground: Boolean;
+begin
+  Result := FPlatformFirebaseMessaging.ShowBannerWhenForeground;
+end;
+
 procedure TFirebaseMessaging.ApplicationEventMessageHandler(const Sender: TObject; const M: TMessage);
 begin
   case TApplicationEventMessage(M).Value.Event of
@@ -275,6 +286,11 @@ end;
 procedure TFirebaseMessaging.RequestAuthorization;
 begin
   FPlatformFirebaseMessaging.RequestAuthorization;
+end;
+
+procedure TFirebaseMessaging.SetShowBannerWhenForeground(const Value: Boolean);
+begin
+  FPlatformFirebaseMessaging.ShowBannerWhenForeground := Value;
 end;
 
 function TFirebaseMessaging.Start: Boolean;

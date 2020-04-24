@@ -160,7 +160,7 @@ begin
     end;
     if LPayload.IndexOfName(cGCMMessageIDKey) > -1 then
     begin
-      if not AIsStartup then
+      if not AIsStartup and (ShowBannerWhenForeground or not IsForeground) then
         PublishNotification(data);
       TThread.Synchronize(nil,
         procedure
