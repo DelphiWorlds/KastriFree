@@ -33,7 +33,9 @@ type
     class function HasBackgroundMode(const AMode: string): Boolean; static;
     class function IsBackground: Boolean; static;
     class function IsIPhoneX: Boolean; static;
+    //!!! ADictionary must be a JSON dictionary!!
     class function NSDictionaryToJSON(const ADictionary: NSDictionary): string; static;
+    class function NSDictionaryToString(const ADictionary: NSDictionary): string; static;
     class function SharedApplication: UIApplication; static;
     class function StandardUserDefaults: NSUserDefaults; static;
   end;
@@ -125,6 +127,20 @@ begin
   end
   else
     Result := '';
+end;
+
+class function TiOSHelperEx.NSDictionaryToString(const ADictionary: NSDictionary): string;
+var
+  I: Integer;
+begin
+  // Just dumps the keys for now
+  Result := '';
+  for I := 0 to ADictionary.allKeys.count - 1 do
+  begin
+    if I > 0 then
+      Result := Result + #13#10;
+    Result := Result + NSStrToStr(TNSString.Wrap(ADictionary.allKeys.objectAtIndex(I)));
+  end;
 end;
 
 class function TiOSHelperEx.SharedApplication: UIApplication;
