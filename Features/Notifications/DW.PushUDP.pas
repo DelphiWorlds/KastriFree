@@ -14,7 +14,7 @@ interface
 
 uses
   // RTL
-  System.SysUtils, System.Classes,
+  System.SysUtils, System.Classes, System.Messaging,
   // Indy
   IdBaseComponent, IdComponent, IdUDPBase, IdUDPClient,
   // FMX
@@ -28,8 +28,11 @@ type
   private
     FDeviceID: string;
     FToken: string;
+    procedure ApplicationEventMessageHandler(const Sender: TObject; const AMsg: TMessage);
     procedure SendDeviceInfo;
   public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     procedure UpdateDeviceInfo(const ADeviceID, AToken: string);
   end;
 
@@ -45,8 +48,36 @@ implementation
 uses
   // RTL
   System.JSON,
+  // FMX
+  FMX.Platform,
   // DW
   DW.Consts.Android, DW.OSMetadata;
+
+{ TPushUDP }
+
+constructor TPushUDP.Create(AOwner: TComponent);
+begin
+  inherited;
+  TMessageManager.DefaultManager.SubscribeToMessage(TApplicationEventMessage, ApplicationEventMessageHandler);
+end;
+
+destructor TPushUDP.Destroy;
+begin
+  TMessageManager.DefaultManager.Unsubscribe(TApplicationEventMessage, ApplicationEventMessageHandler);
+  inherited;
+end;
+
+procedure TPushUDP.ApplicationEventMessageHandler(const Sender: TObject; const AMsg: TMessage);
+begin
+{
+  case TApplicationEventMessage(AMsg).Value.Event of
+    TApplicationEvent.BecameActive:
+      UDPTimer.Enabled := True;
+    TApplicationEvent.WillBecomeInactive:
+      UDPTimer.Enabled := False;
+  end;
+}
+end;
 
 procedure TPushUDP.UDPTimerTimer(Sender: TObject);
 begin
