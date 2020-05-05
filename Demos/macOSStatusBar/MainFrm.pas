@@ -15,8 +15,10 @@ type
     StatusBarMenuItem: TMenuItem;
     SeparatorMenuItem1: TMenuItem;
     QuitMenuItem: TMenuItem;
+    TestRecreateMenuItem: TMenuItem;
     procedure QuitMenuItemClick(Sender: TObject);
     procedure TestMenuItemClick(Sender: TObject);
+    procedure TestRecreateMenuItemClick(Sender: TObject);
   private
     FStatusBarMenu: TStatusBarMenu;
   public
@@ -63,6 +65,15 @@ begin
   // Make sure the app is active
   SharedApplication.activateIgnoringOtherApps(True);
   ShowMessage('Test');
+end;
+
+procedure TfrmMain.TestRecreateMenuItemClick(Sender: TObject);
+begin
+  if TestMenuItem.Text.Equals('Test') then
+    TestMenuItem.Text := 'Test B'
+  else
+    TestMenuItem.Text := 'Test';
+  FStatusBarMenu.RecreateMenu;
 end;
 
 end.

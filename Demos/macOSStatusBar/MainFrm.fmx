@@ -21,6 +21,10 @@ object frmMain: TfrmMain
       ImageIndex = 1
       OnClick = TestMenuItemClick
     end
+    object TestRecreateMenuItem: TMenuItem
+      Text = 'Test Recreate'
+      OnClick = TestRecreateMenuItemClick
+    end
     object SeparatorMenuItem1: TMenuItem
       Text = '-'
     end
