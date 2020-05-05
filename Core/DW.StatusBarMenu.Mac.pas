@@ -37,6 +37,7 @@ type
     procedure CreateMenuItem(const AMenu: NSMenu; const AItem: TMenuItem);
     function GetSubMenu: NSMenu;
   protected
+    procedure Refresh;
     property FMXItem: TMenuItem read FFMXItem;
     property StatusBarMenu: TStatusBarMenu read FStatusBarMenu;
     property SubMenu: NSMenu read GetSubMenu;
@@ -66,6 +67,7 @@ type
     procedure ClearMenuItems;
     procedure RemoveStatusItem;
     procedure SetPopupMenu(const Value: TPopupMenu);
+    procedure UpdateMenuItem(const AItem: TMenuItem);
   protected
     class function StatusBar: NSStatusBar;
   protected
@@ -76,6 +78,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure RecreateMenu;
+    procedure Refresh;
     property PopupMenu: TPopupMenu read FPopupMenu write SetPopupMenu;
   end;
 
@@ -205,9 +208,12 @@ destructor TMacOSMenuItem.Destroy;
 begin
   FFMXItem := nil;
   FStatusBarMenu := nil;
-  if FNSMenuItem.menu <> nil then
-    FNSMenuItem.menu.removeItem(FNSMenuItem);
-  FNSMenuItem.release;
+  if FNSMenuItem <> nil then
+  begin
+    if FNSMenuItem.menu <> nil then
+      FNSMenuItem.menu.removeItem(FNSMenuItem);
+    FNSMenuItem.release;
+  end;
   FNSMenuItem := nil;
   inherited;
 end;
@@ -220,6 +226,15 @@ begin
     FNSMenuItem.setSubmenu(FSubMenu);
   end;
   Result := FSubMenu;
+end;
+
+procedure TMacOSMenuItem.Refresh;
+begin
+  if not FFMXItem.Text.Equals('-') then
+  begin
+    FNSMenuItem.setTitle(StrToNSStr(FFMXItem.Text));
+    UpdateNSMenuItemImage(FNSMenuItem, FFMXItem);
+  end;
 end;
 
 function TMacOSMenuItem.GetObjectiveCClass: PTypeInfo;
@@ -295,6 +310,29 @@ begin
     for I := 1 to FPopupMenu.ItemsCount - 1 do
       AddMenuItem(FPopupMenu.Items[I]);
   end;
+end;
+
+procedure TStatusBarMenu.Refresh;
+var
+  I: Integer;
+begin
+  if (FPopupMenu <> nil) and (FPopupMenu.VisibleItemCount > 0) then
+  begin
+    UpdateNSStatusItemImage(FStatusItem, FPopupMenu.Items[0]);
+    for I := 1 to FPopupMenu.ItemsCount - 1 do
+      UpdateMenuItem(FPopupMenu.Items[I]);
+  end;
+end;
+
+procedure TStatusBarMenu.UpdateMenuItem(const AItem: TMenuItem);
+var
+  I, LIndex: Integer;
+begin
+  LIndex := FMenuItems.IndexOfFMXItem(AItem);
+  if LIndex > -1 then
+    MenuItems.Items[LIndex].Refresh;
+  for I := 0 to AItem.ItemsCount - 1 do
+    UpdateMenuItem(AItem.Items[I]);
 end;
 
 procedure TStatusBarMenu.AddMenuItem(const AItem: TMenuItem);
