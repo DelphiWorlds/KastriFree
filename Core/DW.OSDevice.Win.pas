@@ -73,9 +73,9 @@ begin
     Result.LanguageCode := 'en';
   LLength := GetLocaleInfo(GetUserDefaultLCID, LOCALE_SLANGUAGE, LBuffer, Length(LBuffer));
   if LLength > 0 then
-    SetString(Result.LanguageCode, LBuffer, LLength - 1)
+    SetString(Result.LanguageDisplayName, LBuffer, LLength - 1)
   else
-    Result.LanguageCode := '';
+    Result.LanguageDisplayName := '';
   LLength := GetLocaleInfo(GetUserDefaultLCID, LOCALE_SISO3166CTRYNAME, LBuffer, Length(LBuffer));
   if LLength > 0 then
     SetString(Result.CountryCode, LBuffer, LLength - 1)
