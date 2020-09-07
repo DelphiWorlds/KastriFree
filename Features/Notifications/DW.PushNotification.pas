@@ -165,7 +165,11 @@ end;
 
 function TPushNotifications.GetPushService: TPushService;
 begin
+  {$IF CompilerVersion < 34}
+  Result := TPushServiceManager.Instance.GetServiceByName(TPushService.TServiceNames.FCM);
+  {$ELSE}
   Result := TPushServiceManager.Instance.GetServiceByName(TPushService.TServiceNames.GCM);
+  {$ENDIF}
 end;
 
 procedure TPushNotifications.PresentLocalNotification(const AJSON: TJSONObject);
