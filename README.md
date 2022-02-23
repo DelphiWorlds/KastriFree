@@ -4,9 +4,9 @@ From [Delphi Worlds](http://www.delphiworlds.com)
 
 ## Attention 
 
-**Kastri Free has entered maintenance mode - no new development will take place; only minor bug fixes.**
+**Kastri Free has been retired permanently.**
 
-For ongoing development, please refer to the [new Kastri repo](https://github.com/DelphiWorlds/Kastri)
+For ongoing development, please refer to the [new Kastri repo](https://github.com/DelphiWorlds/Kastri). If you would like to see something that was implemented in KastriFree in the Kastri repository, please [file an issue there](https://github.com/DelphiWorlds/Kastri/issues).
 
 Kastri Free:
 
